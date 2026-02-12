@@ -1,4 +1,4 @@
-import api from './auth.service';
+import { api } from '@/lib/axios';
 
 export const userService = {
     // Get all users (can filter by role)

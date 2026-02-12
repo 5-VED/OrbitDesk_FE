@@ -1,4 +1,4 @@
-import api from './auth.service';
+import { api } from '@/lib/axios';
 
 export const groupService = {
     // Get all groups

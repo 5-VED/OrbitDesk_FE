@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { groupService } from '../../services/group.service';
+import { groupService } from '@/features/groups/api/groups';
 
 // ─── Async Thunks ───────────────────────────────────────────────
 

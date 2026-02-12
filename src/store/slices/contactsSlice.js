@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { userService } from '../../services/user.service';
+import { userService } from '@/features/contacts/api/users';
 
 // ─── Async Thunks ───────────────────────────────────────────────
 
