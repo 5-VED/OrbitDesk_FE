@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Search,
     Book,
@@ -7,45 +7,180 @@ import {
     ChevronRight,
     Plus,
     Clock,
-    Eye
+    Eye,
+    Edit,
+    Trash2
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
+import { Input } from '../components/ui/Input';
+import { Modal } from '../components/ui/Modal';
+import { knowledgeBaseService } from '@/features/knowledgeBase/api/knowledgeBase';
+import { useAppSelector } from '../store/hooks';
+import { selectCurrentUser } from '../store/slices/authSlice';
+import toast from 'react-hot-toast';
 import './KnowledgeBase.css';
 
-// Mock data
-const categories = [
-    { id: 1, name: 'Getting Started', icon: Book, articles: 12, color: '#3b82f6' },
-    { id: 2, name: 'Account & Billing', icon: FileText, articles: 8, color: '#10b981' },
-    { id: 3, name: 'Technical Support', icon: Folder, articles: 24, color: '#f59e0b' },
-    { id: 4, name: 'API Documentation', icon: FileText, articles: 15, color: '#8b5cf6' },
-    { id: 5, name: 'Mobile Apps', icon: Folder, articles: 6, color: '#ec4899' },
-    { id: 6, name: 'Integrations', icon: Folder, articles: 18, color: '#06b6d4' },
-];
-
-const popularArticles = [
-    { id: 1, title: 'How to reset your password', category: 'Getting Started', views: 1520, updated: '2 days ago' },
-    { id: 2, title: 'Setting up two-factor authentication', category: 'Account & Billing', views: 892, updated: '1 week ago' },
-    { id: 3, title: 'Troubleshooting login issues', category: 'Technical Support', views: 756, updated: '3 days ago' },
-    { id: 4, title: 'API authentication guide', category: 'API Documentation', views: 634, updated: '5 days ago' },
-    { id: 5, title: 'Connecting Slack integration', category: 'Integrations', views: 512, updated: '1 week ago' },
-];
-
-const recentArticles = [
-    { id: 1, title: 'New dashboard features overview', category: 'Getting Started', updated: '1 hour ago' },
-    { id: 2, title: 'Understanding SLA policies', category: 'Technical Support', updated: '3 hours ago' },
-    { id: 3, title: 'Mobile app push notifications setup', category: 'Mobile Apps', updated: '5 hours ago' },
-    { id: 4, title: 'Webhook configuration guide', category: 'API Documentation', updated: 'Yesterday' },
-];
-
 export function KnowledgeBase() {
+    const user = useAppSelector(selectCurrentUser);
     const [searchQuery, setSearchQuery] = useState('');
+    const [categories, setCategories] = useState([]);
+    const [articles, setArticles] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState(null);
+
+    // Modal States
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
+    const [editingCategory, setEditingCategory] = useState(null);
+    const [editingArticle, setEditingArticle] = useState(null);
+
+    // Form Data
+    const [categoryForm, setCategoryForm] = useState({ name: '', description: '', slug: '', color: '#3b82f6' });
+    const [articleForm, setArticleForm] = useState({ title: '', slug: '', category: '', content: '', status: 'published' });
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [catsRes, artsRes] = await Promise.all([
+                knowledgeBaseService.getCategories(),
+                knowledgeBaseService.getArticles({ limit: 100 }) // Fetching sufficient articles for now
+            ]);
+            setCategories(catsRes.data);
+            setArticles(artsRes.data.articles);
+        } catch (error) {
+            console.error("Failed to fetch KB data", error);
+            toast.error("Failed to load Knowledge Base");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- Category Management ---
+
+    const handleOpenCategoryModal = (category = null) => {
+        setEditingCategory(category);
+        if (category) {
+            setCategoryForm({
+                name: category.name,
+                description: category.description || '',
+                slug: category.slug,
+                color: category.color || '#3b82f6'
+            });
+        } else {
+            setCategoryForm({ name: '', description: '', slug: '', color: '#3b82f6' });
+        }
+        setIsCategoryModalOpen(true);
+    };
+
+    const handleCategorySubmit = async (e) => {
+        e.preventDefault();
+        try {
+            if (editingCategory) {
+                await knowledgeBaseService.updateCategory(editingCategory._id, categoryForm);
+                toast.success("Category updated");
+            } else {
+                await knowledgeBaseService.createCategory(categoryForm);
+                toast.success("Category created");
+            }
+            fetchData();
+            setIsCategoryModalOpen(false);
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to save category");
+        }
+    };
+
+    const handleDeleteCategory = async (id) => {
+        if (!confirm("Are you sure? This action cannot be undone.")) return;
+        try {
+            await knowledgeBaseService.deleteCategory(id);
+            toast.success("Category deleted");
+            fetchData();
+        } catch (error) {
+            toast.error("Failed to delete category");
+        }
+    };
+
+    // --- Article Management ---
+
+    const handleOpenArticleModal = (article = null) => {
+        setEditingArticle(article);
+        if (article) {
+            setArticleForm({
+                title: article.title,
+                slug: article.slug,
+                category: article.category?._id || '',
+                content: article.content,
+                status: article.status || 'published'
+            });
+        } else {
+            setArticleForm({
+                title: '',
+                slug: '',
+                category: categories.length > 0 ? categories[0]._id : '',
+                content: '',
+                status: 'published'
+            });
+        }
+        setIsArticleModalOpen(true);
+    };
+
+    const handleArticleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            if (editingArticle) {
+                await knowledgeBaseService.updateArticle(editingArticle._id, articleForm);
+                toast.success("Article updated");
+            } else {
+                await knowledgeBaseService.createArticle(articleForm);
+                toast.success("Article created");
+            }
+            fetchData();
+            setIsArticleModalOpen(false);
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to save article");
+        }
+    };
+
+    const handleDeleteArticle = async (id) => {
+        if (!confirm("Delete this article?")) return;
+        try {
+            await knowledgeBaseService.deleteArticle(id);
+            toast.success("Article deleted");
+            fetchData();
+        } catch (error) {
+            toast.error("Failed to delete article");
+        }
+    };
+
+    // Helper: Filter articles
+    const filteredArticles = articles.filter(article => {
+        const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory ? article.category?._id === selectedCategory : true;
+        return matchesSearch && matchesCategory;
+    });
+
+    const popularArticles = [...articles].sort((a, b) => b.views - a.views).slice(0, 5);
+    const recentArticles = [...articles].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0, 5);
+
+    // Debug check: Ensure user is loaded and check role case-insensitively
+    const userRole = (user?.role_type || '').toLowerCase();
+    const isAdminOrAgent = ['admin', 'agent', 'superadmin'].includes(userRole);
 
     return (
         <PageContainer
             title="Knowledge Base"
-            actions={<Button icon={Plus}>New Article</Button>}
+            actions={isAdminOrAgent && (
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => handleOpenCategoryModal()}>New Category</Button>
+                    <Button icon={Plus} onClick={() => handleOpenArticleModal()}>New Article</Button>
+                </div>
+            )}
         >
             <div className="kb-page">
                 {/* Search */}
@@ -63,71 +198,118 @@ export function KnowledgeBase() {
 
                 {/* Categories Grid */}
                 <section className="kb-section">
-                    <h2 className="kb-section-title">Browse by Category</h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="kb-section-title mb-0">Browse by Category</h2>
+                        {selectedCategory && (
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedCategory(null)}>
+                                Clear Filter
+                            </Button>
+                        )}
+                    </div>
+
                     <div className="kb-categories">
                         {categories.map((cat) => (
-                            <Card key={cat.id} className="category-card" hover>
-                                <div className="category-icon" style={{ backgroundColor: cat.color + '20', color: cat.color }}>
-                                    <cat.icon size={24} />
+                            <Card
+                                key={cat._id}
+                                className={`category-card ${selectedCategory === cat._id ? 'ring-2 ring-primary' : ''}`}
+                                hover
+                                onClick={() => setSelectedCategory(selectedCategory === cat._id ? null : cat._id)}
+                            >
+                                <div className="category-header flex justify-between w-full">
+                                    <div className="category-icon" style={{ backgroundColor: (cat.color || '#3b82f6') + '20', color: cat.color || '#3b82f6' }}>
+                                        <Folder size={24} />
+                                    </div>
+                                    {isAdminOrAgent && (
+                                        <div className="category-actions" onClick={(e) => e.stopPropagation()}>
+                                            <Button variant="ghost" size="icon" onClick={() => handleOpenCategoryModal(cat)}>
+                                                <Edit size={14} />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDeleteCategory(cat._id)}>
+                                                <Trash2 size={14} />
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="category-info">
+                                <div className="category-info mt-3">
                                     <h3>{cat.name}</h3>
-                                    <span>{cat.articles} articles</span>
+                                    <span>{articles.filter(a => a.category?._id === cat._id).length} articles</span>
                                 </div>
-                                <ChevronRight size={20} className="category-arrow" />
                             </Card>
                         ))}
                     </div>
                 </section>
 
                 <div className="kb-grid">
-                    {/* Popular Articles */}
-                    <Card className="articles-card">
+                    {/* Articles List (Filtered) */}
+                    <Card className="articles-card col-span-2">
+                        <CardHeader>
+                            <CardTitle>
+                                {selectedCategory
+                                    ? `Articles in ${categories.find(c => c._id === selectedCategory)?.name}`
+                                    : searchQuery ? 'Search Results' : 'Recent Articles'}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="articles-list">
+                                {filteredArticles.length > 0 ? (
+                                    filteredArticles.map((article) => (
+                                        <div key={article._id} className="article-item group">
+                                            <div className="article-icon">
+                                                <FileText size={18} />
+                                            </div>
+                                            <div className="article-content flex-1">
+                                                <div className="flex justify-between">
+                                                    <a href="#" className="article-title">{article.title}</a>
+                                                    {isAdminOrAgent && (
+                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                                            <button onClick={() => handleOpenArticleModal(article)} className="text-gray-500 hover:text-primary">
+                                                                <Edit size={14} />
+                                                            </button>
+                                                            <button onClick={() => handleDeleteArticle(article._id)} className="text-gray-500 hover:text-red-500">
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="article-meta">
+                                                    <span className="article-category">{article.category?.name}</span>
+                                                    <span className="article-updated">
+                                                        <Clock size={12} />
+                                                        {new Date(article.updatedAt).toLocaleDateString()}
+                                                    </span>
+                                                    <span className="article-views ml-2">
+                                                        <Eye size={12} />
+                                                        {article.views}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500">No articles found.</div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Popular Articles Sidebar */}
+                    <Card className="articles-card h-fit">
                         <CardHeader>
                             <CardTitle>Popular Articles</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="articles-list">
                                 {popularArticles.map((article) => (
-                                    <div key={article.id} className="article-item">
+                                    <div key={article._id} className="article-item">
                                         <div className="article-icon">
                                             <FileText size={18} />
                                         </div>
                                         <div className="article-content">
-                                            <a href="#" className="article-title">{article.title}</a>
+                                            <span className="article-title block truncate">{article.title}</span>
                                             <div className="article-meta">
-                                                <span className="article-category">{article.category}</span>
                                                 <span className="article-views">
                                                     <Eye size={12} />
-                                                    {article.views}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Recent Articles */}
-                    <Card className="articles-card">
-                        <CardHeader>
-                            <CardTitle>Recently Updated</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="articles-list">
-                                {recentArticles.map((article) => (
-                                    <div key={article.id} className="article-item">
-                                        <div className="article-icon">
-                                            <FileText size={18} />
-                                        </div>
-                                        <div className="article-content">
-                                            <a href="#" className="article-title">{article.title}</a>
-                                            <div className="article-meta">
-                                                <span className="article-category">{article.category}</span>
-                                                <span className="article-updated">
-                                                    <Clock size={12} />
-                                                    {article.updated}
+                                                    {article.views} views
                                                 </span>
                                             </div>
                                         </div>
@@ -138,6 +320,121 @@ export function KnowledgeBase() {
                     </Card>
                 </div>
             </div>
+
+            {/* Category Modal */}
+            <Modal
+                isOpen={isCategoryModalOpen}
+                onClose={() => setIsCategoryModalOpen(false)}
+                title={editingCategory ? "Edit Category" : "New Category"}
+                footer={
+                    <>
+                        <Button variant="ghost" onClick={() => setIsCategoryModalOpen(false)}>Cancel</Button>
+                        <Button type="submit" form="category-form">{editingCategory ? "Update" : "Create"}</Button>
+                    </>
+                }
+            >
+                <form id="category-form" onSubmit={handleCategorySubmit} className="space-y-4">
+                    <Input
+                        label="Name"
+                        value={categoryForm.name}
+                        onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                        required
+                    />
+                    <Input
+                        label="Slug"
+                        value={categoryForm.slug}
+                        onChange={e => setCategoryForm({ ...categoryForm, slug: e.target.value })}
+                        required
+                        placeholder="e.g. getting-started"
+                    />
+                    <Input
+                        label="Description"
+                        value={categoryForm.description}
+                        onChange={e => setCategoryForm({ ...categoryForm, description: e.target.value })}
+                    />
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">Color</label>
+                        <div className="flex gap-2">
+                            {['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'].map(c => (
+                                <button
+                                    key={c}
+                                    type="button"
+                                    className={`w-8 h-8 rounded-full ${categoryForm.color === c ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
+                                    style={{ backgroundColor: c }}
+                                    onClick={() => setCategoryForm({ ...categoryForm, color: c })}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Article Modal */}
+            <Modal
+                isOpen={isArticleModalOpen}
+                onClose={() => setIsArticleModalOpen(false)}
+                title={editingArticle ? "Edit Article" : "New Article"}
+                size="large"
+                footer={
+                    <>
+                        <Button variant="ghost" onClick={() => setIsArticleModalOpen(false)}>Cancel</Button>
+                        <Button type="submit" form="article-form">{editingArticle ? "Update" : "Create"}</Button>
+                    </>
+                }
+            >
+                <form id="article-form" onSubmit={handleArticleSubmit} className="space-y-4">
+                    <Input
+                        label="Title"
+                        value={articleForm.title}
+                        onChange={e => setArticleForm({ ...articleForm, title: e.target.value })}
+                        required
+                    />
+                    <Input
+                        label="Slug"
+                        value={articleForm.slug}
+                        onChange={e => setArticleForm({ ...articleForm, slug: e.target.value })}
+                        required
+                        placeholder="e.g. how-to-reset-password"
+                    />
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">Category</label>
+                        <select
+                            className="w-full p-2 border rounded-md bg-transparent"
+                            value={articleForm.category}
+                            onChange={e => setArticleForm({ ...articleForm, category: e.target.value })}
+                            required
+                        >
+                            <option value="">Select Category</option>
+                            {categories.map(c => (
+                                <option key={c._id} value={c._id}>{c.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">Content</label>
+                        <textarea
+                            className="w-full p-2 border rounded-md h-40 bg-transparent"
+                            value={articleForm.content}
+                            onChange={e => setArticleForm({ ...articleForm, content: e.target.value })}
+                            required
+                            placeholder="Write your article content here..."
+                            style={{ resize: 'vertical', minHeight: '150px' }}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">Status</label>
+                        <select
+                            className="w-full p-2 border rounded-md bg-transparent"
+                            value={articleForm.status}
+                            onChange={e => setArticleForm({ ...articleForm, status: e.target.value })}
+                        >
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
+                </form>
+            </Modal>
         </PageContainer>
     );
 }
