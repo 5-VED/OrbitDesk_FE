@@ -26,7 +26,9 @@ export const authService = {
             password: userData.password,
             // Assuming phone is not in initial signup form, providing a default.
             // Ideally, the form should be updated to collect phone.
-            phone: '0000000000',
+            phone: userData.phone,
+            country_code: userData.countryCode ? userData.countryCode.replace(/-/g, '') : '+91',
+            gender: userData.gender || 'other',
             // Organization ID handling might be needed if creating a new org or joining one.
             // For now, passing 'company' as a placeholder or if it's an ID.
             // Backend User model schema expects ObjectId for organization_id (ref: Organization).

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Modal } from '../components/ui/Modal';
 import { Input, Select } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { userService } from '../services/user.service';
+import { userService } from '@/features/contacts/api/users';
 import { toast } from 'react-hot-toast';
 import './ContactModal.css';
 

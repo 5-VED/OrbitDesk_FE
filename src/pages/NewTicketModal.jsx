@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { Modal } from '../components/ui/Modal';
 import { Input, Textarea, Select } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { userService } from '../services/user.service';
-import { groupService } from '../services/group.service';
+import { userService } from '../features/contacts/api/users';
+import { groupService } from '../features/groups/api/groups';
 import { getPriorityOptions, getTypeOptions } from '../utils/ticketConstants';
+import { aiService } from '../services/ai.service';
+import { Sparkles } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import './NewTicketModal.css';
 
 export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
@@ -23,6 +26,7 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
     const [agents, setAgents] = useState([]);
     const [groups, setGroups] = useState([]);
     const [loadingOptions, setLoadingOptions] = useState(false);
+    const [loadingTags, setLoadingTags] = useState(false);
 
     // Reset or populate form when modal opens or ticket changes
     useEffect(() => {
@@ -88,6 +92,30 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
         setFormData(prev => ({ ...prev, [field]: value }));
         if (errors[field]) {
             setErrors(prev => ({ ...prev, [field]: '' }));
+        }
+    };
+
+    const handleSuggestTags = async () => {
+        if (!formData.description) return;
+
+        setLoadingTags(true);
+        try {
+            const result = await aiService.suggestTags(formData.description);
+            if (result && result.tags && result.tags.length > 0) {
+                const newTags = result.tags.join(', ');
+                setFormData(prev => ({
+                    ...prev,
+                    tags: prev.tags ? `${prev.tags}, ${newTags}` : newTags
+                }));
+                toast.success(`Added ${result.tags.length} suggested tags`);
+            } else {
+                toast("No tags suggested based on description", { icon: 'ℹ️' });
+            }
+        } catch (error) {
+            console.error("Failed to suggest tags:", error);
+            toast.error("Failed to get AI suggestions");
+        } finally {
+            setLoadingTags(false);
         }
     };
 
@@ -251,7 +279,20 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
                 </div>
 
                 <div className="form-section">
-                    <h3 className="form-section-title">Additional Information (Optional)</h3>
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="form-section-title mb-0">Additional Information (Optional)</h3>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            icon={Sparkles}
+                            onClick={handleSuggestTags}
+                            disabled={loadingTags || !formData.description}
+                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 h-8 px-2 text-xs"
+                        >
+                            {loadingTags ? 'Suggesting...' : 'Auto-Suggest Tags'}
+                        </Button>
+                    </div>
 
                     <Input
                         label="Tags"

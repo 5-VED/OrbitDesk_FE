@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
-import { groupService } from '../services/group.service';
+import { groupService } from '@/features/groups/api/groups';
 import { toast } from 'react-hot-toast';
 import './GroupModal.css';
 

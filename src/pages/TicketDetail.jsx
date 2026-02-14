@@ -13,8 +13,13 @@ import {
     RefreshCw,
     Edit,
     Trash2,
+    Check,
     X,
-    Check
+    Sparkles,
+    FileText,
+    Smile,
+    Meh,
+    Frown
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
@@ -23,6 +28,7 @@ import { StatusBadge, PriorityBadge } from '../components/ui/Badge';
 import { Avatar } from '../components/ui/Avatar';
 import { Select, Textarea } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
+import { SmartReplyModal } from '../components/ai/SmartReplyModal';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
     fetchTicketDetail,
@@ -41,6 +47,7 @@ import {
     selectTicketAgents,
 } from '../store/slices/ticketDetailSlice';
 import { getStatusOptions, getPriorityOptions } from '../utils/ticketConstants';
+import { aiService } from '../services/ai.service';
 import { toast } from 'react-hot-toast';
 import './TicketDetail.css';
 
@@ -64,6 +71,12 @@ export function TicketDetail() {
     const [deletingCommentId, setDeletingCommentId] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [commentToDelete, setCommentToDelete] = useState(null);
+    const [isSmartReplyModalOpen, setIsSmartReplyModalOpen] = useState(false);
+
+    // AI State
+    const [sentiment, setSentiment] = useState(null);
+    const [summary, setSummary] = useState(null);
+    const [loadingSummary, setLoadingSummary] = useState(false);
 
     useEffect(() => {
         dispatch(fetchTicketDetail(ticketId));
@@ -74,7 +87,44 @@ export function TicketDetail() {
         };
     }, [dispatch, ticketId]);
 
+    // Analyze Sentiment on load
+    useEffect(() => {
+        if (ticket?.description && !sentiment) {
+            aiService.analyzeSentiment(ticket.description)
+                .then(res => {
+                    if (res && res.sentiment) setSentiment(res.sentiment);
+                    else if (res && res.label) setSentiment(res);
+                })
+                .catch(err => console.error("Sentiment analysis failed:", err));
+        }
+    }, [ticket?.description]);
+
     const handleRefresh = () => dispatch(fetchTicketDetail(ticketId));
+
+    const handleSummarize = async () => {
+        setLoadingSummary(true);
+        try {
+            const conversation = [
+                `Customer: ${ticket.description}`,
+                ...comments.map(c => `${c.author_id.first_name}: ${c.body}`)
+            ].join('\n\n');
+
+            const res = await aiService.summarizeTicket({
+                ticketId,
+                ticketConversation: conversation
+            });
+
+            if (res && res.summary) {
+                setSummary(res.summary);
+                toast.success("Summary generated");
+            }
+        } catch (error) {
+            toast.error("Failed to summarize ticket");
+            console.error(error);
+        } finally {
+            setLoadingSummary(false);
+        }
+    };
 
     const handleSubmitReply = async (e) => {
         e.preventDefault();
@@ -142,6 +192,11 @@ export function TicketDetail() {
     const handleCancelEdit = () => {
         setEditingCommentId(null);
         setEditingCommentText('');
+    };
+
+    const handleSmartReplyInsert = (text) => {
+        setReplyText(text);
+        setIsInternal(false); // Default to public reply for AI suggestions
     };
 
     const handleSaveEdit = async (commentId) => {
@@ -232,6 +287,13 @@ export function TicketDetail() {
         return null;
     };
 
+    const getSentimentIcon = () => {
+        if (!sentiment) return null;
+        if (sentiment.label === 'Positive') return <Smile size={16} className="text-green-500" />;
+        if (sentiment.label === 'Negative') return <Frown size={16} className="text-red-500" />;
+        return <Meh size={16} className="text-yellow-500" />; // Neutral
+    };
+
     return (
         <PageContainer
             title={
@@ -240,13 +302,24 @@ export function TicketDetail() {
                         <ArrowLeft size={20} />
                     </Link>
                     <div className="ticket-header-info">
-                        <span className="ticket-id">#{ticketId?.slice(-6).toUpperCase()}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="ticket-id">#{ticketId?.slice(-6).toUpperCase()}</span>
+                            {sentiment && (
+                                <span className={`sentiment-badge ${sentiment.label.toLowerCase()}`} title={`Sentiment: ${sentiment.label}`}>
+                                    {getSentimentIcon()}
+                                    {sentiment.emoji}
+                                </span>
+                            )}
+                        </div>
                         <h1 className="ticket-subject">{ticket.subject}</h1>
                     </div>
                 </div>
             }
             actions={
                 <>
+                    <Button variant="outline" icon={FileText} onClick={handleSummarize} disabled={loadingSummary}>
+                        {loadingSummary ? 'Summarizing...' : 'Summarize'}
+                    </Button>
                     <Button variant="ghost" icon={RefreshCw} onClick={handleRefresh} />
                     <Button variant="secondary" icon={MoreHorizontal} />
                     <Button onClick={handleResolveTicket} disabled={ticket.status === 'solved'}>
@@ -286,6 +359,38 @@ export function TicketDetail() {
             >
                 <p>Are you sure you want to delete this note? This action cannot be undone.</p>
             </Modal>
+
+            {/* AI Smart Reply Modal */}
+            <SmartReplyModal
+                isOpen={isSmartReplyModalOpen}
+                onClose={() => setIsSmartReplyModalOpen(false)}
+                onApply={handleSmartReplyInsert}
+                ticketId={ticketId}
+            />
+
+            {/* AI Summary Section */}
+            {summary && (
+                <div className="ticket-summary-alert" style={{ marginBottom: '20px' }}>
+                    <Card className="bg-blue-50 border-blue-200">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center gap-2 text-blue-800">
+                                <Sparkles size={16} /> AI Summary
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-blue-700 whitespace-pre-wrap">{summary}</p>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-blue-600 hover:bg-blue-100 mt-2 h-auto p-1"
+                                onClick={() => setSummary(null)}
+                            >
+                                Dismiss
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
 
             <div className="ticket-detail">
                 {/* Main Content */}
@@ -415,6 +520,15 @@ export function TicketDetail() {
                                 rows={4}
                             />
                             <div className="reply-actions">
+                                <Button
+                                    variant="ghost"
+                                    icon={Sparkles}
+                                    type="button"
+                                    className="ai-reply-btn"
+                                    onClick={() => setIsSmartReplyModalOpen(true)}
+                                >
+                                    AI Reply
+                                </Button>
                                 <Button variant="ghost" icon={Paperclip} type="button">
                                     Attach
                                 </Button>

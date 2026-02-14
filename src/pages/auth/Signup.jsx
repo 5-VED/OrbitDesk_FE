@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Building, ArrowRight, Phone, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
+import { Input, Select } from '../../components/ui/Input';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { signupUser, loginUser, selectAuthLoading, clearAuthError } from '../../store/slices/authSlice';
 import { countryCodes } from '../../utils/countryCodes';
@@ -24,6 +24,7 @@ export function Signup() {
         countryCode: '+91',
         password: '',
         confirmPassword: '',
+        gender: '',
     });
 
     // Sort country codes by name or keep as is (list is alphabetical)
@@ -217,6 +218,18 @@ export function Signup() {
                                 />
                             </div>
                         </div>
+
+                        <Select
+                            label="Gender"
+                            options={[
+                                { value: 'male', label: 'Male' },
+                                { value: 'female', label: 'Female' },
+                                { value: 'other', label: 'Other' }
+                            ]}
+                            value={formData.gender}
+                            onChange={handleChange('gender')}
+                            required
+                        />
 
                         <Input
                             label="Company Name"

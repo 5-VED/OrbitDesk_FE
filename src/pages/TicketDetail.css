@@ -442,3 +442,38 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+.ai-reply-btn {
+    color: #9333ea;
+}
+
+.ai-reply-btn:hover {
+    background-color: #f3e8ff;
+    color: #7e22ce;
+}
+
+/* Sentiment Badge */
+.sentiment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.sentiment-badge.positive {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.sentiment-badge.neutral {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.sentiment-badge.negative {
+    background-color: #fee2e2;
+    color: #991b1b;
+}

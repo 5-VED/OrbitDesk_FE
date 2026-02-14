@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
-import { organizationService } from '../services/organization.service';
+import { organizationService } from '@/features/organizations/api/organizations';
 import { toast } from 'react-hot-toast';
 import { X } from 'lucide-react';
 import './OrganizationModal.css';
