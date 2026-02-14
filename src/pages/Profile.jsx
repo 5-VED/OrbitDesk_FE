@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User, Mail, Shield, Calendar, Camera, Save, X, Phone } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
@@ -22,6 +22,11 @@ export function Profile() {
     });
     const [loading, setLoading] = useState(false);
 
+    // Profile picture state
+    const fileInputRef = useRef(null);
+    const [profilePic, setProfilePic] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
+
     useEffect(() => {
         if (user) {
             setFormData({
@@ -30,6 +35,7 @@ export function Profile() {
                 email: user.email || '',
                 phone: user.phone || ''
             });
+            setPreviewUrl(user.profile_pic || null);
         }
     }, [user]);
 
@@ -43,6 +49,8 @@ export function Profile() {
                 email: user.email || '',
                 phone: user.phone || ''
             });
+            setPreviewUrl(user.profile_pic || null);
+            setProfilePic(null);
         }
     };
 
@@ -54,19 +62,39 @@ export function Profile() {
         }));
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setProfilePic(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+
+    const getImageUrl = (url) => {
+        if (!url) return null;
+        if (url.startsWith('http') || url.startsWith('blob:')) return url;
+        // Adjust for local dev if needed, typically Vite proxy handles /uploads
+        return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
+    };
+
     const handleSave = async () => {
         if (!user) return;
 
         setLoading(true);
         try {
-            const updatePayload = {
-                first_name: formData.first_name,
-                last_name: formData.last_name,
-                phone: formData.phone,
-                email: formData.email
-            };
+            const data = new FormData();
+            // Append text fields
+            data.append('first_name', formData.first_name);
+            data.append('last_name', formData.last_name);
+            data.append('email', formData.email);
+            data.append('phone', formData.phone);
 
-            await dispatch(updateUserProfile({ userId: user._id || user.id, data: updatePayload })).unwrap();
+            // Append profile picture if selected
+            if (profilePic) {
+                data.append('profile_pic', profilePic);
+            }
+
+            await dispatch(updateUserProfile({ userId: user._id || user.id, data })).unwrap();
             toast.success('Profile updated successfully');
             setIsEditing(false);
         } catch (error) {
@@ -92,13 +120,29 @@ export function Profile() {
                     <div className="profile-info-wrapper">
                         <div className="profile-avatar-wrapper">
                             <Avatar
+                                src={getImageUrl(previewUrl)}
                                 name={`${user.first_name} ${user.last_name}`}
                                 size="xl"
                                 className="profile-avatar-lg"
                             />
-                            <button className="profile-avatar-edit">
-                                <Camera size={16} />
-                            </button>
+                            {isEditing && (
+                                <>
+                                    <button
+                                        className="profile-avatar-edit"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        type="button"
+                                    >
+                                        <Camera size={16} />
+                                    </button>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                    />
+                                </>
+                            )}
                         </div>
                         <div className="profile-names">
                             <h2 className="profile-fullname">{user.first_name} {user.last_name}</h2>

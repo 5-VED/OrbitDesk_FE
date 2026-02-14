@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Plus,
     Search,
@@ -11,10 +11,12 @@ import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
+import { AgentModal } from './AgentModal';
+import { userService } from '../features/contacts/api/users';
 import './Agents.css';
 
-// Mock data
-const agents = [
+// Mock data as fallback
+const mockAgents = [
     {
         id: 1,
         name: 'Sarah Chen',
@@ -37,39 +39,6 @@ const agents = [
         rating: 4.6,
         slaCompliance: 92,
     },
-    {
-        id: 3,
-        name: 'Emily Davis',
-        email: 'emily.davis@supportdesk.com',
-        role: 'Agent',
-        department: 'Technical Support',
-        status: 'busy',
-        tickets: { open: 15, resolved: 98, total: 113 },
-        rating: 4.9,
-        slaCompliance: 98,
-    },
-    {
-        id: 4,
-        name: 'Alex Kim',
-        email: 'alex.kim@supportdesk.com',
-        role: 'Junior Agent',
-        department: 'General',
-        status: 'away',
-        tickets: { open: 5, resolved: 67, total: 72 },
-        rating: 4.5,
-        slaCompliance: 88,
-    },
-    {
-        id: 5,
-        name: 'Lisa Wang',
-        email: 'lisa.wang@supportdesk.com',
-        role: 'Team Lead',
-        department: 'Technical Support',
-        status: 'offline',
-        tickets: { open: 3, resolved: 245, total: 248 },
-        rating: 4.7,
-        slaCompliance: 94,
-    },
 ];
 
 const statusColors = {
@@ -81,17 +50,60 @@ const statusColors = {
 
 export function Agents() {
     const [searchQuery, setSearchQuery] = useState('');
+    const [agents, setAgents] = useState(mockAgents);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const fetchAgents = async () => {
+        setIsLoading(true);
+        try {
+            const data = await userService.getAgents();
+            if (data && Array.isArray(data) && data.length > 0) {
+                const mappedAgents = data.map(a => ({
+                    id: a._id,
+                    name: `${a.first_name} ${a.last_name}`,
+                    email: a.email,
+                    role: a.role,
+                    department: a.department || 'General',
+                    status: 'offline', // Default since backend doesn't track this yet
+                    tickets: { open: 0, resolved: 0, total: 0 },
+                    rating: 5.0, // Default
+                    slaCompliance: 100 // Default
+                }));
+                setAgents(mappedAgents);
+            }
+        } catch (error) {
+            console.error("Failed to fetch agents, using mock data", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAgents();
+    }, []);
 
     const filteredAgents = agents.filter(agent =>
         agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         agent.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const handleSuccess = (newAgent) => {
+        setIsModalOpen(false);
+        fetchAgents(); // Refresh list associated with backend
+    };
+
     return (
         <PageContainer
             title="Agents"
-            actions={<Button icon={Plus}>Add Agent</Button>}
+            actions={<Button icon={Plus} onClick={() => setIsModalOpen(true)}>Add Agent</Button>}
         >
+            <AgentModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={handleSuccess}
+            />
+
             <div className="agents-page">
                 {/* Search and Filters */}
                 <div className="agents-toolbar">
@@ -112,54 +124,58 @@ export function Agents() {
                 </div>
 
                 {/* Agents Grid */}
-                <div className="agents-grid">
-                    {filteredAgents.map((agent) => (
-                        <Card key={agent.id} className="agent-card" hover>
-                            <div className="agent-card-header">
-                                <Avatar name={agent.name} size="lg" status={agent.status} />
-                                <Button variant="ghost" size="sm" icon={MoreHorizontal} />
-                            </div>
+                {isLoading ? (
+                    <div style={{ padding: '20px', textAlign: 'center' }}>Loading agents...</div>
+                ) : (
+                    <div className="agents-grid">
+                        {filteredAgents.map((agent) => (
+                            <Card key={agent.id} className="agent-card" hover>
+                                <div className="agent-card-header">
+                                    <Avatar name={agent.name} size="lg" status={agent.status} />
+                                    <Button variant="ghost" size="sm" icon={MoreHorizontal} />
+                                </div>
 
-                            <div className="agent-info">
-                                <h3>{agent.name}</h3>
-                                <span className="agent-role">{agent.role}</span>
-                                <Badge variant={statusColors[agent.status]} size="sm">
-                                    {agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
-                                </Badge>
-                            </div>
+                                <div className="agent-info">
+                                    <h3>{agent.name}</h3>
+                                    <span className="agent-role">{agent.role}</span>
+                                    <Badge variant={statusColors[agent.status] || 'default'} size="sm">
+                                        {(agent.status || 'offline').charAt(0).toUpperCase() + (agent.status || 'offline').slice(1)}
+                                    </Badge>
+                                </div>
 
-                            <div className="agent-meta">
-                                <span className="agent-department">{agent.department}</span>
-                                <a href={`mailto:${agent.email}`} className="agent-email">
-                                    <Mail size={14} />
-                                    {agent.email}
-                                </a>
-                            </div>
+                                <div className="agent-meta">
+                                    <span className="agent-department">{agent.department}</span>
+                                    <a href={`mailto:${agent.email}`} className="agent-email">
+                                        <Mail size={14} />
+                                        {agent.email}
+                                    </a>
+                                </div>
 
-                            <div className="agent-stats">
-                                <div className="agent-stat">
-                                    <span className="stat-value">{agent.tickets.open}</span>
-                                    <span className="stat-label">Open</span>
+                                <div className="agent-stats">
+                                    <div className="agent-stat">
+                                        <span className="stat-value">{agent.tickets?.open || 0}</span>
+                                        <span className="stat-label">Open</span>
+                                    </div>
+                                    <div className="agent-stat">
+                                        <span className="stat-value">{agent.tickets?.resolved || 0}</span>
+                                        <span className="stat-label">Resolved</span>
+                                    </div>
+                                    <div className="agent-stat">
+                                        <span className="stat-value">
+                                            <Star size={12} className="star-icon" />
+                                            {agent.rating || 5.0}
+                                        </span>
+                                        <span className="stat-label">Rating</span>
+                                    </div>
+                                    <div className="agent-stat">
+                                        <span className="stat-value">{agent.slaCompliance || 100}%</span>
+                                        <span className="stat-label">SLA</span>
+                                    </div>
                                 </div>
-                                <div className="agent-stat">
-                                    <span className="stat-value">{agent.tickets.resolved}</span>
-                                    <span className="stat-label">Resolved</span>
-                                </div>
-                                <div className="agent-stat">
-                                    <span className="stat-value">
-                                        <Star size={12} className="star-icon" />
-                                        {agent.rating}
-                                    </span>
-                                    <span className="stat-label">Rating</span>
-                                </div>
-                                <div className="agent-stat">
-                                    <span className="stat-value">{agent.slaCompliance}%</span>
-                                    <span className="stat-label">SLA</span>
-                                </div>
-                            </div>
-                        </Card>
-                    ))}
-                </div>
+                            </Card>
+                        ))}
+                    </div>
+                )}
             </div>
         </PageContainer>
     );

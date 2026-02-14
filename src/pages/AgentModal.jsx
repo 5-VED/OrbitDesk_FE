@@ -3,21 +3,21 @@ import { Camera } from 'lucide-react';
 import { Modal } from '../components/ui/Modal';
 import { Input, Select } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { userService } from '../features/contacts/api/users';
 import { Avatar } from '../components/ui/Avatar';
-import { userService } from '@/features/contacts/api/users';
 import { toast } from 'react-hot-toast';
 import './ContactModal.css';
 
-export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
+export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
     const fileInputRef = useRef(null);
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
         email: '',
-        password: '',
         phone: '',
-        gender: 'male',
-        country_code: '+91',
+        role: 'Agent',
+        department: '',
+        password: '',
     });
     const [profilePic, setProfilePic] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -27,31 +27,33 @@ export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
 
     useEffect(() => {
         if (isOpen) {
-            if (contact) {
+            if (agent) {
                 setFormData({
-                    first_name: contact.first_name || '',
-                    last_name: contact.last_name || '',
-                    email: contact.email || '',
-                    phone: contact.phone || '',
-                    gender: contact.gender || 'male',
-                    country_code: contact.country_code || '+91',
+                    first_name: agent.first_name || '',
+                    last_name: agent.last_name || '',
+                    email: agent.email || '',
+                    phone: agent.phone || '',
+                    role: agent.role || 'Agent',
+                    department: agent.department || '',
+                    password: '',
                 });
-                setPreviewUrl(contact.profile_pic || null);
+                setPreviewUrl(agent.profile_pic || null);
             } else {
                 setFormData({
                     first_name: '',
                     last_name: '',
                     email: '',
                     phone: '',
-                    gender: 'male',
-                    country_code: '+91',
+                    role: 'Agent',
+                    department: '',
+                    password: '',
                 });
                 setPreviewUrl(null);
             }
             setProfilePic(null);
             setErrors({});
         }
-    }, [isOpen, contact]);
+    }, [isOpen, agent]);
 
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -75,7 +77,6 @@ export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
         if (!formData.last_name.trim()) newErrors.last_name = 'Last name is required';
         if (!formData.email.trim()) newErrors.email = 'Email is required';
         if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
-        if (!/^\d{10}$/.test(formData.phone)) newErrors.phone = 'Phone must be 10 digits';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -91,42 +92,31 @@ export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
             let response;
             const data = new FormData();
 
-            // Append form data
-            data.append('first_name', formData.first_name);
-            data.append('last_name', formData.last_name);
-            data.append('email', formData.email);
-            data.append('phone', formData.phone);
-            data.append('gender', formData.gender);
-            data.append('country_code', formData.country_code);
+            Object.keys(formData).forEach(key => {
+                if (key === 'password' && !formData[key]) return;
+                data.append(key, formData[key]);
+            });
+
+            if (!agent && !formData.password) {
+                data.append('password', 'Agent@123');
+            }
 
             if (profilePic) {
                 data.append('profile_pic', profilePic);
             }
 
-            if (contact) {
-                // Update mode
-                response = await userService.update(contact._id, data);
+            if (agent) {
+                response = await userService.update(agent._id, data);
             } else {
-                // Create mode: Auto-generate password
-                const password = 'User@' + Math.floor(1000 + Math.random() * 9000);
-                data.append('password', password);
-
                 response = await userService.create(data);
             }
 
-            // userService methods return response.data directly (or handled in interceptor)
-            // But let's check consistency. userService.create returns 'response.data'.
-            // If success, it might be an object with success: true or the user object.
-            // Let's assume standard response format.
-
-            toast.success(`Contact ${contact ? 'updated' : 'created'} successfully`);
-            // onSuccess might expect the created/updated user object or just a signal
+            toast.success(`Agent ${agent ? 'updated' : 'created'} successfully`);
             if (onSuccess) onSuccess();
             onClose();
-
         } catch (error) {
-            console.error(`Failed to ${contact ? 'update' : 'create'} contact:`, error);
-            const msg = error.response?.data?.message || error.message || `Failed to ${contact ? 'update' : 'create'} contact`;
+            console.error(`Failed to ${agent ? 'update' : 'create'} agent:`, error);
+            const msg = error.response?.data?.message || error.message || "Failed to save agent";
             toast.error(msg);
             setErrors({ submit: msg });
         } finally {
@@ -137,6 +127,7 @@ export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
     const getImageUrl = (url) => {
         if (!url) return null;
         if (url.startsWith('http') || url.startsWith('blob:')) return url;
+        // Adjust for local dev if needed, typically Vite proxy handles /uploads
         return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
     };
 
@@ -144,7 +135,7 @@ export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={contact ? "Edit Contact" : "Add New Contact"}
+            title={agent ? "Edit Agent" : "Add New Agent"}
             size="large"
             footer={
                 <>
@@ -152,7 +143,7 @@ export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
                         Cancel
                     </Button>
                     <Button onClick={handleSubmit} disabled={isSubmitting}>
-                        {isSubmitting ? 'Saving...' : (contact ? 'Update Contact' : 'Create Contact')}
+                        {isSubmitting ? 'Saving...' : (agent ? 'Update Agent' : 'Create Agent')}
                     </Button>
                 </>
             }
@@ -228,25 +219,34 @@ export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
                             error={errors.email}
                             required
                         />
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.5rem' }}>
-                            <Input
-                                label="Country Code"
-                                value={formData.country_code}
-                                onChange={(e) => handleChange('country_code', e.target.value)}
-                                placeholder="+91"
-                            />
-                            <Input
-                                label="Phone"
-                                value={formData.phone}
-                                onChange={(e) => {
-                                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                                    handleChange('phone', value);
-                                }}
-                                error={errors.phone}
-                                required
-                                placeholder="1234567890"
-                            />
-                        </div>
+                        <Input
+                            label="Phone"
+                            value={formData.phone}
+                            onChange={(e) => handleChange('phone', e.target.value)}
+                            error={errors.phone}
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div className="form-section">
+                    <h3 className="form-section-title">Role & Department</h3>
+                    <div className="form-row">
+                        <Select
+                            label="Role"
+                            value={formData.role}
+                            onChange={(e) => handleChange('role', e.target.value)}
+                            options={[
+                                { value: 'Agent', label: 'Agent' },
+                                { value: 'Admin', label: 'Admin' },
+                            ]}
+                        />
+                        <Input
+                            label="Department"
+                            value={formData.department}
+                            onChange={(e) => handleChange('department', e.target.value)}
+                            placeholder="e.g. Technical Support"
+                        />
                     </div>
                 </div>
             </form>
