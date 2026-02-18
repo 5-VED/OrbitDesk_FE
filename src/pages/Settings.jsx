@@ -14,6 +14,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Input, Select, Textarea } from '../components/ui/Input';
+import { SlaPolicyList } from '../features/settings/components/SlaPolicyList';
 import './Settings.css';
 
 const menuItems = [
@@ -209,7 +210,9 @@ export function Settings() {
                         </Card>
                     )}
 
-                    {(activeSection === 'sla' || activeSection === 'integrations' || activeSection === 'email') && (
+                    {activeSection === 'sla' && <SlaPolicyList />}
+
+                    {(activeSection === 'integrations' || activeSection === 'email') && (
                         <Card>
                             <CardHeader>
                                 <CardTitle>{menuItems.find(m => m.id === activeSection)?.label}</CardTitle>

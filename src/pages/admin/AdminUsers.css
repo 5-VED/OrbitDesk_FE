@@ -1,0 +1,361 @@
+/* ============================================
+   ADMIN USERS
+   ============================================ */
+
+.admin-users {
+    animation: fadeIn var(--transition-normal);
+}
+
+/* Quick Stats Bar */
+.admin-users-quick-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-xl);
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-users-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.admin-users-stat-value {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+}
+
+.admin-users-stat-admin {
+    color: var(--color-danger);
+}
+
+.admin-users-stat-agent {
+    color: var(--color-primary);
+}
+
+.admin-users-stat-customer {
+    color: var(--color-success);
+}
+
+.admin-users-stat-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    font-weight: var(--font-weight-medium);
+}
+
+.admin-users-stat-divider {
+    width: 1px;
+    height: 32px;
+    background-color: var(--color-border);
+}
+
+/* Toolbar */
+.admin-users-toolbar-card {
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-users-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+}
+
+.admin-users-search {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    position: relative;
+}
+
+.admin-users-search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--color-text-tertiary);
+    pointer-events: none;
+}
+
+.admin-users-search-input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-sm) 40px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    transition: border-color var(--transition-fast);
+}
+
+.admin-users-search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.admin-users-search-clear {
+    position: absolute;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: var(--color-bg-hover);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+}
+
+.admin-users-filters {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.admin-users-filter-select {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.admin-users-filter-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* Bulk Actions Bar */
+.admin-users-bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(135deg, var(--color-primary-light), rgba(99, 102, 241, 0.08));
+    border-top: 1px solid var(--color-border);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.admin-users-bulk-count {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+}
+
+.admin-users-bulk-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.admin-users-bulk-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    padding: 4px 8px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.admin-users-bulk-clear:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-text-primary);
+}
+
+/* Users Table */
+.admin-users-table-card {
+    overflow: hidden;
+}
+
+.admin-users-table {
+    width: 100%;
+}
+
+.admin-users-table-header {
+    display: grid;
+    grid-template-columns: 40px 2.5fr 0.8fr 0.8fr 1.2fr 1fr 1fr 0.8fr;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background-color: var(--color-bg-tertiary);
+    border-bottom: 1px solid var(--color-border);
+    align-items: center;
+}
+
+.admin-users-table-body {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.admin-users-table-row {
+    display: grid;
+    grid-template-columns: 40px 2.5fr 0.8fr 0.8fr 1.2fr 1fr 1fr 0.8fr;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    align-items: center;
+    border-bottom: 1px solid var(--color-border-light);
+    transition: background-color var(--transition-fast);
+}
+
+.admin-users-table-row:hover {
+    background-color: var(--color-bg-tertiary);
+}
+
+.admin-users-table-row.selected {
+    background-color: var(--color-primary-light);
+}
+
+.admin-users-col-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-users-col-check input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+}
+
+.admin-users-col-user {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.admin-users-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-users-user-name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    line-height: 1.3;
+}
+
+.admin-users-user-email {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+
+.admin-users-org-text,
+.admin-users-group-text,
+.admin-users-login-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+/* Action Buttons */
+.admin-users-action-btns {
+    display: flex;
+    gap: 4px;
+}
+
+.admin-users-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.admin-users-action-btn:hover {
+    background-color: var(--color-bg-hover);
+    color: var(--color-text-primary);
+}
+
+.admin-users-action-btn.danger:hover {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+/* Table Footer */
+.admin-users-table-footer {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+
+/* Create User Form */
+.admin-users-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) 0;
+}
+
+.admin-users-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.admin-users-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+
+    .admin-users-table-header,
+    .admin-users-table-row {
+        grid-template-columns: 40px 2fr 0.8fr 0.8fr 1fr 0.8fr;
+    }
+
+    .admin-users-col-group,
+    .admin-users-col-login {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-users-quick-stats {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .admin-users-toolbar {
+        flex-direction: column;
+    }
+
+    .admin-users-filters {
+        width: 100%;
+    }
+
+    .admin-users-filter-select {
+        flex: 1;
+    }
+}

@@ -542,6 +542,47 @@ export function TicketDetail() {
 
                 {/* Sidebar */}
                 <aside className="ticket-sidebar">
+                    {/* SLA Status */}
+                    {(ticket.response_due_at || ticket.resolve_due_at) && (
+                        <Card className="mb-4">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Clock size={16} /> SLA Status
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    {ticket.response_due_at && (
+                                        <div className="flex flex-col text-sm">
+                                            <span className="text-gray-500 font-medium">Response Due</span>
+                                            <div className="flex items-center justify-between">
+                                                <span>{new Date(ticket.response_due_at).toLocaleString()}</span>
+                                                {new Date() > new Date(ticket.response_due_at) ? (
+                                                    <span className="text-red-500 font-bold text-xs bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Overdue</span>
+                                                ) : (
+                                                    <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full border border-green-200">On Track</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {ticket.resolve_due_at && (
+                                        <div className="flex flex-col text-sm border-t pt-2 mt-2">
+                                            <span className="text-gray-500 font-medium">Resolution Due</span>
+                                            <div className="flex items-center justify-between">
+                                                <span>{new Date(ticket.resolve_due_at).toLocaleString()}</span>
+                                                {new Date() > new Date(ticket.resolve_due_at) ? (
+                                                    <span className="text-red-500 font-bold text-xs bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Overdue</span>
+                                                ) : (
+                                                    <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full border border-green-200">On Track</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Properties */}
                     <Card>
                         <CardHeader>

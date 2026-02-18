@@ -1,0 +1,358 @@
+/* ============================================
+   ADMIN ROLES & PERMISSIONS
+   ============================================ */
+
+.admin-roles {
+    animation: fadeIn var(--transition-normal);
+}
+
+.admin-roles-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: var(--spacing-lg);
+    align-items: flex-start;
+}
+
+/* Roles List */
+.admin-roles-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.admin-role-card {
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all var(--transition-fast);
+}
+
+.admin-role-card.active {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.admin-role-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-xs);
+}
+
+.admin-role-card-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.admin-role-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.admin-role-icon[data-color="danger"] {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+.admin-role-icon[data-color="primary"] {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.admin-role-icon[data-color="warning"] {
+    background-color: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.admin-role-icon[data-color="success"] {
+    background-color: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.admin-role-icon[data-color="info"] {
+    background-color: var(--color-info-light);
+    color: var(--color-info);
+}
+
+.admin-role-name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.admin-role-system-badge {
+    display: inline-block;
+    font-size: 0.625rem;
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    color: var(--color-text-tertiary);
+    background: var(--color-bg-tertiary);
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.admin-role-user-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+
+.admin-role-description {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    margin: 0 0 var(--spacing-sm) 0;
+    line-height: 1.4;
+}
+
+.admin-role-perm-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+
+.admin-role-perm-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.admin-role-perm-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width var(--transition-slow);
+}
+
+.admin-role-perm-fill[data-color="danger"] {
+    background: var(--color-danger);
+}
+
+.admin-role-perm-fill[data-color="primary"] {
+    background: var(--color-primary);
+}
+
+.admin-role-perm-fill[data-color="warning"] {
+    background: var(--color-warning);
+}
+
+.admin-role-perm-fill[data-color="success"] {
+    background: var(--color-success);
+}
+
+.admin-role-perm-fill[data-color="info"] {
+    background: var(--color-info);
+}
+
+/* Permission Detail Panel */
+.admin-permissions-detail {
+    position: sticky;
+    top: calc(var(--navbar-height) + var(--spacing-xl));
+}
+
+.admin-permissions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.admin-permissions-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+    margin: 4px 0 0 0;
+}
+
+.admin-permissions-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.admin-role-icon-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.admin-role-icon-inline[data-color="danger"] {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+.admin-role-icon-inline[data-color="primary"] {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.admin-role-icon-inline[data-color="warning"] {
+    background-color: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.admin-role-icon-inline[data-color="success"] {
+    background-color: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.admin-role-icon-inline[data-color="info"] {
+    background-color: var(--color-info-light);
+    color: var(--color-info);
+}
+
+/* Permission Groups */
+.admin-permission-groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.admin-permission-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--spacing-sm);
+}
+
+.admin-permission-group-name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.admin-permission-group-count {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+
+.admin-permission-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-xs);
+}
+
+.admin-permission-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.admin-permission-item:hover {
+    background-color: var(--color-bg-tertiary);
+}
+
+.admin-perm-check {
+    color: var(--color-success);
+    flex-shrink: 0;
+}
+
+.admin-perm-uncheck {
+    color: var(--color-text-tertiary);
+    flex-shrink: 0;
+    opacity: 0.5;
+}
+
+.admin-perm-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.admin-permission-item.granted .admin-perm-label {
+    color: var(--color-text-primary);
+}
+
+.admin-perm-lock {
+    color: var(--color-text-tertiary);
+    opacity: 0.4;
+    margin-left: auto;
+}
+
+/* Create Role Permissions */
+.admin-create-role-perms {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.admin-create-role-perms-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.admin-create-perm-group {
+    padding: var(--spacing-sm);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+.admin-create-perm-group-name {
+    display: block;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-xs);
+}
+
+.admin-create-perm-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xs);
+}
+
+.admin-create-perm-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: var(--radius-sm);
+}
+
+.admin-create-perm-item:hover {
+    background: var(--color-bg-hover);
+}
+
+.admin-create-perm-item input[type="checkbox"] {
+    accent-color: var(--color-primary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .admin-roles-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-roles-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: var(--spacing-sm);
+    }
+
+    .admin-permissions-detail {
+        position: static;
+    }
+}

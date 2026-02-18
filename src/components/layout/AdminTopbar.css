@@ -1,0 +1,204 @@
+/* ============================================
+   ADMIN TOPBAR
+   ============================================ */
+
+.admin-topbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: var(--sidebar-width);
+    height: var(--navbar-height);
+    background-color: var(--color-bg-primary);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--spacing-xl);
+    z-index: 99;
+    transition: left var(--transition-normal);
+}
+
+.admin-topbar.collapsed {
+    left: var(--sidebar-collapsed-width);
+}
+
+.admin-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.admin-topbar-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.admin-breadcrumb-label {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.admin-breadcrumb-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    font-size: 0.6875rem;
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #f59e0b;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.08));
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--radius-full);
+}
+
+.admin-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.admin-navbar-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.admin-navbar-icon-btn:hover {
+    background-color: var(--color-bg-hover);
+    color: var(--color-text-primary);
+}
+
+/* User dropdown */
+.admin-navbar-user-container {
+    position: relative;
+}
+
+.admin-navbar-user {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.admin-navbar-user:hover,
+.admin-navbar-user.active {
+    background-color: var(--color-bg-hover);
+}
+
+.admin-navbar-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-navbar-user-name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    line-height: 1.2;
+}
+
+.admin-navbar-user-role {
+    font-size: var(--font-size-xs);
+    color: #f59e0b;
+    line-height: 1.2;
+}
+
+.admin-navbar-chevron {
+    color: var(--color-text-tertiary);
+    transition: transform var(--transition-fast);
+}
+
+.admin-navbar-chevron.rotate {
+    transform: rotate(180deg);
+}
+
+/* Dropdown */
+.admin-navbar-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 240px;
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 200;
+    animation: fadeIn var(--transition-fast);
+    overflow: hidden;
+}
+
+.admin-dropdown-header {
+    padding: var(--spacing-md);
+}
+
+.admin-dropdown-user-name {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.admin-dropdown-user-email {
+    display: block;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    margin-top: 2px;
+}
+
+.admin-dropdown-divider {
+    height: 1px;
+    background-color: var(--color-border);
+}
+
+.admin-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.admin-dropdown-item:hover {
+    background-color: var(--color-bg-hover);
+    color: var(--color-text-primary);
+}
+
+.admin-dropdown-item.danger {
+    color: var(--color-danger);
+}
+
+.admin-dropdown-item.danger:hover {
+    background-color: var(--color-danger-light);
+}
+
+@media (max-width: 1024px) {
+    .admin-topbar {
+        left: var(--sidebar-collapsed-width);
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-topbar {
+        left: 0;
+    }
+}

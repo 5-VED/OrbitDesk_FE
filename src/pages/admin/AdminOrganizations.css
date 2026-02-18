@@ -1,0 +1,99 @@
+/* ============================================
+   ADMIN ORGANIZATIONS
+   ============================================ */
+
+.admin-orgs {
+    animation: fadeIn var(--transition-normal);
+}
+
+.admin-orgs-toolbar {
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-orgs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.admin-org-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+
+.admin-org-avatar {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--color-primary-light), rgba(99, 102, 241, 0.1));
+    color: var(--color-primary);
+}
+
+.admin-org-card-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.admin-org-card:hover .admin-org-card-actions {
+    opacity: 1;
+}
+
+.admin-org-name {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 4px 0;
+}
+
+.admin-org-domain {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.admin-org-badges {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-md);
+}
+
+.admin-org-stats {
+    display: flex;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-sm) 0;
+    border-top: 1px solid var(--color-border-light);
+    margin-bottom: var(--spacing-sm);
+}
+
+.admin-org-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.admin-org-sla {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+
+.admin-org-sla strong {
+    color: var(--color-text-secondary);
+}
+
+@media (max-width: 768px) {
+    .admin-orgs-grid {
+        grid-template-columns: 1fr;
+    }
+}

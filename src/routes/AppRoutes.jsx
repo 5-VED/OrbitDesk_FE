@@ -1,7 +1,9 @@
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'; // Assuming this is moved
-import { Loader } from '@/components/ui/Loader'; // Assuming this exists or will exist
+import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
+import { AdminRoute } from '@/features/auth/components/AdminRoute';
+import { AdminLayout } from '@/components/layout/AdminLayout';
+import { Loader } from '@/components/ui/Loader';
 
 // Lazy Load Pages
 const Login = lazy(() => import('@/pages/auth/Login').then(module => ({ default: module.Login })));
@@ -16,8 +18,17 @@ const Organizations = lazy(() => import('@/pages/Organizations').then(module => 
 const Reports = lazy(() => import('@/pages/Reports').then(module => ({ default: module.Reports })));
 const KnowledgeBase = lazy(() => import('@/pages/KnowledgeBase').then(module => ({ default: module.KnowledgeBase })));
 const Settings = lazy(() => import('@/pages/Settings').then(module => ({ default: module.Settings })));
-
 const Profile = lazy(() => import('@/pages/Profile').then(module => ({ default: module.Profile })));
+
+// Lazy Load Admin Pages
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
+const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers').then(module => ({ default: module.AdminUsers })));
+const AdminRoles = lazy(() => import('@/pages/admin/AdminRoles').then(module => ({ default: module.AdminRoles })));
+const AdminOrganizations = lazy(() => import('@/pages/admin/AdminOrganizations').then(module => ({ default: module.AdminOrganizations })));
+const AdminGroups = lazy(() => import('@/pages/admin/AdminGroups').then(module => ({ default: module.AdminGroups })));
+const AdminSla = lazy(() => import('@/pages/admin/AdminSla').then(module => ({ default: module.AdminSla })));
+const AdminAuditLog = lazy(() => import('@/pages/admin/AdminAuditLog').then(module => ({ default: module.AdminAuditLog })));
+const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings').then(module => ({ default: module.AdminSettings })));
 
 export const AppRoutes = () => {
     return (
@@ -41,7 +52,20 @@ export const AppRoutes = () => {
                     <Route path="/knowledge-base" element={<KnowledgeBase />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
-                    {/* Add more routes here */}
+                </Route>
+
+                {/* Admin Routes — requires admin role */}
+                <Route element={<AdminRoute />}>
+                    <Route path="/admin" element={<AdminLayout />}>
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="users" element={<AdminUsers />} />
+                        <Route path="roles" element={<AdminRoles />} />
+                        <Route path="organizations" element={<AdminOrganizations />} />
+                        <Route path="groups" element={<AdminGroups />} />
+                        <Route path="sla-policies" element={<AdminSla />} />
+                        <Route path="audit-log" element={<AdminAuditLog />} />
+                        <Route path="settings" element={<AdminSettings />} />
+                    </Route>
                 </Route>
 
                 {/* 404 */}
