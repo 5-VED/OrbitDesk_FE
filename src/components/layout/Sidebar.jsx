@@ -25,7 +25,7 @@ const navItems = [
     { path: '/contacts', icon: Users, label: 'Contacts' },
     { path: '/agents', icon: UserCircle, label: 'Agents' },
     { path: '/groups', icon: UsersRound, label: 'Groups' },
-    { path: '/organizations', icon: Building2, label: 'Organizations' },
+    { path: '/organizations', icon: Building2, label: 'Organizations', adminOnly: true },
     { path: '/reports', icon: BarChart3, label: 'Reports' },
     { path: '/knowledge-base', icon: BookOpen, label: 'Knowledge Base' },
 ];
@@ -38,6 +38,8 @@ const bottomItems = [
 export function Sidebar({ collapsed, onToggle }) {
     const user = useAppSelector(selectCurrentUser);
     const isAdmin = user?.role_type === 'admin';
+
+    const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
     return (
         <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
@@ -59,7 +61,7 @@ export function Sidebar({ collapsed, onToggle }) {
 
             <nav className="sidebar-nav">
                 <ul className="sidebar-nav-list">
-                    {navItems.map((item) => (
+                    {visibleNavItems.map((item) => (
                         <li key={item.path}>
                             <NavLink
                                 to={item.path}

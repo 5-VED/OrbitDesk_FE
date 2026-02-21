@@ -3,16 +3,47 @@ import { authService } from '@/features/auth/api/auth';
 
 // ─── Async Thunks ───────────────────────────────────────────────
 
+// ─── Async Thunks ───────────────────────────────────────────────
+
+export const checkSession = createAsyncThunk(
+    'auth/checkSession',
+    async (_, { rejectWithValue }) => {
+        try {
+            const user = await authService.checkSession();
+            if (!user) {
+                return rejectWithValue('No active session');
+            }
+            return user;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Session check failed');
+        }
+    }
+);
+
 export const loginUser = createAsyncThunk(
     'auth/loginUser',
     async ({ email, password }, { rejectWithValue }) => {
         try {
             const data = await authService.login(email, password);
-            return data; // { token, user }
+            return data; // { user, token } - we ignore token
         } catch (error) {
             return rejectWithValue(
                 error.response?.data?.message || 'Login failed. Please check your credentials.'
             );
+        }
+    }
+);
+
+export const logoutUser = createAsyncThunk(
+    'auth/logoutUser',
+    async (_, { rejectWithValue }) => {
+        try {
+            await authService.logout();
+            return null;
+        } catch (error) {
+            console.error('Logout error', error);
+            // Even if backend fails, clear frontend state
+            return null;
         }
     }
 );
@@ -48,12 +79,10 @@ export const updateUserProfile = createAsyncThunk(
 // ─── Initial State ──────────────────────────────────────────────
 
 const storedUser = authService.getCurrentUser();
-const storedToken = localStorage.getItem('token');
 
 const initialState = {
     user: storedUser || null,
-    token: storedToken || null,
-    isAuthenticated: !!storedToken,
+    isAuthenticated: !!storedUser,
     loading: false,
     error: null,
 };
@@ -64,24 +93,32 @@ const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        logout(state) {
-            authService.logout();
-            state.user = null;
-            state.token = null;
-            state.isAuthenticated = false;
-            state.error = null;
-        },
         clearAuthError(state) {
             state.error = null;
         },
-        setCredentials(state, action) {
-            const { user, token } = action.payload;
-            state.user = user;
-            state.token = token;
-            state.isAuthenticated = true;
+        // Optimistic update if needed
+        setUser(state, action) {
+            state.user = action.payload;
+            state.isAuthenticated = !!action.payload;
         },
     },
     extraReducers: (builder) => {
+        // Check Session
+        builder
+            .addCase(checkSession.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(checkSession.fulfilled, (state, action) => {
+                state.loading = false;
+                state.user = action.payload;
+                state.isAuthenticated = true;
+            })
+            .addCase(checkSession.rejected, (state) => {
+                state.loading = false;
+                state.user = null;
+                state.isAuthenticated = false;
+            });
+
         // Login
         builder
             .addCase(loginUser.pending, (state) => {
@@ -91,7 +128,6 @@ const authSlice = createSlice({
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action.payload.user;
-                state.token = action.payload.token;
                 state.isAuthenticated = true;
                 state.error = null;
             })
@@ -99,6 +135,13 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             });
+
+        // Logout
+        builder.addCase(logoutUser.fulfilled, (state) => {
+            state.user = null;
+            state.isAuthenticated = false;
+            state.error = null;
+        });
 
         // Signup
         builder
@@ -135,7 +178,7 @@ const authSlice = createSlice({
 
 // ─── Actions ────────────────────────────────────────────────────
 
-export const { logout, clearAuthError, setCredentials } = authSlice.actions;
+export const { clearAuthError, setUser } = authSlice.actions;
 
 // ─── Selectors ──────────────────────────────────────────────────
 
@@ -143,6 +186,6 @@ export const selectCurrentUser = (state) => state.auth.user;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
 export const selectAuthLoading = (state) => state.auth.loading;
 export const selectAuthError = (state) => state.auth.error;
-export const selectAuthToken = (state) => state.auth.token;
+// Token selector removed as it's not stored in state anymore
 
 export default authSlice.reducer;

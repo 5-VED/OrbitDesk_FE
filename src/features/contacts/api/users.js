@@ -9,9 +9,9 @@ export const userService = {
 
     // Get agents (users who can be assigned tickets)
     getAgents: async () => {
-        // Assuming agents have 'Agent' role
-        const response = await api.get('/user', { params: { role: 'Agent' } });
-        return response.data;
+        // Now calling the specific endpoint that returns stats
+        const response = await api.get('/user/agents');
+        return response.data; // Expected { success: true, data: { agents: [], pagination: {} } }
     },
 
     // Get user by ID

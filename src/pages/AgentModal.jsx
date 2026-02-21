@@ -10,12 +10,13 @@ import './ContactModal.css';
 
 export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
     const fileInputRef = useRef(null);
+    const [roles, setRoles] = useState([]);
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
         email: '',
         phone: '',
-        role: 'Agent',
+        role: '', // Will be set to ID
         department: '',
         password: '',
     });
@@ -26,34 +27,74 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
+        const fetchRoles = async () => {
+            try {
+                const response = await userService.getRoles();
+                if (response.success && response.data) {
+                    setRoles(response.data);
+                    // If no agent (create mode), default to 'Agent' role ID
+                    if (!agent) {
+                        const agentRole = response.data.find(r => r.role === 'Agent');
+                        if (agentRole) {
+                            setFormData(prev => ({ ...prev, role: agentRole._id }));
+                        } else if (response.data.length > 0) {
+                            // Fallback to first role
+                            setFormData(prev => ({ ...prev, role: response.data[0]._id }));
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch roles", error);
+                toast.error("Failed to load roles");
+            }
+        };
+        fetchRoles();
+    }, [agent]); // Re-fetch on component mount/agent change? Ideally just mount, but checking logic inside
+
+    useEffect(() => {
         if (isOpen) {
             if (agent) {
+                // Agent.role might be populated object { _id, role } or just ID
+                const roleId = typeof agent.role === 'object' ? agent.role._id : agent.role;
                 setFormData({
                     first_name: agent.first_name || '',
                     last_name: agent.last_name || '',
                     email: agent.email || '',
                     phone: agent.phone || '',
-                    role: agent.role || 'Agent',
+                    role: roleId || '',
                     department: agent.department || '',
                     password: '',
                 });
                 setPreviewUrl(agent.profile_pic || null);
             } else {
-                setFormData({
+                // Reset form but preserve role if we already fetched it and set default
+                setFormData(prev => ({
                     first_name: '',
                     last_name: '',
                     email: '',
                     phone: '',
-                    role: 'Agent',
+                    role: prev.role || '',
                     department: '',
                     password: '',
-                });
+                }));
                 setPreviewUrl(null);
             }
             setProfilePic(null);
             setErrors({});
+            // Also ensure we have roles if not fetched yet (race condition protection)
+            if (roles.length === 0) {
+                userService.getRoles().then(response => {
+                    if (response.success && response.data) {
+                        setRoles(response.data);
+                        if (!agent) {
+                            const agentRole = response.data.find(r => r.role === 'Agent');
+                            if (agentRole) setFormData(prev => ({ ...prev, role: agentRole._id }));
+                        }
+                    }
+                });
+            }
         }
-    }, [isOpen, agent]);
+    }, [isOpen, agent]); // dependencies...
 
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -77,6 +118,7 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
         if (!formData.last_name.trim()) newErrors.last_name = 'Last name is required';
         if (!formData.email.trim()) newErrors.email = 'Email is required';
         if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
+        if (!formData.role) newErrors.role = 'Role is required';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -89,11 +131,13 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
 
         setIsSubmitting(true);
         try {
+            // ... (rest of logic same)
             let response;
             const data = new FormData();
 
             Object.keys(formData).forEach(key => {
                 if (key === 'password' && !formData[key]) return;
+                // Ensure role is ID
                 data.append(key, formData[key]);
             });
 
@@ -127,7 +171,6 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
     const getImageUrl = (url) => {
         if (!url) return null;
         if (url.startsWith('http') || url.startsWith('blob:')) return url;
-        // Adjust for local dev if needed, typically Vite proxy handles /uploads
         return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
     };
 
@@ -156,6 +199,7 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
                 )}
 
                 <div className="form-section profile-upload-section" style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    {/* ... (avatar logic same) ... */}
                     <div className="profile-upload-container" style={{ position: 'relative', cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()}>
                         <Avatar
                             src={getImageUrl(previewUrl)}
@@ -163,11 +207,12 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
                             size="xl"
                             style={{ width: '80px', height: '80px', fontSize: '2rem' }}
                         />
+                        {/* ... */}
                         <div className="profile-upload-overlay" style={{
                             position: 'absolute',
                             bottom: 0,
                             right: 0,
-                            background: '#7c3aed', // primary color
+                            background: '#7c3aed',
                             borderRadius: '50%',
                             width: '28px',
                             height: '28px',
@@ -236,10 +281,8 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
                             label="Role"
                             value={formData.role}
                             onChange={(e) => handleChange('role', e.target.value)}
-                            options={[
-                                { value: 'Agent', label: 'Agent' },
-                                { value: 'Admin', label: 'Admin' },
-                            ]}
+                            options={roles.map(r => ({ value: r._id, label: r.role }))}
+                            error={errors.role}
                         />
                         <Input
                             label="Department"

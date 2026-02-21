@@ -3,12 +3,11 @@ import { api } from '@/lib/axios';
 export const authService = {
     login: async (email, password) => {
         const response = await api.post('/user/login', { email, password });
-        // The backend returns { data: { token, user } } inside response.data
-        if (response.data.success && response.data.data.token) {
-            localStorage.setItem('token', response.data.data.token);
-            // The backend returns user object as well, let's store it
+        // The backend sets the token in an httpOnly cookie.
+        // We just store the user info for UI state.
+        if (response.data.success) {
             localStorage.setItem('user', JSON.stringify(response.data.data.user));
-            return response.data.data;
+            return response.data.data; // { user, token } - token is in cookie now too
         }
         return response.data;
     },
@@ -25,25 +24,12 @@ export const authService = {
             email: userData.email,
             password: userData.password,
             // Assuming phone is not in initial signup form, providing a default.
-            // Ideally, the form should be updated to collect phone.
             phone: userData.phone,
             country_code: userData.countryCode ? userData.countryCode.replace(/-/g, '') : '+91',
             gender: userData.gender || 'other',
-            // Organization ID handling might be needed if creating a new org or joining one.
-            // For now, passing 'company' as a placeholder or if it's an ID.
-            // Backend User model schema expects ObjectId for organization_id (ref: Organization).
-            // If the user is creating a new company, maybe backend handles specific logic or separate endpoint.
-            // But User controller just calls UserService.signup(req.body).
-            // UserService checks existing user by email/phone.
-            // Then creates user.
-            // If organization_id is passed it must be an ObjectId.
-            // If 'company' is a string name, we can't pass it directly to organization_id.
-            // I'll omit organization_id for now unless it's a valid ID to avoid cast error.
-            // (or if backend handles name -> org creation logic which it doesn't seem to yet based on snippets)
         };
 
         // If userData.company is an ID (24 hex chars), include it.
-        // Otherwise, we might need a different flow for creating org.
         if (userData.company && /^[0-9a-fA-F]{24}$/.test(userData.company)) {
             payload.organization_id = userData.company;
         }
@@ -63,9 +49,28 @@ export const authService = {
         return response.data;
     },
 
-    logout: () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+    logout: async () => {
+        try {
+            await api.post('/user/logout');
+        } catch (error) {
+            console.error('Logout failed', error);
+        } finally {
+            localStorage.removeItem('user');
+            // Token is httpOnly cookie, browser handles removal on response or expiry,
+            // but the logout endpoint explicitly clears it.
+        }
+    },
+
+    checkSession: async () => {
+        try {
+            const response = await api.get('/user/me');
+            if (response.data.success) {
+                localStorage.setItem('user', JSON.stringify(response.data.data));
+                return response.data.data;
+            }
+        } catch (error) {
+            return null;
+        }
     },
 
     getCurrentUser: () => {
@@ -73,7 +78,7 @@ export const authService = {
     },
 
     isAuthenticated: () => {
-        return !!localStorage.getItem('token');
+        return !!localStorage.getItem('user'); // Basic check, real check is /user/me
     }
 };
 

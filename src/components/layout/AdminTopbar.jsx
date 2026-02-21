@@ -2,7 +2,7 @@ import { Search, Bell, ChevronDown, LogOut, User, ArrowLeft } from 'lucide-react
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { logout, selectCurrentUser } from '../../store/slices/authSlice';
+import { logoutUser, selectCurrentUser } from '../../store/slices/authSlice';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { Avatar } from '../ui/Avatar';
 import './AdminTopbar.css';
@@ -27,7 +27,7 @@ export function AdminTopbar({ collapsed }) {
     }, []);
 
     const handleLogout = () => {
-        dispatch(logout());
+        dispatch(logoutUser());
         navigate('/login');
     };
 

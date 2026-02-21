@@ -1,45 +1,24 @@
+
+
 import { useState, useEffect } from 'react';
 import {
     Plus,
     Search,
     Star,
     Mail,
-    MoreHorizontal
+    MoreHorizontal,
+    Edit2,
+    Trash2
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
+import { Card } from '../components/ui/Card';
 import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { AgentModal } from './AgentModal';
 import { userService } from '../features/contacts/api/users';
+import { toast } from 'react-hot-toast';
 import './Agents.css';
-
-// Mock data as fallback
-const mockAgents = [
-    {
-        id: 1,
-        name: 'Sarah Chen',
-        email: 'sarah.chen@supportdesk.com',
-        role: 'Senior Agent',
-        department: 'Technical Support',
-        status: 'online',
-        tickets: { open: 12, resolved: 156, total: 168 },
-        rating: 4.8,
-        slaCompliance: 96,
-    },
-    {
-        id: 2,
-        name: 'Mike Johnson',
-        email: 'mike.johnson@supportdesk.com',
-        role: 'Agent',
-        department: 'Billing',
-        status: 'online',
-        tickets: { open: 8, resolved: 134, total: 142 },
-        rating: 4.6,
-        slaCompliance: 92,
-    },
-];
 
 const statusColors = {
     online: 'success',
@@ -50,30 +29,23 @@ const statusColors = {
 
 export function Agents() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [agents, setAgents] = useState(mockAgents);
+    const [agents, setAgents] = useState([]);
+    const [filteredAgents, setFilteredAgents] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedAgent, setSelectedAgent] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const fetchAgents = async () => {
         setIsLoading(true);
         try {
-            const data = await userService.getAgents();
-            if (data && Array.isArray(data) && data.length > 0) {
-                const mappedAgents = data.map(a => ({
-                    id: a._id,
-                    name: `${a.first_name} ${a.last_name}`,
-                    email: a.email,
-                    role: a.role,
-                    department: a.department || 'General',
-                    status: 'offline', // Default since backend doesn't track this yet
-                    tickets: { open: 0, resolved: 0, total: 0 },
-                    rating: 5.0, // Default
-                    slaCompliance: 100 // Default
-                }));
-                setAgents(mappedAgents);
+            const response = await userService.getAgents();
+            if (response.success && response.data?.agents) {
+                setAgents(response.data.agents);
+                setFilteredAgents(response.data.agents);
             }
         } catch (error) {
-            console.error("Failed to fetch agents, using mock data", error);
+            console.error("Failed to fetch agents", error);
+            toast.error("Failed to load agents");
         } finally {
             setIsLoading(false);
         }
@@ -83,25 +55,54 @@ export function Agents() {
         fetchAgents();
     }, []);
 
-    const filteredAgents = agents.filter(agent =>
-        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    useEffect(() => {
+        const lowerQuery = searchQuery.toLowerCase();
+        const filtered = agents.filter(agent => {
+            const fullName = `${agent.first_name} ${agent.last_name}`.toLowerCase();
+            return fullName.includes(lowerQuery) || agent.email.toLowerCase().includes(lowerQuery);
+        });
+        setFilteredAgents(filtered);
+    }, [searchQuery, agents]);
 
-    const handleSuccess = (newAgent) => {
+    const handleEdit = (agent) => {
+        setSelectedAgent(agent);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (agentId) => {
+        if (!window.confirm("Are you sure you want to delete this agent?")) return;
+
+        try {
+            await userService.delete(agentId);
+            toast.success("Agent deleted successfully");
+            fetchAgents();
+        } catch (error) {
+            console.error("Delete failed", error);
+            toast.error("Failed to delete agent");
+        }
+    };
+
+    const handleSuccess = () => {
         setIsModalOpen(false);
-        fetchAgents(); // Refresh list associated with backend
+        setSelectedAgent(null);
+        fetchAgents();
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedAgent(null);
     };
 
     return (
         <PageContainer
             title="Agents"
-            actions={<Button icon={Plus} onClick={() => setIsModalOpen(true)}>Add Agent</Button>}
+            actions={<Button icon={Plus} onClick={() => { setSelectedAgent(null); setIsModalOpen(true); }}>Add Agent</Button>}
         >
             <AgentModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={handleCloseModal}
                 onSuccess={handleSuccess}
+                agent={selectedAgent}
             />
 
             <div className="agents-page">
@@ -129,22 +130,25 @@ export function Agents() {
                 ) : (
                     <div className="agents-grid">
                         {filteredAgents.map((agent) => (
-                            <Card key={agent.id} className="agent-card" hover>
+                            <Card key={agent._id} className="agent-card" hover>
                                 <div className="agent-card-header">
-                                    <Avatar name={agent.name} size="lg" status={agent.status} />
-                                    <Button variant="ghost" size="sm" icon={MoreHorizontal} />
+                                    <Avatar name={`${agent.first_name} ${agent.last_name}`} src={agent.profile_pic} size="lg" status={agent.status} />
+                                    <div className="agent-actions" style={{ display: 'flex', gap: '8px' }}>
+                                        <Button variant="ghost" size="sm" icon={Edit2} onClick={() => handleEdit(agent)} />
+                                        <Button variant="ghost" size="sm" icon={Trash2} onClick={() => handleDelete(agent._id)} className="text-danger" />
+                                    </div>
                                 </div>
 
                                 <div className="agent-info">
-                                    <h3>{agent.name}</h3>
-                                    <span className="agent-role">{agent.role}</span>
+                                    <h3>{agent.first_name} {agent.last_name}</h3>
+                                    <span className="agent-role">{agent.role?.role || 'Agent'}</span>
                                     <Badge variant={statusColors[agent.status] || 'default'} size="sm">
                                         {(agent.status || 'offline').charAt(0).toUpperCase() + (agent.status || 'offline').slice(1)}
                                     </Badge>
                                 </div>
 
                                 <div className="agent-meta">
-                                    <span className="agent-department">{agent.department}</span>
+                                    <span className="agent-department">{agent.department || 'General'}</span>
                                     <a href={`mailto:${agent.email}`} className="agent-email">
                                         <Mail size={14} />
                                         {agent.email}
@@ -163,12 +167,12 @@ export function Agents() {
                                     <div className="agent-stat">
                                         <span className="stat-value">
                                             <Star size={12} className="star-icon" />
-                                            {agent.rating || 5.0}
+                                            5.0
                                         </span>
                                         <span className="stat-label">Rating</span>
                                     </div>
                                     <div className="agent-stat">
-                                        <span className="stat-value">{agent.slaCompliance || 100}%</span>
+                                        <span className="stat-value">100%</span>
                                         <span className="stat-label">SLA</span>
                                     </div>
                                 </div>
