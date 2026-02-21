@@ -218,7 +218,10 @@ export function Groups() {
                         selectedRows={selectedRows}
                         onSelectRow={handleSelectRow}
                         onSelectAll={handleSelectAll}
-                        emptyMessage={loading ? "Loading groups..." : "No groups found"}
+                        emptyMessage={loading
+                            ? { title: 'Loading groups...', subtitle: '' }
+                            : { title: 'No Groups Yet', subtitle: 'Create a group to organize your agents and route tickets efficiently.' }
+                        }
                         onRowClick={(row) => dispatch(setDetailGroup(row))}
                         rowKey="_id"
                     />

@@ -9,13 +9,42 @@ export function DataTable({
     onSelectAll,
     loading = false,
     emptyMessage = 'No data available',
+    onRowClick,
     className = '',
-    rowKey = 'id', // Support for custom row key (e.g., '_id' for MongoDB)
+    rowKey = 'id',
 }) {
     const getRowId = (row) => row[rowKey] || row.id || row._id;
 
     const allSelected = data.length > 0 && selectedRows.length === data.length;
     const someSelected = selectedRows.length > 0 && selectedRows.length < data.length;
+
+    const renderEmpty = () => {
+        const title = typeof emptyMessage === 'object' ? emptyMessage.title : emptyMessage;
+        const subtitle = typeof emptyMessage === 'object'
+            ? emptyMessage.subtitle
+            : 'Try adjusting your search or create a new entry.';
+
+        return (
+            <tr>
+                <td colSpan={columns.length + (selectable ? 1 : 0)} className="data-table-empty">
+                    <div className="data-table-empty-inner">
+                        <div className="data-table-empty-icon" aria-hidden="true">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" strokeWidth="1.5"
+                                strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+                                <line x1="12" y1="12" x2="12" y2="16" />
+                                <line x1="10" y1="14" x2="14" y2="14" />
+                            </svg>
+                        </div>
+                        <p className="data-table-empty-title">{title}</p>
+                        {subtitle && <p className="data-table-empty-sub">{subtitle}</p>}
+                    </div>
+                </td>
+            </tr>
+        );
+    };
 
     return (
         <div className={`data-table-wrapper ${className}`}>
@@ -51,11 +80,7 @@ export function DataTable({
                             </td>
                         </tr>
                     ) : data.length === 0 ? (
-                        <tr>
-                            <td colSpan={columns.length + (selectable ? 1 : 0)} className="data-table-empty">
-                                {emptyMessage}
-                            </td>
-                        </tr>
+                        renderEmpty()
                     ) : (
                         data.map((row, idx) => {
                             const rowId = getRowId(row);
@@ -63,6 +88,8 @@ export function DataTable({
                                 <tr
                                     key={rowId || idx}
                                     className={selectedRows.includes(rowId) ? 'selected' : ''}
+                                    onClick={() => onRowClick?.(row)}
+                                    style={onRowClick ? { cursor: 'pointer' } : undefined}
                                 >
                                     {selectable && (
                                         <td className="data-table-checkbox">
@@ -70,6 +97,7 @@ export function DataTable({
                                                 type="checkbox"
                                                 checked={selectedRows.includes(rowId)}
                                                 onChange={(e) => onSelectRow?.(rowId, e.target.checked)}
+                                                onClick={(e) => e.stopPropagation()}
                                             />
                                         </td>
                                     )}
@@ -90,4 +118,3 @@ export function DataTable({
         </div>
     );
 }
-

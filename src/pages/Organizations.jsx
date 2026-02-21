@@ -228,7 +228,10 @@ export function Organizations() {
                         selectedRows={selectedRows}
                         onSelectRow={handleSelectRow}
                         onSelectAll={handleSelectAll}
-                        emptyMessage={loading ? "Loading organizations..." : "No organizations found"}
+                        emptyMessage={loading
+                            ? { title: 'Loading organizations...', subtitle: '' }
+                            : { title: 'No Organizations Yet', subtitle: 'Add your first organization to manage your customer accounts.' }
+                        }
                         onRowClick={(row) => dispatch(setDetailOrg(row))}
                         rowKey="_id"
                     />

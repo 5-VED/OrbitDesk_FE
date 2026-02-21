@@ -327,7 +327,10 @@ export function Contacts() {
                         selectedRows={selectedRows}
                         onSelectRow={handleSelectRow}
                         onSelectAll={handleSelectAll}
-                        emptyMessage={loading ? "Loading contacts..." : "No contacts found"}
+                        emptyMessage={loading
+                            ? { title: 'Loading contacts...', subtitle: '' }
+                            : { title: 'No Contacts Yet', subtitle: 'Add your first contact or import a list to get started.' }
+                        }
                         onRowClick={(row) => dispatch(setDetailContact(row))}
                         rowKey="_id"
                     />

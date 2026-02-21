@@ -58,11 +58,44 @@
 }
 
 /* Empty and loading states */
-.data-table-empty,
-.data-table-loading {
+.data-table-empty {
     text-align: center !important;
-    padding: var(--spacing-2xl) !important;
+    padding: 56px var(--spacing-lg) !important;
     color: var(--color-text-tertiary);
+}
+
+.data-table-empty-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.data-table-empty-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: var(--color-bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.data-table-empty-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.data-table-empty-sub {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+    margin: 0;
+    max-width: 280px;
+    line-height: var(--line-height-relaxed);
 }
 
 .data-table-loading {

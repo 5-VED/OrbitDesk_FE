@@ -5,6 +5,9 @@ import { AdminRoute } from '@/features/auth/components/AdminRoute';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Loader } from '@/components/ui/Loader';
 
+// 404 Page
+const NotFound = lazy(() => import('@/pages/NotFound').then(module => ({ default: module.NotFound })));
+
 // Lazy Load Pages
 const Login = lazy(() => import('@/pages/auth/Login').then(module => ({ default: module.Login })));
 const Signup = lazy(() => import('@/pages/auth/Signup').then(module => ({ default: module.Signup })));
@@ -68,8 +71,8 @@ export const AppRoutes = () => {
                     </Route>
                 </Route>
 
-                {/* 404 */}
-                <Route path="*" element={<Navigate to="/login" replace />} />
+                {/* 404 — catch-all for any unknown route */}
+                <Route path="*" element={<NotFound />} />
             </Routes>
         </Suspense>
     );

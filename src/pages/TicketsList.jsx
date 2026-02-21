@@ -377,7 +377,10 @@ export function TicketsList() {
                     selectedRows={selectedRows}
                     onSelectRow={handleSelectRow}
                     onSelectAll={handleSelectAll}
-                    emptyMessage={loading ? "Loading tickets..." : "No tickets found"}
+                    emptyMessage={loading
+                        ? { title: 'Loading tickets...', subtitle: '' }
+                        : { title: 'No Tickets Yet', subtitle: 'Create your first ticket or adjust your filters to see results.' }
+                    }
                     rowKey="_id"
                 />
 

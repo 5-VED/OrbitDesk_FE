@@ -140,3 +140,41 @@
     color: var(--color-warning);
     fill: var(--color-warning);
 }
+
+/* ---- Empty State ---- */
+.agents-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: 64px var(--spacing-lg);
+    text-align: center;
+}
+
+.agents-empty-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background-color: var(--color-bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.agents-empty-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.agents-empty-sub {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+    margin: 0;
+    max-width: 320px;
+    line-height: var(--line-height-relaxed);
+}

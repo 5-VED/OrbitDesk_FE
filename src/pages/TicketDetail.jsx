@@ -5,8 +5,6 @@ import {
     Send,
     MoreHorizontal,
     Clock,
-    User,
-    Tag,
     MessageSquare,
     Lock,
     RefreshCw,
