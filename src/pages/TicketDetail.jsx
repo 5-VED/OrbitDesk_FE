@@ -16,7 +16,8 @@ import {
     FileText,
     Smile,
     Meh,
-    Frown
+    Frown,
+    Star
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
@@ -46,6 +47,7 @@ import {
 } from '../store/slices/ticketDetailSlice';
 import { getStatusOptions, getPriorityOptions } from '../utils/ticketConstants';
 import { aiService } from '../services/ai.service';
+import { ratingService } from '../services/rating.service';
 import { toast } from 'react-hot-toast';
 import './TicketDetail.css';
 
@@ -77,6 +79,13 @@ export function TicketDetail() {
     const [summary, setSummary] = useState(null);
     const [loadingSummary, setLoadingSummary] = useState(false);
 
+    // Rating State
+    const [existingRating, setExistingRating] = useState(null);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [selectedRating, setSelectedRating] = useState(0);
+    const [ratingFeedback, setRatingFeedback] = useState('');
+    const [submittingRating, setSubmittingRating] = useState(false);
+
     useEffect(() => {
         dispatch(fetchTicketDetail(ticketId));
         dispatch(fetchAgents());
@@ -85,6 +94,20 @@ export function TicketDetail() {
             dispatch(clearTicketDetail());
         };
     }, [dispatch, ticketId]);
+
+    useEffect(() => {
+        if (ticketId) {
+            ratingService.getRatingByTicket(ticketId)
+                .then(res => {
+                    if (res.success && res.data) {
+                        setExistingRating(res.data);
+                        setSelectedRating(res.data.rating);
+                        setRatingFeedback(res.data.feedback || '');
+                    }
+                })
+                .catch(() => {});
+        }
+    }, [ticketId]);
 
     // Analyze Sentiment on load
     useEffect(() => {
@@ -293,6 +316,48 @@ export function TicketDetail() {
         if (sentiment.label === 'Positive') return <Smile size={16} className="text-green-500" />;
         if (sentiment.label === 'Negative') return <Frown size={16} className="text-red-500" />;
         return <Meh size={16} className="text-yellow-500" />; // Neutral
+    };
+
+    const handleSubmitRating = async () => {
+        if (selectedRating === 0) {
+            toast.error('Please select a rating');
+            return;
+        }
+        setSubmittingRating(true);
+        try {
+            const res = await ratingService.submitRating(ticketId, {
+                rating: selectedRating,
+                feedback: ratingFeedback,
+            });
+            if (res.success) {
+                setExistingRating(res.data);
+                toast.success(existingRating ? 'Rating updated' : 'Rating submitted');
+            }
+        } catch (error) {
+            toast.error('Failed to submit rating');
+        } finally {
+            setSubmittingRating(false);
+        }
+    };
+
+    const renderStars = (interactive = false) => {
+        const displayRating = interactive ? (hoverRating || selectedRating) : (existingRating?.rating || 0);
+        return (
+            <div className="rating-stars" onMouseLeave={() => interactive && setHoverRating(0)}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                        key={star}
+                        size={interactive ? 28 : 20}
+                        className={`rating-star ${star <= displayRating ? 'filled' : ''}`}
+                        fill={star <= displayRating ? '#f59e0b' : 'none'}
+                        stroke={star <= displayRating ? '#f59e0b' : 'currentColor'}
+                        style={{ cursor: interactive ? 'pointer' : 'default' }}
+                        onMouseEnter={() => interactive && setHoverRating(star)}
+                        onClick={() => interactive && setSelectedRating(star)}
+                    />
+                ))}
+            </div>
+        );
     };
 
     return (
@@ -648,6 +713,46 @@ export function TicketDetail() {
                                     {ticket.tags.map((tag, index) => (
                                         <span key={index} className="tag-badge">{tag}</span>
                                     ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Agent Rating */}
+                    {(ticket.status === 'solved' || ticket.status === 'closed') && ticket.assignee_id && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>
+                                    <Star size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                                    Rate Agent
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="rating-section">
+                                    <p className="rating-agent-name">
+                                        How was <strong>{getAssigneeName() || 'the agent'}</strong>?
+                                    </p>
+                                    {renderStars(true)}
+                                    <textarea
+                                        className="rating-feedback-input"
+                                        placeholder="Optional feedback..."
+                                        value={ratingFeedback}
+                                        onChange={(e) => setRatingFeedback(e.target.value)}
+                                        rows={2}
+                                    />
+                                    <Button
+                                        size="sm"
+                                        onClick={handleSubmitRating}
+                                        disabled={submittingRating || selectedRating === 0}
+                                        style={{ width: '100%' }}
+                                    >
+                                        {submittingRating ? 'Submitting...' : (existingRating ? 'Update Rating' : 'Submit Rating')}
+                                    </Button>
+                                    {existingRating && (
+                                        <p className="rating-submitted-hint">
+                                            You rated {existingRating.rating}/5
+                                        </p>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

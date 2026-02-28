@@ -182,9 +182,9 @@ export function Agents() {
                                     <div className="agent-stat">
                                         <span className="stat-value">
                                             <Star size={12} className="star-icon" />
-                                            5.0
+                                            {agent.rating?.avg > 0 ? agent.rating.avg.toFixed(1) : 'N/A'}
                                         </span>
-                                        <span className="stat-label">Rating</span>
+                                        <span className="stat-label">Rating{agent.rating?.total > 0 ? ` (${agent.rating.total})` : ''}</span>
                                     </div>
                                     <div className="agent-stat">
                                         <span className="stat-value">100%</span>
