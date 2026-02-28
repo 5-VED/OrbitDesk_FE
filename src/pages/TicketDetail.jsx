@@ -625,7 +625,11 @@ export function TicketDetail() {
                                             <span className="text-gray-500 font-medium">Response Due</span>
                                             <div className="flex items-center justify-between">
                                                 <span>{new Date(ticket.response_due_at).toLocaleString()}</span>
-                                                {new Date() > new Date(ticket.response_due_at) ? (
+                                                {ticket.first_response_at ? (
+                                                    new Date(ticket.first_response_at) <= new Date(ticket.response_due_at)
+                                                        ? <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full border border-green-200">Responded</span>
+                                                        : <span className="text-red-500 font-bold text-xs bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Breached</span>
+                                                ) : new Date() > new Date(ticket.response_due_at) ? (
                                                     <span className="text-red-500 font-bold text-xs bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Overdue</span>
                                                 ) : (
                                                     <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full border border-green-200">On Track</span>
@@ -638,7 +642,11 @@ export function TicketDetail() {
                                             <span className="text-gray-500 font-medium">Resolution Due</span>
                                             <div className="flex items-center justify-between">
                                                 <span>{new Date(ticket.resolve_due_at).toLocaleString()}</span>
-                                                {new Date() > new Date(ticket.resolve_due_at) ? (
+                                                {ticket.solved_at ? (
+                                                    new Date(ticket.solved_at) <= new Date(ticket.resolve_due_at)
+                                                        ? <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full border border-green-200">Resolved</span>
+                                                        : <span className="text-red-500 font-bold text-xs bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Breached</span>
+                                                ) : new Date() > new Date(ticket.resolve_due_at) ? (
                                                     <span className="text-red-500 font-bold text-xs bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Overdue</span>
                                                 ) : (
                                                     <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full border border-green-200">On Track</span>

@@ -35,7 +35,19 @@ export const slaService = {
     reorder: async (orderedIds) => {
         const response = await api.post('/sla/reorder', { orderedIds });
         return response.data;
-    }
+    },
+
+    // Get SLA metrics (compliance, breaches, etc.)
+    getMetrics: async () => {
+        const response = await api.get('/sla/metrics');
+        return response.data;
+    },
+
+    // Get dashboard stats (ticket counts + SLA compliance)
+    getDashboardStats: async () => {
+        const response = await api.get('/sla/dashboard-stats');
+        return response.data;
+    },
 };
 
 export default slaService;
