@@ -27,18 +27,18 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
+        if (!isOpen) return;
+
         const fetchRoles = async () => {
             try {
                 const response = await userService.getRoles();
                 if (response.success && response.data) {
                     setRoles(response.data);
-                    // If no agent (create mode), default to 'Agent' role ID
                     if (!agent) {
                         const agentRole = response.data.find(r => r.role === 'Agent');
                         if (agentRole) {
                             setFormData(prev => ({ ...prev, role: agentRole._id }));
                         } else if (response.data.length > 0) {
-                            // Fallback to first role
                             setFormData(prev => ({ ...prev, role: response.data[0]._id }));
                         }
                     }
@@ -48,53 +48,36 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
                 toast.error("Failed to load roles");
             }
         };
-        fetchRoles();
-    }, [agent]); // Re-fetch on component mount/agent change? Ideally just mount, but checking logic inside
 
-    useEffect(() => {
-        if (isOpen) {
-            if (agent) {
-                // Agent.role might be populated object { _id, role } or just ID
-                const roleId = typeof agent.role === 'object' ? agent.role._id : agent.role;
-                setFormData({
-                    first_name: agent.first_name || '',
-                    last_name: agent.last_name || '',
-                    email: agent.email || '',
-                    phone: agent.phone || '',
-                    role: roleId || '',
-                    department: agent.department || '',
-                    password: '',
-                });
-                setPreviewUrl(agent.profile_pic || null);
-            } else {
-                // Reset form but preserve role if we already fetched it and set default
-                setFormData(prev => ({
-                    first_name: '',
-                    last_name: '',
-                    email: '',
-                    phone: '',
-                    role: prev.role || '',
-                    department: '',
-                    password: '',
-                }));
-                setPreviewUrl(null);
-            }
-            setProfilePic(null);
-            setErrors({});
-            // Also ensure we have roles if not fetched yet (race condition protection)
-            if (roles.length === 0) {
-                userService.getRoles().then(response => {
-                    if (response.success && response.data) {
-                        setRoles(response.data);
-                        if (!agent) {
-                            const agentRole = response.data.find(r => r.role === 'Agent');
-                            if (agentRole) setFormData(prev => ({ ...prev, role: agentRole._id }));
-                        }
-                    }
-                });
-            }
+        if (agent) {
+            const roleId = typeof agent.role === 'object' ? agent.role._id : agent.role;
+            setFormData({
+                first_name: agent.first_name || '',
+                last_name: agent.last_name || '',
+                email: agent.email || '',
+                phone: agent.phone || '',
+                role: roleId || '',
+                department: agent.department || '',
+                password: '',
+            });
+            setPreviewUrl(agent.profile_pic || null);
+        } else {
+            setFormData(prev => ({
+                first_name: '',
+                last_name: '',
+                email: '',
+                phone: '',
+                role: prev.role || '',
+                department: '',
+                password: '',
+            }));
+            setPreviewUrl(null);
         }
-    }, [isOpen, agent]); // dependencies...
+
+        setProfilePic(null);
+        setErrors({});
+        fetchRoles();
+    }, [isOpen, agent]);
 
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));

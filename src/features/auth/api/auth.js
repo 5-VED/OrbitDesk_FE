@@ -79,7 +79,22 @@ export const authService = {
 
     isAuthenticated: () => {
         return !!localStorage.getItem('user'); // Basic check, real check is /user/me
-    }
+    },
+
+    forgotPassword: async (email) => {
+        const response = await api.post('/user/forgot-password', { email });
+        return response.data;
+    },
+
+    verifyOtp: async (email, otp) => {
+        const response = await api.post('/user/verify-otp', { email, otp });
+        return response.data;
+    },
+
+    resetPassword: async (token, password) => {
+        const response = await api.post('/user/reset-password', { token, password });
+        return response.data;
+    },
 };
 
 export default api;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     Plus,
     Search,
@@ -109,6 +109,7 @@ const columns = [
 
 export function TicketsList() {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const currentUser = useAppSelector(selectCurrentUser);
     const tickets = useAppSelector(selectTickets);
     const loading = useAppSelector(selectTicketsLoading);
@@ -351,7 +352,7 @@ export function TicketsList() {
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            window.location.href = `/tickets/${row._id}`;
+                                            navigate(`/tickets/${row._id}`);
                                         }}
                                     >
                                         <Eye size={16} />
