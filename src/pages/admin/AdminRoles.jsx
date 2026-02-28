@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Shield,
     Plus,
@@ -7,16 +7,17 @@ import {
     Users,
     CheckSquare,
     Square,
-    Eye,
     Lock,
     X,
-    Copy
+    Copy,
+    Loader
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
+import { roleService } from '@/services/role.service';
+import { toast } from 'react-hot-toast';
 import './AdminRoles.css';
 
 const permissionGroups = [
@@ -67,60 +68,183 @@ const permissionGroups = [
     },
 ];
 
-const mockRoles = [
-    {
-        id: 1,
-        name: 'Admin',
-        description: 'Full access to all system features',
-        userCount: 3,
-        isSystem: true,
-        color: 'danger',
-        permissions: permissionGroups.flatMap(g => g.permissions.map(p => p.key)),
-    },
-    {
-        id: 2,
-        name: 'Agent',
-        description: 'Can manage tickets, view contacts and reports',
-        userCount: 12,
-        isSystem: true,
-        color: 'primary',
-        permissions: ['tickets.view', 'tickets.create', 'tickets.edit', 'tickets.assign', 'users.view', 'orgs.view', 'reports.view'],
-    },
-    {
-        id: 3,
-        name: 'Support Lead',
-        description: 'Agent access plus team management',
-        userCount: 4,
-        isSystem: false,
-        color: 'warning',
-        permissions: ['tickets.view', 'tickets.create', 'tickets.edit', 'tickets.delete', 'tickets.assign', 'tickets.bulk', 'users.view', 'users.edit', 'orgs.view', 'reports.view', 'reports.export'],
-    },
-    {
-        id: 4,
-        name: 'Customer',
-        description: 'Can create and view own tickets',
-        userCount: 156,
-        isSystem: true,
-        color: 'success',
-        permissions: ['tickets.view', 'tickets.create'],
-    },
-    {
-        id: 5,
-        name: 'Viewer',
-        description: 'Read-only access to tickets and reports',
-        userCount: 8,
-        isSystem: false,
-        color: 'info',
-        permissions: ['tickets.view', 'users.view', 'orgs.view', 'reports.view'],
-    },
-];
+const allPermissionKeys = permissionGroups.flatMap(g => g.permissions.map(p => p.key));
+
+const roleColorMap = {
+    'Admin': 'danger',
+    'Agent': 'primary',
+    'User': 'success',
+};
+
+function getRoleColor(roleName) {
+    return roleColorMap[roleName] || 'info';
+}
 
 export function AdminRoles() {
-    const [roles] = useState(mockRoles);
-    const [selectedRole, setSelectedRole] = useState(roles[0]);
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [roles, setRoles] = useState([]);
+    const [selectedRole, setSelectedRole] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    const allPermissions = permissionGroups.flatMap(g => g.permissions.map(p => p.key));
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [formSubmitting, setFormSubmitting] = useState(false);
+
+    const [formData, setFormData] = useState({
+        role: '',
+        description: '',
+        permissions: [],
+    });
+
+    const fetchRoles = async () => {
+        try {
+            const response = await roleService.list();
+            if (response.success && response.data) {
+                setRoles(response.data);
+                if (!selectedRole && response.data.length > 0) {
+                    setSelectedRole(response.data[0]);
+                } else if (selectedRole) {
+                    const updated = response.data.find(r => r._id === selectedRole._id);
+                    setSelectedRole(updated || response.data[0] || null);
+                }
+            }
+        } catch (error) {
+            toast.error('Failed to load roles');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRoles();
+    }, []);
+
+    const resetForm = () => {
+        setFormData({ role: '', description: '', permissions: [] });
+        setIsEditMode(false);
+    };
+
+    const openCreateModal = () => {
+        resetForm();
+        setIsCreateModalOpen(true);
+    };
+
+    const openEditModal = () => {
+        if (!selectedRole) return;
+        setFormData({
+            role: selectedRole.role,
+            description: selectedRole.description || '',
+            permissions: selectedRole.permissions || [],
+        });
+        setIsEditMode(true);
+        setIsCreateModalOpen(true);
+    };
+
+    const handlePermissionToggle = (key) => {
+        setFormData(prev => ({
+            ...prev,
+            permissions: prev.permissions.includes(key)
+                ? prev.permissions.filter(p => p !== key)
+                : [...prev.permissions, key],
+        }));
+    };
+
+    const handleToggleGroupAll = (group) => {
+        const groupKeys = group.permissions.map(p => p.key);
+        const allSelected = groupKeys.every(k => formData.permissions.includes(k));
+
+        setFormData(prev => ({
+            ...prev,
+            permissions: allSelected
+                ? prev.permissions.filter(p => !groupKeys.includes(p))
+                : [...new Set([...prev.permissions, ...groupKeys])],
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.role.trim()) {
+            toast.error('Role name is required');
+            return;
+        }
+
+        setFormSubmitting(true);
+        try {
+            if (isEditMode && selectedRole) {
+                await roleService.update(selectedRole._id, formData);
+                toast.success('Role updated successfully');
+            } else {
+                await roleService.create(formData);
+                toast.success('Role created successfully');
+            }
+            setIsCreateModalOpen(false);
+            resetForm();
+            await fetchRoles();
+        } catch (error) {
+            toast.error(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} role`);
+        } finally {
+            setFormSubmitting(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!selectedRole) return;
+
+        setFormSubmitting(true);
+        try {
+            await roleService.delete(selectedRole._id);
+            toast.success('Role deleted successfully');
+            setIsDeleteModalOpen(false);
+            setSelectedRole(null);
+            await fetchRoles();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to delete role');
+        } finally {
+            setFormSubmitting(false);
+        }
+    };
+
+    const handleDuplicate = () => {
+        if (!selectedRole) return;
+        setFormData({
+            role: `${selectedRole.role} (Copy)`,
+            description: selectedRole.description || '',
+            permissions: [...(selectedRole.permissions || [])],
+        });
+        setIsEditMode(false);
+        setIsCreateModalOpen(true);
+    };
+
+    const handlePermissionToggleInline = async (permKey) => {
+        if (!selectedRole || selectedRole.isSystem) return;
+
+        const updatedPermissions = selectedRole.permissions?.includes(permKey)
+            ? selectedRole.permissions.filter(p => p !== permKey)
+            : [...(selectedRole.permissions || []), permKey];
+
+        try {
+            await roleService.update(selectedRole._id, { permissions: updatedPermissions });
+            await fetchRoles();
+        } catch (error) {
+            toast.error('Failed to update permission');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="admin-roles">
+                <div className="admin-page-header">
+                    <div>
+                        <h1 className="admin-page-title">Roles & Permissions</h1>
+                        <p className="admin-page-subtitle">Configure access control for different user types</p>
+                    </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+                    <Loader size={24} className="spin" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-roles">
@@ -131,50 +255,60 @@ export function AdminRoles() {
                     <p className="admin-page-subtitle">Configure access control for different user types</p>
                 </div>
                 <div className="admin-page-actions">
-                    <Button icon={Plus} onClick={() => setIsCreateModalOpen(true)}>Create Role</Button>
+                    <Button icon={Plus} onClick={openCreateModal}>Create Role</Button>
                 </div>
             </div>
 
             <div className="admin-roles-layout">
                 {/* Roles List */}
                 <div className="admin-roles-list">
-                    {roles.map((role) => (
-                        <Card
-                            key={role.id}
-                            className={`admin-role-card ${selectedRole?.id === role.id ? 'active' : ''}`}
-                            hover
-                            onClick={() => setSelectedRole(role)}
-                        >
-                            <div className="admin-role-card-header">
-                                <div className="admin-role-card-info">
-                                    <div className="admin-role-icon" data-color={role.color}>
-                                        <Shield size={18} />
-                                    </div>
-                                    <div>
-                                        <span className="admin-role-name">{role.name}</span>
-                                        {role.isSystem && (
-                                            <span className="admin-role-system-badge">System</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="admin-role-user-count">
-                                    <Users size={14} />
-                                    <span>{role.userCount}</span>
-                                </div>
-                            </div>
-                            <p className="admin-role-description">{role.description}</p>
-                            <div className="admin-role-perm-summary">
-                                <span>{role.permissions.length}/{allPermissions.length} permissions</span>
-                                <div className="admin-role-perm-bar">
-                                    <div
-                                        className="admin-role-perm-fill"
-                                        data-color={role.color}
-                                        style={{ width: `${(role.permissions.length / allPermissions.length) * 100}%` }}
-                                    />
-                                </div>
-                            </div>
+                    {roles.length === 0 ? (
+                        <Card>
+                            <CardContent>
+                                <p style={{ textAlign: 'center', color: 'var(--color-text-tertiary)', padding: '20px 0' }}>
+                                    No roles found. Create your first role.
+                                </p>
+                            </CardContent>
                         </Card>
-                    ))}
+                    ) : (
+                        roles.map((role) => (
+                            <Card
+                                key={role._id}
+                                className={`admin-role-card ${selectedRole?._id === role._id ? 'active' : ''}`}
+                                hover
+                                onClick={() => setSelectedRole(role)}
+                            >
+                                <div className="admin-role-card-header">
+                                    <div className="admin-role-card-info">
+                                        <div className="admin-role-icon" data-color={getRoleColor(role.role)}>
+                                            <Shield size={18} />
+                                        </div>
+                                        <div>
+                                            <span className="admin-role-name">{role.role}</span>
+                                            {role.isSystem && (
+                                                <span className="admin-role-system-badge">System</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="admin-role-user-count">
+                                        <Users size={14} />
+                                        <span>{role.userCount || 0}</span>
+                                    </div>
+                                </div>
+                                <p className="admin-role-description">{role.description || 'No description'}</p>
+                                <div className="admin-role-perm-summary">
+                                    <span>{(role.permissions || []).length}/{allPermissionKeys.length} permissions</span>
+                                    <div className="admin-role-perm-bar">
+                                        <div
+                                            className="admin-role-perm-fill"
+                                            data-color={getRoleColor(role.role)}
+                                            style={{ width: `${((role.permissions || []).length / allPermissionKeys.length) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            </Card>
+                        ))
+                    )}
                 </div>
 
                 {/* Permission Detail */}
@@ -184,18 +318,18 @@ export function AdminRoles() {
                             <div className="admin-permissions-header">
                                 <div>
                                     <CardTitle>
-                                        <span className="admin-role-icon-inline" data-color={selectedRole.color}>
+                                        <span className="admin-role-icon-inline" data-color={getRoleColor(selectedRole.role)}>
                                             <Shield size={16} />
                                         </span>
-                                        {selectedRole.name} Permissions
+                                        {selectedRole.role} Permissions
                                     </CardTitle>
-                                    <p className="admin-permissions-subtitle">{selectedRole.description}</p>
+                                    <p className="admin-permissions-subtitle">{selectedRole.description || 'No description'}</p>
                                 </div>
                                 {!selectedRole.isSystem && (
                                     <div className="admin-permissions-actions">
-                                        <Button variant="secondary" size="sm" icon={Copy}>Duplicate</Button>
-                                        <Button variant="secondary" size="sm" icon={Edit}>Edit</Button>
-                                        <Button variant="danger" size="sm" icon={Trash2}>Delete</Button>
+                                        <Button variant="secondary" size="sm" icon={Copy} onClick={handleDuplicate}>Duplicate</Button>
+                                        <Button variant="secondary" size="sm" icon={Edit} onClick={openEditModal}>Edit</Button>
+                                        <Button variant="danger" size="sm" icon={Trash2} onClick={() => setIsDeleteModalOpen(true)}>Delete</Button>
                                     </div>
                                 )}
                             </div>
@@ -207,14 +341,19 @@ export function AdminRoles() {
                                         <div className="admin-permission-group-header">
                                             <span className="admin-permission-group-name">{group.name}</span>
                                             <span className="admin-permission-group-count">
-                                                {group.permissions.filter(p => selectedRole.permissions.includes(p.key)).length}/{group.permissions.length}
+                                                {group.permissions.filter(p => (selectedRole.permissions || []).includes(p.key)).length}/{group.permissions.length}
                                             </span>
                                         </div>
                                         <div className="admin-permission-items">
                                             {group.permissions.map((perm) => {
-                                                const isGranted = selectedRole.permissions.includes(perm.key);
+                                                const isGranted = (selectedRole.permissions || []).includes(perm.key);
                                                 return (
-                                                    <div key={perm.key} className={`admin-permission-item ${isGranted ? 'granted' : 'denied'}`}>
+                                                    <div
+                                                        key={perm.key}
+                                                        className={`admin-permission-item ${isGranted ? 'granted' : 'denied'}`}
+                                                        onClick={() => handlePermissionToggleInline(perm.key)}
+                                                        style={{ cursor: selectedRole.isSystem ? 'default' : 'pointer' }}
+                                                    >
                                                         {isGranted ? (
                                                             <CheckSquare size={16} className="admin-perm-check" />
                                                         ) : (
@@ -236,36 +375,94 @@ export function AdminRoles() {
                 )}
             </div>
 
-            {/* Create Role Modal */}
+            {/* Create / Edit Role Modal */}
             <Modal
                 isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                title="Create New Role"
+                onClose={() => { setIsCreateModalOpen(false); resetForm(); }}
+                title={isEditMode ? 'Edit Role' : 'Create New Role'}
             >
-                <form className="admin-users-form" onSubmit={(e) => { e.preventDefault(); setIsCreateModalOpen(false); }}>
-                    <Input label="Role Name" placeholder="e.g. Support Lead" required />
-                    <Input label="Description" placeholder="Brief description of this role" />
+                <form className="admin-users-form" onSubmit={handleSubmit}>
+                    <Input
+                        label="Role Name"
+                        placeholder="e.g. Support Lead"
+                        value={formData.role}
+                        onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                        required
+                    />
+                    <Input
+                        label="Description"
+                        placeholder="Brief description of this role"
+                        value={formData.description}
+                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    />
                     <div className="admin-create-role-perms">
                         <span className="admin-create-role-perms-label">Permissions</span>
-                        {permissionGroups.map((group) => (
-                            <div key={group.name} className="admin-create-perm-group">
-                                <span className="admin-create-perm-group-name">{group.name}</span>
-                                <div className="admin-create-perm-items">
-                                    {group.permissions.map((perm) => (
-                                        <label key={perm.key} className="admin-create-perm-item">
-                                            <input type="checkbox" />
-                                            <span>{perm.label}</span>
-                                        </label>
-                                    ))}
+                        {permissionGroups.map((group) => {
+                            const groupKeys = group.permissions.map(p => p.key);
+                            const allSelected = groupKeys.every(k => formData.permissions.includes(k));
+
+                            return (
+                                <div key={group.name} className="admin-create-perm-group">
+                                    <label
+                                        className="admin-create-perm-group-name"
+                                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                        onClick={() => handleToggleGroupAll(group)}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={allSelected}
+                                            onChange={() => handleToggleGroupAll(group)}
+                                        />
+                                        {group.name}
+                                    </label>
+                                    <div className="admin-create-perm-items">
+                                        {group.permissions.map((perm) => (
+                                            <label key={perm.key} className="admin-create-perm-item">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.permissions.includes(perm.key)}
+                                                    onChange={() => handlePermissionToggle(perm.key)}
+                                                />
+                                                <span>{perm.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                     <div className="admin-users-form-actions">
-                        <Button variant="secondary" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
-                        <Button type="submit" icon={Plus}>Create Role</Button>
+                        <Button variant="secondary" type="button" onClick={() => { setIsCreateModalOpen(false); resetForm(); }} disabled={formSubmitting}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" icon={isEditMode ? Edit : Plus} disabled={formSubmitting}>
+                            {formSubmitting ? 'Saving...' : (isEditMode ? 'Update Role' : 'Create Role')}
+                        </Button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                title="Delete Role"
+                size="small"
+                footer={
+                    <>
+                        <Button variant="ghost" onClick={() => setIsDeleteModalOpen(false)} disabled={formSubmitting}>Cancel</Button>
+                        <Button className="danger" onClick={handleDelete} disabled={formSubmitting}>
+                            {formSubmitting ? 'Deleting...' : 'Delete'}
+                        </Button>
+                    </>
+                }
+            >
+                <p>
+                    Are you sure you want to delete the <strong>{selectedRole?.role}</strong> role?
+                    {selectedRole?.userCount > 0 && (
+                        <span> This role is currently assigned to <strong>{selectedRole.userCount}</strong> user(s).</span>
+                    )}
+                </p>
             </Modal>
         </div>
     );
