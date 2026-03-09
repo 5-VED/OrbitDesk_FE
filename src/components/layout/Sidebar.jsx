@@ -35,19 +35,26 @@ const bottomItems = [
     { path: '/help', icon: HelpCircle, label: 'Help' },
 ];
 
-export function Sidebar({ collapsed, onToggle }) {
+export function Sidebar({ collapsed, onToggle, mobileOpen = false, isMobile = false }) {
     const user = useAppSelector(selectCurrentUser);
     const isAdmin = user?.role_type === 'admin';
 
     const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
+    const sidebarClasses = [
+        'sidebar',
+        collapsed && !isMobile ? 'sidebar-collapsed' : '',
+        isMobile ? 'sidebar-mobile' : '',
+        isMobile && mobileOpen ? 'sidebar-mobile-open' : '',
+    ].filter(Boolean).join(' ');
+
     return (
-        <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
+        <aside className={sidebarClasses}>
             <div className="sidebar-header">
                 {!collapsed && (
                     <div className="sidebar-logo">
-                        <div className="sidebar-logo-icon">S</div>
-                        <span className="sidebar-logo-text">SupportDesk</span>
+                        <div className="sidebar-logo-icon">O</div>
+                        <span className="sidebar-logo-text">OrbitDesk</span>
                     </div>
                 )}
                 <button

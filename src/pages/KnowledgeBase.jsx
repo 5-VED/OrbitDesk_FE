@@ -29,10 +29,13 @@ export function KnowledgeBase() {
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedArticle, setSelectedArticle] = useState(null);
 
     // Modal States
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null);
     const [editingCategory, setEditingCategory] = useState(null);
     const [editingArticle, setEditingArticle] = useState(null);
 
@@ -95,15 +98,9 @@ export function KnowledgeBase() {
         }
     };
 
-    const handleDeleteCategory = async (id) => {
-        if (!confirm("Are you sure? This action cannot be undone.")) return;
-        try {
-            await knowledgeBaseService.deleteCategory(id);
-            toast.success("Category deleted");
-            fetchData();
-        } catch (error) {
-            toast.error("Failed to delete category");
-        }
+    const handleDeleteCategory = (id) => {
+        setDeleteTarget({ type: 'category', id });
+        setIsDeleteModalOpen(true);
     };
 
     // --- Article Management ---
@@ -147,14 +144,27 @@ export function KnowledgeBase() {
         }
     };
 
-    const handleDeleteArticle = async (id) => {
-        if (!confirm("Delete this article?")) return;
+    const handleDeleteArticle = (id) => {
+        setDeleteTarget({ type: 'article', id });
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
         try {
-            await knowledgeBaseService.deleteArticle(id);
-            toast.success("Article deleted");
+            if (deleteTarget.type === 'category') {
+                await knowledgeBaseService.deleteCategory(deleteTarget.id);
+                toast.success("Category deleted");
+            } else {
+                await knowledgeBaseService.deleteArticle(deleteTarget.id);
+                toast.success("Article deleted");
+            }
             fetchData();
         } catch (error) {
-            toast.error("Failed to delete article");
+            toast.error(`Failed to delete ${deleteTarget.type}`);
+        } finally {
+            setIsDeleteModalOpen(false);
+            setDeleteTarget(null);
         }
     };
 
@@ -277,7 +287,12 @@ export function KnowledgeBase() {
                                             </div>
                                             <div className="article-content flex-1">
                                                 <div className="flex justify-between">
-                                                    <a href="#" className="article-title">{article.title}</a>
+                                                    <button
+                                                        className="article-title article-title-btn"
+                                                        onClick={() => setSelectedArticle(article)}
+                                                    >
+                                                        {article.title}
+                                                    </button>
                                                     {isAdminOrAgent && (
                                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                                                             <button onClick={() => handleOpenArticleModal(article)} className="text-gray-500 hover:text-primary">
@@ -377,6 +392,49 @@ export function KnowledgeBase() {
                     </Card>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => { setIsDeleteModalOpen(false); setDeleteTarget(null); }}
+                title={`Delete ${deleteTarget?.type === 'category' ? 'Category' : 'Article'}`}
+                size="small"
+                footer={
+                    <>
+                        <Button variant="ghost" onClick={() => { setIsDeleteModalOpen(false); setDeleteTarget(null); }}>Cancel</Button>
+                        <Button className="danger" onClick={confirmDelete}>Delete</Button>
+                    </>
+                }
+            >
+                <p>Are you sure you want to delete this {deleteTarget?.type}? This action cannot be undone.</p>
+            </Modal>
+
+            {/* Article Detail Modal */}
+            <Modal
+                isOpen={!!selectedArticle}
+                onClose={() => setSelectedArticle(null)}
+                title={selectedArticle?.title || ''}
+                size="large"
+            >
+                {selectedArticle && (
+                    <div className="article-detail-view">
+                        <div className="article-detail-meta">
+                            <span className="article-category">{selectedArticle.category?.name}</span>
+                            <span className="article-updated">
+                                <Clock size={12} />
+                                Updated {new Date(selectedArticle.updatedAt).toLocaleDateString()}
+                            </span>
+                            <span className="article-views">
+                                <Eye size={12} />
+                                {selectedArticle.views} views
+                            </span>
+                        </div>
+                        <div className="article-detail-content" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.75', marginTop: '16px' }}>
+                            {selectedArticle.content}
+                        </div>
+                    </div>
+                )}
+            </Modal>
 
             {/* Category Modal */}
             <Modal

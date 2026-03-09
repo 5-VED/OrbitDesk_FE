@@ -16,6 +16,10 @@
     cursor: not-allowed;
 }
 
+.btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
 /* Sizes */
 .btn-sm {
     height: 32px;

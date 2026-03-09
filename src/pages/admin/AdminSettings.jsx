@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-    Settings,
     Save,
     Globe,
     Lock,
@@ -9,12 +8,14 @@ import {
     Database,
     RefreshCw,
     Info,
-    AlertTriangle
+    AlertTriangle,
+    Loader2
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input, Select } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
+import { settingsService } from '@/services/settings.service';
 import './AdminSettings.css';
 
 const settingsSections = [
@@ -43,40 +44,85 @@ const languageOptions = [
     { value: 'hi', label: 'Hindi' },
 ];
 
+const defaultNotifications = [
+    { key: 'ticketCreated', event: 'Ticket Created', desc: 'When a new ticket is submitted' },
+    { key: 'ticketAssigned', event: 'Ticket Assigned', desc: 'When a ticket is assigned to an agent' },
+    { key: 'ticketResolved', event: 'Ticket Resolved', desc: 'When a ticket is marked resolved' },
+    { key: 'slaBreachWarning', event: 'SLA Breach Warning', desc: '15 minutes before SLA breach' },
+    { key: 'slaBreached', event: 'SLA Breached', desc: 'When an SLA target is missed' },
+    { key: 'newComment', event: 'New Comment', desc: 'When someone comments on a ticket' },
+    { key: 'userSignup', event: 'User Signup', desc: 'When a new user registers' },
+    { key: 'agentStatusChange', event: 'Agent Status Change', desc: 'When an agent goes online/offline' },
+];
+
 export function AdminSettings() {
     const [activeSection, setActiveSection] = useState('general');
-    const [settings, setSettings] = useState({
-        appName: 'OrbitDesk',
-        supportEmail: 'support@orbitdesk.com',
-        timezone: 'UTC',
-        language: 'en',
-        dateFormat: 'MM/DD/YYYY',
-        // Security
-        minPasswordLength: 8,
-        requireUppercase: true,
-        requireNumbers: true,
-        requireSpecial: true,
-        sessionTimeout: 30,
-        maxLoginAttempts: 5,
-        twoFactorRequired: false,
-        // Email
-        smtpHost: 'smtp.gmail.com',
-        smtpPort: 587,
-        smtpUser: 'noreply@orbitdesk.com',
-        smtpPassword: '••••••••••',
-        smtpSecure: true,
-        fromName: 'OrbitDesk Support',
-        fromEmail: 'noreply@orbitdesk.com',
-    });
+    const [settings, setSettings] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
-    const handleChange = (field) => (e) => {
+    useEffect(() => {
+        const load = async () => {
+            try {
+                setLoading(true);
+                const res = await settingsService.get();
+                setSettings(res.data || {});
+            } catch (err) {
+                console.error('Failed to load settings:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, []);
+
+    const getSectionData = (section) => settings[section] || {};
+
+    const handleChange = (section, field) => (e) => {
         const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-        setSettings(prev => ({ ...prev, [field]: value }));
+        setSettings(prev => ({
+            ...prev,
+            [section]: { ...prev[section], [field]: value },
+        }));
     };
+
+    const handleNotifChange = (key, channel) => (e) => {
+        setSettings(prev => ({
+            ...prev,
+            notifications: {
+                ...prev.notifications,
+                [key]: { ...(prev.notifications?.[key] || {}), [channel]: e.target.checked },
+            },
+        }));
+    };
+
+    const handleSave = async (category) => {
+        try {
+            setSaving(true);
+            const res = await settingsService.update(category, settings[category] || {});
+            setSettings(prev => ({ ...prev, [category]: res.data }));
+        } catch (err) {
+            console.error('Failed to save settings:', err);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="admin-settings" style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
+                <Loader2 size={32} className="animate-spin" />
+            </div>
+        );
+    }
+
+    const general = getSectionData('general');
+    const security = getSectionData('security');
+    const email = getSectionData('email');
+    const notifications = getSectionData('notifications');
 
     return (
         <div className="admin-settings">
-            {/* Page Header */}
             <div className="admin-page-header">
                 <div>
                     <h1 className="admin-page-title">System Settings</h1>
@@ -85,7 +131,6 @@ export function AdminSettings() {
             </div>
 
             <div className="admin-settings-layout">
-                {/* Settings Navigation */}
                 <aside className="admin-settings-nav">
                     <nav>
                         {settingsSections.map((section) => (
@@ -101,47 +146,21 @@ export function AdminSettings() {
                     </nav>
                 </aside>
 
-                {/* Settings Content */}
                 <div className="admin-settings-content">
                     {activeSection === 'general' && (
                         <Card>
-                            <CardHeader>
-                                <CardTitle>General Settings</CardTitle>
-                            </CardHeader>
+                            <CardHeader><CardTitle>General Settings</CardTitle></CardHeader>
                             <CardContent>
-                                <form className="admin-settings-form">
-                                    <Input
-                                        label="Application Name"
-                                        value={settings.appName}
-                                        onChange={handleChange('appName')}
-                                    />
-                                    <Input
-                                        label="Support Email"
-                                        type="email"
-                                        value={settings.supportEmail}
-                                        onChange={handleChange('supportEmail')}
-                                    />
+                                <form className="admin-settings-form" onSubmit={(e) => { e.preventDefault(); handleSave('general'); }}>
+                                    <Input label="Application Name" value={general.appName || ''} onChange={handleChange('general', 'appName')} />
+                                    <Input label="Support Email" type="email" value={general.supportEmail || ''} onChange={handleChange('general', 'supportEmail')} />
                                     <div className="admin-settings-form-row">
-                                        <Select
-                                            label="Timezone"
-                                            options={timezoneOptions}
-                                            value={settings.timezone}
-                                            onChange={handleChange('timezone')}
-                                        />
-                                        <Select
-                                            label="Language"
-                                            options={languageOptions}
-                                            value={settings.language}
-                                            onChange={handleChange('language')}
-                                        />
+                                        <Select label="Timezone" options={timezoneOptions} value={general.timezone || 'UTC'} onChange={handleChange('general', 'timezone')} />
+                                        <Select label="Language" options={languageOptions} value={general.language || 'en'} onChange={handleChange('general', 'language')} />
                                     </div>
-                                    <Input
-                                        label="Date Format"
-                                        value={settings.dateFormat}
-                                        onChange={handleChange('dateFormat')}
-                                    />
+                                    <Input label="Date Format" value={general.dateFormat || ''} onChange={handleChange('general', 'dateFormat')} />
                                     <div className="admin-settings-save-row">
-                                        <Button icon={Save}>Save Changes</Button>
+                                        <Button type="submit" icon={Save} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
                                     </div>
                                 </form>
                             </CardContent>
@@ -150,68 +169,43 @@ export function AdminSettings() {
 
                     {activeSection === 'security' && (
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Security Settings</CardTitle>
-                            </CardHeader>
+                            <CardHeader><CardTitle>Security Settings</CardTitle></CardHeader>
                             <CardContent>
-                                <form className="admin-settings-form">
+                                <form className="admin-settings-form" onSubmit={(e) => { e.preventDefault(); handleSave('security'); }}>
                                     <div className="admin-settings-section-group">
                                         <h4 className="admin-settings-section-title">Password Policy</h4>
-                                        <Input
-                                            label="Minimum Password Length"
-                                            type="number"
-                                            value={settings.minPasswordLength}
-                                            onChange={handleChange('minPasswordLength')}
-                                            min={6}
-                                            max={128}
-                                        />
+                                        <Input label="Minimum Password Length" type="number" value={security.minPasswordLength || 8} onChange={handleChange('security', 'minPasswordLength')} min={6} max={128} />
                                         <div className="admin-settings-toggles">
                                             <label className="admin-settings-toggle-item">
-                                                <div className="admin-settings-toggle-info">
-                                                    <span className="admin-settings-toggle-label">Require uppercase letters</span>
-                                                </div>
-                                                <input type="checkbox" className="admin-settings-toggle-input" checked={settings.requireUppercase} onChange={handleChange('requireUppercase')} />
+                                                <div className="admin-settings-toggle-info"><span className="admin-settings-toggle-label">Require uppercase letters</span></div>
+                                                <input type="checkbox" className="admin-settings-toggle-input" checked={security.requireUppercase ?? true} onChange={handleChange('security', 'requireUppercase')} />
                                             </label>
                                             <label className="admin-settings-toggle-item">
-                                                <div className="admin-settings-toggle-info">
-                                                    <span className="admin-settings-toggle-label">Require numbers</span>
-                                                </div>
-                                                <input type="checkbox" className="admin-settings-toggle-input" checked={settings.requireNumbers} onChange={handleChange('requireNumbers')} />
+                                                <div className="admin-settings-toggle-info"><span className="admin-settings-toggle-label">Require numbers</span></div>
+                                                <input type="checkbox" className="admin-settings-toggle-input" checked={security.requireNumbers ?? true} onChange={handleChange('security', 'requireNumbers')} />
                                             </label>
                                             <label className="admin-settings-toggle-item">
-                                                <div className="admin-settings-toggle-info">
-                                                    <span className="admin-settings-toggle-label">Require special characters</span>
-                                                </div>
-                                                <input type="checkbox" className="admin-settings-toggle-input" checked={settings.requireSpecial} onChange={handleChange('requireSpecial')} />
+                                                <div className="admin-settings-toggle-info"><span className="admin-settings-toggle-label">Require special characters</span></div>
+                                                <input type="checkbox" className="admin-settings-toggle-input" checked={security.requireSpecial ?? true} onChange={handleChange('security', 'requireSpecial')} />
                                             </label>
                                         </div>
                                     </div>
                                     <div className="admin-settings-section-group">
                                         <h4 className="admin-settings-section-title">Session & Access</h4>
                                         <div className="admin-settings-form-row">
-                                            <Input
-                                                label="Session Timeout (minutes)"
-                                                type="number"
-                                                value={settings.sessionTimeout}
-                                                onChange={handleChange('sessionTimeout')}
-                                            />
-                                            <Input
-                                                label="Max Login Attempts"
-                                                type="number"
-                                                value={settings.maxLoginAttempts}
-                                                onChange={handleChange('maxLoginAttempts')}
-                                            />
+                                            <Input label="Session Timeout (minutes)" type="number" value={security.sessionTimeout || 30} onChange={handleChange('security', 'sessionTimeout')} />
+                                            <Input label="Max Login Attempts" type="number" value={security.maxLoginAttempts || 5} onChange={handleChange('security', 'maxLoginAttempts')} />
                                         </div>
                                         <label className="admin-settings-toggle-item">
                                             <div className="admin-settings-toggle-info">
                                                 <span className="admin-settings-toggle-label">Require Two-Factor Authentication</span>
                                                 <span className="admin-settings-toggle-desc">All users must set up 2FA</span>
                                             </div>
-                                            <input type="checkbox" className="admin-settings-toggle-input" checked={settings.twoFactorRequired} onChange={handleChange('twoFactorRequired')} />
+                                            <input type="checkbox" className="admin-settings-toggle-input" checked={security.twoFactorRequired ?? false} onChange={handleChange('security', 'twoFactorRequired')} />
                                         </label>
                                     </div>
                                     <div className="admin-settings-save-row">
-                                        <Button icon={Save}>Save Security Settings</Button>
+                                        <Button type="submit" icon={Save} disabled={saving}>{saving ? 'Saving...' : 'Save Security Settings'}</Button>
                                     </div>
                                 </form>
                             </CardContent>
@@ -220,64 +214,35 @@ export function AdminSettings() {
 
                     {activeSection === 'email' && (
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Email Configuration (SMTP)</CardTitle>
-                            </CardHeader>
+                            <CardHeader><CardTitle>Email Configuration (SMTP)</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="admin-settings-info-banner">
                                     <Info size={16} />
                                     <span>These settings configure the outgoing email server for notifications, ticket replies, and system alerts.</span>
                                 </div>
-                                <form className="admin-settings-form">
+                                <form className="admin-settings-form" onSubmit={(e) => { e.preventDefault(); handleSave('email'); }}>
                                     <div className="admin-settings-form-row">
-                                        <Input
-                                            label="SMTP Host"
-                                            value={settings.smtpHost}
-                                            onChange={handleChange('smtpHost')}
-                                        />
-                                        <Input
-                                            label="SMTP Port"
-                                            type="number"
-                                            value={settings.smtpPort}
-                                            onChange={handleChange('smtpPort')}
-                                        />
+                                        <Input label="SMTP Host" value={email.smtpHost || ''} onChange={handleChange('email', 'smtpHost')} />
+                                        <Input label="SMTP Port" type="number" value={email.smtpPort || 587} onChange={handleChange('email', 'smtpPort')} />
                                     </div>
                                     <div className="admin-settings-form-row">
-                                        <Input
-                                            label="SMTP Username"
-                                            value={settings.smtpUser}
-                                            onChange={handleChange('smtpUser')}
-                                        />
-                                        <Input
-                                            label="SMTP Password"
-                                            type="password"
-                                            value={settings.smtpPassword}
-                                            onChange={handleChange('smtpPassword')}
-                                        />
+                                        <Input label="SMTP Username" value={email.smtpUser || ''} onChange={handleChange('email', 'smtpUser')} />
+                                        <Input label="SMTP Password" type="password" value={email.smtpPassword || ''} onChange={handleChange('email', 'smtpPassword')} />
                                     </div>
                                     <label className="admin-settings-toggle-item">
                                         <div className="admin-settings-toggle-info">
                                             <span className="admin-settings-toggle-label">Use TLS/SSL</span>
                                             <span className="admin-settings-toggle-desc">Encrypt SMTP connection (recommended)</span>
                                         </div>
-                                        <input type="checkbox" className="admin-settings-toggle-input" checked={settings.smtpSecure} onChange={handleChange('smtpSecure')} />
+                                        <input type="checkbox" className="admin-settings-toggle-input" checked={email.smtpSecure ?? true} onChange={handleChange('email', 'smtpSecure')} />
                                     </label>
                                     <div className="admin-settings-form-row">
-                                        <Input
-                                            label="From Name"
-                                            value={settings.fromName}
-                                            onChange={handleChange('fromName')}
-                                        />
-                                        <Input
-                                            label="From Email"
-                                            type="email"
-                                            value={settings.fromEmail}
-                                            onChange={handleChange('fromEmail')}
-                                        />
+                                        <Input label="From Name" value={email.fromName || ''} onChange={handleChange('email', 'fromName')} />
+                                        <Input label="From Email" type="email" value={email.fromEmail || ''} onChange={handleChange('email', 'fromEmail')} />
                                     </div>
                                     <div className="admin-settings-save-row">
                                         <Button variant="secondary" icon={RefreshCw}>Test Connection</Button>
-                                        <Button icon={Save}>Save Email Settings</Button>
+                                        <Button type="submit" icon={Save} disabled={saving}>{saving ? 'Saving...' : 'Save Email Settings'}</Button>
                                     </div>
                                 </form>
                             </CardContent>
@@ -286,34 +251,23 @@ export function AdminSettings() {
 
                     {activeSection === 'notifications' && (
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Notification Preferences</CardTitle>
-                            </CardHeader>
+                            <CardHeader><CardTitle>Notification Preferences</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="admin-settings-notification-grid">
-                                    {[
-                                        { event: 'Ticket Created', email: true, inApp: true, desc: 'When a new ticket is submitted' },
-                                        { event: 'Ticket Assigned', email: true, inApp: true, desc: 'When a ticket is assigned to an agent' },
-                                        { event: 'Ticket Resolved', email: true, inApp: true, desc: 'When a ticket is marked resolved' },
-                                        { event: 'SLA Breach Warning', email: true, inApp: true, desc: '15 minutes before SLA breach' },
-                                        { event: 'SLA Breached', email: true, inApp: true, desc: 'When an SLA target is missed' },
-                                        { event: 'New Comment', email: false, inApp: true, desc: 'When someone comments on a ticket' },
-                                        { event: 'User Signup', email: true, inApp: false, desc: 'When a new user registers' },
-                                        { event: 'Agent Status Change', email: false, inApp: true, desc: 'When an agent goes online/offline' },
-                                    ].map((item) => (
-                                        <div key={item.event} className="admin-notif-row">
+                                    {defaultNotifications.map((item) => (
+                                        <div key={item.key} className="admin-notif-row">
                                             <div className="admin-notif-info">
                                                 <span className="admin-notif-event">{item.event}</span>
                                                 <span className="admin-notif-desc">{item.desc}</span>
                                             </div>
                                             <div className="admin-notif-channels">
                                                 <label className="admin-notif-channel">
-                                                    <input type="checkbox" defaultChecked={item.email} />
+                                                    <input type="checkbox" checked={notifications?.[item.key]?.email ?? false} onChange={handleNotifChange(item.key, 'email')} />
                                                     <Mail size={14} />
                                                     <span>Email</span>
                                                 </label>
                                                 <label className="admin-notif-channel">
-                                                    <input type="checkbox" defaultChecked={item.inApp} />
+                                                    <input type="checkbox" checked={notifications?.[item.key]?.inApp ?? false} onChange={handleNotifChange(item.key, 'inApp')} />
                                                     <Bell size={14} />
                                                     <span>In-App</span>
                                                 </label>
@@ -322,7 +276,7 @@ export function AdminSettings() {
                                     ))}
                                 </div>
                                 <div className="admin-settings-save-row">
-                                    <Button icon={Save}>Save Notification Settings</Button>
+                                    <Button icon={Save} disabled={saving} onClick={() => handleSave('notifications')}>{saving ? 'Saving...' : 'Save Notification Settings'}</Button>
                                 </div>
                             </CardContent>
                         </Card>
@@ -330,9 +284,7 @@ export function AdminSettings() {
 
                     {activeSection === 'database' && (
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Database & Storage</CardTitle>
-                            </CardHeader>
+                            <CardHeader><CardTitle>Database & Storage</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="admin-settings-info-banner warning">
                                     <AlertTriangle size={16} />
@@ -341,29 +293,17 @@ export function AdminSettings() {
                                 <div className="admin-db-info">
                                     <div className="admin-db-row">
                                         <span className="admin-db-label">Database</span>
-                                        <span className="admin-db-value">MongoDB v7.0</span>
+                                        <span className="admin-db-value">MongoDB</span>
                                         <Badge variant="success">Connected</Badge>
                                     </div>
                                     <div className="admin-db-row">
-                                        <span className="admin-db-label">Host</span>
-                                        <span className="admin-db-value admin-db-mono">localhost:27017</span>
-                                    </div>
-                                    <div className="admin-db-row">
-                                        <span className="admin-db-label">Database Name</span>
-                                        <span className="admin-db-value admin-db-mono">orbitdesk</span>
-                                    </div>
-                                    <div className="admin-db-row">
-                                        <span className="admin-db-label">Collections</span>
-                                        <span className="admin-db-value">14</span>
-                                    </div>
-                                    <div className="admin-db-row">
                                         <span className="admin-db-label">Cache</span>
-                                        <span className="admin-db-value">Redis (localhost:6379)</span>
+                                        <span className="admin-db-value">Redis</span>
                                         <Badge variant="success">Connected</Badge>
                                     </div>
                                     <div className="admin-db-row">
                                         <span className="admin-db-label">Message Broker</span>
-                                        <span className="admin-db-value">Kafka (localhost:9092)</span>
+                                        <span className="admin-db-value">Kafka</span>
                                         <Badge variant="success">Connected</Badge>
                                     </div>
                                 </div>

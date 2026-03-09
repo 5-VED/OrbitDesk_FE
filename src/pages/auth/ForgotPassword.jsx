@@ -222,8 +222,8 @@ export function ForgotPassword() {
                     <div className="auth-card">
                         <div className="auth-header">
                             <div className="auth-logo">
-                                <div className="auth-logo-icon">S</div>
-                                <span className="auth-logo-text">SupportDesk</span>
+                                <div className="auth-logo-icon">O</div>
+                                <span className="auth-logo-text">OrbitDesk</span>
                             </div>
                             <h1 className="auth-title">Set new password</h1>
                             <p className="auth-subtitle">
@@ -451,8 +451,8 @@ export function ForgotPassword() {
                 <div className="auth-card">
                     <div className="auth-header">
                         <div className="auth-logo">
-                            <div className="auth-logo-icon">S</div>
-                            <span className="auth-logo-text">SupportDesk</span>
+                            <div className="auth-logo-icon">O</div>
+                            <span className="auth-logo-text">OrbitDesk</span>
                         </div>
                         <h1 className="auth-title">Forgot password?</h1>
                         <p className="auth-subtitle">

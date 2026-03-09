@@ -1,4 +1,4 @@
-import { Search, Bell, ChevronDown, LogOut, Settings, User } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut, Settings, User, Menu } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -7,7 +7,7 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { Avatar } from '../ui/Avatar';
 import './TopNavbar.css';
 
-export function TopNavbar({ collapsed }) {
+export function TopNavbar({ collapsed, onMenuToggle, isMobile = false }) {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const user = useAppSelector(selectCurrentUser);
@@ -33,19 +33,47 @@ export function TopNavbar({ collapsed }) {
         navigate('/login');
     };
 
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
     return (
-        <header className={`top-navbar ${collapsed ? 'collapsed' : ''}`}>
-            <div className="top-navbar-search">
-                <Search size={18} className="search-icon" />
-                <input
-                    type="text"
-                    placeholder="Search tickets, contacts, articles..."
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    className="search-input"
-                />
-                <kbd className="search-shortcut">⌘K</kbd>
-            </div>
+        <header className={`top-navbar ${collapsed ? 'collapsed' : ''} ${isMobile ? 'mobile' : ''}`}>
+            {isMobile && (
+                <button className="navbar-icon-btn hamburger-btn" onClick={onMenuToggle} aria-label="Open menu">
+                    <Menu size={22} />
+                </button>
+            )}
+            {isMobile ? (
+                mobileSearchOpen ? (
+                    <div className="top-navbar-search mobile-search-expanded">
+                        <Search size={18} className="search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={searchValue}
+                            onChange={(e) => setSearchValue(e.target.value)}
+                            className="search-input"
+                            autoFocus
+                            onBlur={() => { if (!searchValue) setMobileSearchOpen(false); }}
+                        />
+                    </div>
+                ) : (
+                    <button className="navbar-icon-btn" onClick={() => setMobileSearchOpen(true)} aria-label="Search">
+                        <Search size={20} />
+                    </button>
+                )
+            ) : (
+                <div className="top-navbar-search">
+                    <Search size={18} className="search-icon" />
+                    <input
+                        type="text"
+                        placeholder="Search tickets, contacts, articles..."
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        className="search-input"
+                    />
+                    <kbd className="search-shortcut">⌘K</kbd>
+                </div>
+            )}
 
             <div className="top-navbar-actions">
                 <ThemeToggle />
@@ -61,12 +89,14 @@ export function TopNavbar({ collapsed }) {
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     >
                         <Avatar name={user ? `${user.first_name} ${user.last_name}` : "User"} size="sm" status="online" />
-                        <div className="navbar-user-info">
-                            <span className="navbar-user-name">
-                                {user ? `${user.first_name} ${user.last_name}` : "User"}
-                            </span>
-                            <span className="navbar-user-role">{user?.role || 'User'}</span>
-                        </div>
+                        {!isMobile && (
+                            <div className="navbar-user-info">
+                                <span className="navbar-user-name">
+                                    {user ? `${user.first_name} ${user.last_name}` : "User"}
+                                </span>
+                                <span className="navbar-user-role">{user?.role || 'User'}</span>
+                            </div>
+                        )}
                         <ChevronDown size={16} className={`navbar-user-chevron ${isDropdownOpen ? 'rotate' : ''}`} />
                     </div>
 

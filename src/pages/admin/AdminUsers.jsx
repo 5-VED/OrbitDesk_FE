@@ -1,41 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Users,
     Search,
     Plus,
-    Filter,
-    MoreVertical,
-    Mail,
-    Shield,
-    UserCheck,
-    UserX,
     Trash2,
     Edit,
     Download,
-    ChevronDown,
     X,
     Eye,
-    RefreshCw
+    UserCheck,
+    UserX,
+    Loader2
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input, Select } from '@/components/ui/Input';
+import { userService } from '@/features/contacts/api/users';
 import './AdminUsers.css';
-
-// Mock data
-const mockUsers = [
-    { id: 1, first_name: 'Sarah', last_name: 'Chen', email: 'sarah.chen@acme.com', role: 'agent', status: 'active', organization: 'Acme Corp', group: 'Tier 1 Support', lastLogin: '2 hours ago', ticketsAssigned: 34 },
-    { id: 2, first_name: 'Mike', last_name: 'Johnson', email: 'mike.j@acme.com', role: 'agent', status: 'active', organization: 'Acme Corp', group: 'Tier 2 Support', lastLogin: '30 min ago', ticketsAssigned: 29 },
-    { id: 3, first_name: 'Emily', last_name: 'Davis', email: 'emily.d@acme.com', role: 'admin', status: 'active', organization: 'Acme Corp', group: null, lastLogin: '1 hour ago', ticketsAssigned: 0 },
-    { id: 4, first_name: 'Alex', last_name: 'Kim', email: 'alex.kim@techstart.io', role: 'agent', status: 'active', organization: 'TechStart', group: 'Billing', lastLogin: '5 hours ago', ticketsAssigned: 18 },
-    { id: 5, first_name: 'John', last_name: 'Smith', email: 'john.s@customer.com', role: 'customer', status: 'active', organization: 'Customer Inc', group: null, lastLogin: '1 day ago', ticketsAssigned: 0 },
-    { id: 6, first_name: 'Priya', last_name: 'Patel', email: 'priya.p@acme.com', role: 'agent', status: 'inactive', organization: 'Acme Corp', group: 'Tier 1 Support', lastLogin: '2 weeks ago', ticketsAssigned: 0 },
-    { id: 7, first_name: 'David', last_name: 'Lee', email: 'david.l@techstart.io', role: 'customer', status: 'active', organization: 'TechStart', group: null, lastLogin: '3 days ago', ticketsAssigned: 0 },
-    { id: 8, first_name: 'Jane', last_name: 'Cooper', email: 'jane.c@acme.com', role: 'admin', status: 'active', organization: 'Acme Corp', group: null, lastLogin: 'Just now', ticketsAssigned: 0 },
-];
 
 const roleOptions = [
     { value: '', label: 'All Roles' },
@@ -60,30 +44,47 @@ const getRoleBadgeVariant = (role) => {
 };
 
 const getStatusBadgeVariant = (status) => {
-    return status === 'active' ? 'success' : 'default';
+    return status === 'active' || status === 'online' ? 'success' : 'default';
 };
 
 export function AdminUsers() {
-    const [users] = useState(mockUsers);
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [activeDropdown, setActiveDropdown] = useState(null);
+    const [formData, setFormData] = useState({ first_name: '', last_name: '', email: '', phone: '', role_type: 'customer', password: '' });
+    const [submitting, setSubmitting] = useState(false);
+
+    const fetchUsers = useCallback(async () => {
+        try {
+            setLoading(true);
+            const res = await userService.list();
+            setUsers(res.data || []);
+        } catch (err) {
+            console.error('Failed to fetch users:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
     const filteredUsers = users.filter((user) => {
         const matchesSearch = !searchQuery ||
             `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesRole = !roleFilter || user.role === roleFilter;
-        const matchesStatus = !statusFilter || user.status === statusFilter;
+        const matchesRole = !roleFilter || user.role_type === roleFilter;
+        const matchesStatus = !statusFilter ||
+            (statusFilter === 'active' ? user.is_active !== false : user.is_active === false);
         return matchesSearch && matchesRole && matchesStatus;
     });
 
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            setSelectedUsers(filteredUsers.map(u => u.id));
+            setSelectedUsers(filteredUsers.map(u => u._id));
         } else {
             setSelectedUsers([]);
         }
@@ -95,16 +96,60 @@ export function AdminUsers() {
         );
     };
 
+    const handleCreate = async (e) => {
+        e.preventDefault();
+        try {
+            setSubmitting(true);
+            await userService.create(formData);
+            setIsCreateModalOpen(false);
+            setFormData({ first_name: '', last_name: '', email: '', phone: '', role_type: 'customer', password: '' });
+            fetchUsers();
+        } catch (err) {
+            console.error('Failed to create user:', err);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this user?')) return;
+        try {
+            await userService.delete(id);
+            fetchUsers();
+        } catch (err) {
+            console.error('Failed to delete user:', err);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Delete ${selectedUsers.length} users?`)) return;
+        try {
+            await userService.bulkDelete(selectedUsers);
+            setSelectedUsers([]);
+            fetchUsers();
+        } catch (err) {
+            console.error('Failed to bulk delete:', err);
+        }
+    };
+
+    const handleDisable = async (userId) => {
+        try {
+            await userService.disableUser(userId);
+            fetchUsers();
+        } catch (err) {
+            console.error('Failed to disable user:', err);
+        }
+    };
+
     const userCounts = {
         total: users.length,
-        admins: users.filter(u => u.role === 'admin').length,
-        agents: users.filter(u => u.role === 'agent').length,
-        customers: users.filter(u => u.role === 'customer').length,
+        admins: users.filter(u => u.role_type === 'admin').length,
+        agents: users.filter(u => u.role_type === 'agent').length,
+        customers: users.filter(u => u.role_type === 'customer').length,
     };
 
     return (
         <div className="admin-users">
-            {/* Page Header */}
             <div className="admin-page-header">
                 <div>
                     <h1 className="admin-page-title">Users & Agents</h1>
@@ -116,7 +161,6 @@ export function AdminUsers() {
                 </div>
             </div>
 
-            {/* Quick Stats */}
             <div className="admin-users-quick-stats">
                 <div className="admin-users-stat">
                     <span className="admin-users-stat-value">{userCounts.total}</span>
@@ -139,7 +183,6 @@ export function AdminUsers() {
                 </div>
             </div>
 
-            {/* Filters & Search */}
             <Card className="admin-users-toolbar-card">
                 <div className="admin-users-toolbar">
                     <div className="admin-users-search">
@@ -158,35 +201,20 @@ export function AdminUsers() {
                         )}
                     </div>
                     <div className="admin-users-filters">
-                        <select
-                            value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value)}
-                            className="admin-users-filter-select"
-                        >
-                            {roleOptions.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
+                        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="admin-users-filter-select">
+                            {roleOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                         </select>
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="admin-users-filter-select"
-                        >
-                            {statusOptions.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
+                        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="admin-users-filter-select">
+                            {statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                         </select>
                     </div>
                 </div>
 
-                {/* Bulk Actions Bar */}
                 {selectedUsers.length > 0 && (
                     <div className="admin-users-bulk-bar">
                         <span className="admin-users-bulk-count">{selectedUsers.length} selected</span>
                         <div className="admin-users-bulk-actions">
-                            <Button variant="secondary" size="sm" icon={UserCheck}>Activate</Button>
-                            <Button variant="secondary" size="sm" icon={UserX}>Deactivate</Button>
-                            <Button variant="danger" size="sm" icon={Trash2}>Delete</Button>
+                            <Button variant="danger" size="sm" icon={Trash2} onClick={handleBulkDelete}>Delete</Button>
                         </div>
                         <button className="admin-users-bulk-clear" onClick={() => setSelectedUsers([])}>
                             <X size={14} /> Clear
@@ -195,116 +223,102 @@ export function AdminUsers() {
                 )}
             </Card>
 
-            {/* Users Table */}
             <Card className="admin-users-table-card">
-                <div className="admin-users-table">
-                    <div className="admin-users-table-header">
-                        <div className="admin-users-col-check">
-                            <input
-                                type="checkbox"
-                                onChange={handleSelectAll}
-                                checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
-                            />
-                        </div>
-                        <span className="admin-users-col-user">User</span>
-                        <span className="admin-users-col-role">Role</span>
-                        <span className="admin-users-col-status">Status</span>
-                        <span className="admin-users-col-org">Organization</span>
-                        <span className="admin-users-col-group">Group</span>
-                        <span className="admin-users-col-login">Last Login</span>
-                        <span className="admin-users-col-actions">Actions</span>
+                {loading ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
+                        <Loader2 size={24} className="animate-spin" />
                     </div>
-                    <div className="admin-users-table-body">
-                        {filteredUsers.map((user) => (
-                            <div
-                                key={user.id}
-                                className={`admin-users-table-row ${selectedUsers.includes(user.id) ? 'selected' : ''}`}
-                            >
-                                <div className="admin-users-col-check">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedUsers.includes(user.id)}
-                                        onChange={() => handleSelectUser(user.id)}
-                                    />
-                                </div>
-                                <div className="admin-users-col-user">
-                                    <Avatar name={`${user.first_name} ${user.last_name}`} size="sm" />
-                                    <div className="admin-users-user-info">
-                                        <span className="admin-users-user-name">{user.first_name} {user.last_name}</span>
-                                        <span className="admin-users-user-email">{user.email}</span>
-                                    </div>
-                                </div>
-                                <div className="admin-users-col-role">
-                                    <Badge variant={getRoleBadgeVariant(user.role)}>{user.role}</Badge>
-                                </div>
-                                <div className="admin-users-col-status">
-                                    <Badge variant={getStatusBadgeVariant(user.status)}>{user.status}</Badge>
-                                </div>
-                                <div className="admin-users-col-org">
-                                    <span className="admin-users-org-text">{user.organization}</span>
-                                </div>
-                                <div className="admin-users-col-group">
-                                    <span className="admin-users-group-text">{user.group || '—'}</span>
-                                </div>
-                                <div className="admin-users-col-login">
-                                    <span className="admin-users-login-text">{user.lastLogin}</span>
-                                </div>
-                                <div className="admin-users-col-actions">
-                                    <div className="admin-users-action-btns">
-                                        <button className="admin-users-action-btn" title="View">
-                                            <Eye size={15} />
-                                        </button>
-                                        <button className="admin-users-action-btn" title="Edit">
-                                            <Edit size={15} />
-                                        </button>
-                                        <button className="admin-users-action-btn danger" title="Delete">
-                                            <Trash2 size={15} />
-                                        </button>
-                                    </div>
-                                </div>
+                ) : (
+                    <div className="admin-users-table">
+                        <div className="admin-users-table-header">
+                            <div className="admin-users-col-check">
+                                <input type="checkbox" onChange={handleSelectAll} checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0} />
                             </div>
-                        ))}
+                            <span className="admin-users-col-user">User</span>
+                            <span className="admin-users-col-role">Role</span>
+                            <span className="admin-users-col-status">Status</span>
+                            <span className="admin-users-col-org">Organization</span>
+                            <span className="admin-users-col-group">Group</span>
+                            <span className="admin-users-col-login">Last Login</span>
+                            <span className="admin-users-col-actions">Actions</span>
+                        </div>
+                        <div className="admin-users-table-body">
+                            {filteredUsers.map((user) => (
+                                <div key={user._id} className={`admin-users-table-row ${selectedUsers.includes(user._id) ? 'selected' : ''}`}>
+                                    <div className="admin-users-col-check">
+                                        <input type="checkbox" checked={selectedUsers.includes(user._id)} onChange={() => handleSelectUser(user._id)} />
+                                    </div>
+                                    <div className="admin-users-col-user">
+                                        <Avatar name={`${user.first_name} ${user.last_name}`} size="sm" src={user.profile_pic} />
+                                        <div className="admin-users-user-info">
+                                            <span className="admin-users-user-name">{user.first_name} {user.last_name}</span>
+                                            <span className="admin-users-user-email">{user.email}</span>
+                                        </div>
+                                    </div>
+                                    <div className="admin-users-col-role">
+                                        <Badge variant={getRoleBadgeVariant(user.role_type)}>{user.role_type}</Badge>
+                                    </div>
+                                    <div className="admin-users-col-status">
+                                        <Badge variant={getStatusBadgeVariant(user.is_active !== false ? 'active' : 'inactive')}>
+                                            {user.is_active !== false ? 'active' : 'inactive'}
+                                        </Badge>
+                                    </div>
+                                    <div className="admin-users-col-org">
+                                        <span className="admin-users-org-text">{user.organization_id?.name || '—'}</span>
+                                    </div>
+                                    <div className="admin-users-col-group">
+                                        <span className="admin-users-group-text">{user.groups?.[0]?.name || '—'}</span>
+                                    </div>
+                                    <div className="admin-users-col-login">
+                                        <span className="admin-users-login-text">{user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : '—'}</span>
+                                    </div>
+                                    <div className="admin-users-col-actions">
+                                        <div className="admin-users-action-btns">
+                                            <button className="admin-users-action-btn" title="Disable" onClick={() => handleDisable(user._id)}>
+                                                <UserX size={15} />
+                                            </button>
+                                            <button className="admin-users-action-btn danger" title="Delete" onClick={() => handleDelete(user._id)}>
+                                                <Trash2 size={15} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            {filteredUsers.length === 0 && (
+                                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-tertiary)' }}>
+                                    No users found
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-
-                {/* Footer with count */}
+                )}
                 <div className="admin-users-table-footer">
                     <span>Showing {filteredUsers.length} of {users.length} users</span>
                 </div>
             </Card>
 
-            {/* Create User Modal */}
-            <Modal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                title="Add New User"
-            >
-                <form className="admin-users-form" onSubmit={(e) => { e.preventDefault(); setIsCreateModalOpen(false); }}>
+            <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} title="Add New User">
+                <form className="admin-users-form" onSubmit={handleCreate}>
                     <div className="admin-users-form-row">
-                        <Input label="First Name" placeholder="Enter first name" required />
-                        <Input label="Last Name" placeholder="Enter last name" required />
+                        <Input label="First Name" placeholder="Enter first name" required value={formData.first_name} onChange={(e) => setFormData(p => ({ ...p, first_name: e.target.value }))} />
+                        <Input label="Last Name" placeholder="Enter last name" required value={formData.last_name} onChange={(e) => setFormData(p => ({ ...p, last_name: e.target.value }))} />
                     </div>
-                    <Input label="Email" type="email" placeholder="user@example.com" required />
-                    <Input label="Phone" type="tel" placeholder="+1 (555) 000-0000" />
+                    <Input label="Email" type="email" placeholder="user@example.com" required value={formData.email} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))} />
+                    <Input label="Phone" type="tel" placeholder="+1 (555) 000-0000" value={formData.phone} onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))} />
                     <Select
                         label="Role"
+                        value={formData.role_type}
+                        onChange={(e) => setFormData(p => ({ ...p, role_type: e.target.value }))}
                         options={[
                             { value: 'customer', label: 'Customer' },
                             { value: 'agent', label: 'Agent' },
                             { value: 'admin', label: 'Admin' },
                         ]}
                     />
-                    <Select
-                        label="Status"
-                        options={[
-                            { value: 'active', label: 'Active' },
-                            { value: 'inactive', label: 'Inactive' },
-                        ]}
-                    />
-                    <Input label="Password" type="password" placeholder="Set initial password" required />
+                    <Input label="Password" type="password" placeholder="Set initial password" required value={formData.password} onChange={(e) => setFormData(p => ({ ...p, password: e.target.value }))} />
                     <div className="admin-users-form-actions">
                         <Button variant="secondary" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
-                        <Button type="submit" icon={Plus}>Create User</Button>
+                        <Button type="submit" icon={Plus} disabled={submitting}>{submitting ? 'Creating...' : 'Create User'}</Button>
                     </div>
                 </form>
             </Modal>

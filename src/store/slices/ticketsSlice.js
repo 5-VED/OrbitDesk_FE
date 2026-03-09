@@ -16,6 +16,8 @@ export const fetchTickets = createAsyncThunk(
             if (tickets.filters.status !== 'all') params.status = tickets.filters.status;
             if (tickets.filters.priority !== 'all') params.priority = tickets.filters.priority;
             if (tickets.filters.search) params.search = tickets.filters.search;
+            if (tickets.filters.assignee) params.assignee_id = tickets.filters.assignee;
+            if (tickets.filters.channel !== 'all') params.channel = tickets.filters.channel;
 
             const response = await ticketService.list(params);
 
@@ -112,6 +114,8 @@ const initialState = {
         status: 'all',
         priority: 'all',
         search: '',
+        assignee: '',
+        channel: 'all',
     },
     pagination: {
         page: 1,
@@ -138,6 +142,14 @@ const ticketsSlice = createSlice({
         },
         setSearchQuery(state, action) {
             state.filters.search = action.payload;
+        },
+        setAssigneeFilter(state, action) {
+            state.filters.assignee = action.payload;
+            state.pagination.page = 1;
+        },
+        setChannelFilter(state, action) {
+            state.filters.channel = action.payload;
+            state.pagination.page = 1;
         },
         setPage(state, action) {
             state.pagination.page = action.payload;
@@ -231,6 +243,8 @@ export const {
     setStatusFilter,
     setPriorityFilter,
     setSearchQuery,
+    setAssigneeFilter,
+    setChannelFilter,
     setPage,
     setPageSize,
     setSelectedRows,

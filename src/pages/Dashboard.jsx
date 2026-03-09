@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Ticket,
     Clock,
@@ -18,9 +19,12 @@ import { Avatar } from '../components/ui/Avatar';
 import { Button } from '../components/ui/Button';
 import { slaService } from '../features/settings/api/sla';
 import { userService } from '../features/contacts/api/users';
+import { SkeletonDashboard } from '../components/ui/Skeleton';
+import { StaggerContainer, StaggerItem } from '../components/ui/AnimatedPage';
 import './Dashboard.css';
 
 export function Dashboard() {
+    const navigate = useNavigate();
     const [dashData, setDashData] = useState(null);
     const [agents, setAgents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -36,8 +40,8 @@ export function Dashboard() {
 
                 const agentList = agentsRes?.data?.agents || agentsRes?.data || [];
                 setAgents(Array.isArray(agentList) ? agentList.slice(0, 5) : []);
-            } catch {
-                // Dashboard is non-critical; show empty state
+            } catch (err) {
+                console.warn('Dashboard fetch failed:', err);
             } finally {
                 setLoading(false);
             }
@@ -67,9 +71,7 @@ export function Dashboard() {
     if (loading) {
         return (
             <PageContainer title="Dashboard">
-                <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
-                    <Loader2 size={32} className="spin" />
-                </div>
+                <SkeletonDashboard />
             </PageContainer>
         );
     }
@@ -78,26 +80,28 @@ export function Dashboard() {
         <PageContainer
             title="Dashboard"
             actions={
-                <Button icon={TrendingUp}>View Reports</Button>
+                <Button icon={TrendingUp} onClick={() => navigate('/reports')}>View Reports</Button>
             }
         >
             <div className="dashboard">
                 {/* Stats Cards */}
-                <div className="dashboard-stats">
+                <StaggerContainer className="dashboard-stats">
                     {ticketStats.map((stat) => (
-                        <Card key={stat.label} className="stat-card">
-                            <div className="stat-icon-wrapper" data-color={stat.color}>
-                                <stat.icon size={24} />
-                            </div>
-                            <div className="stat-content">
-                                <span className="stat-label">{stat.label}</span>
-                                <div className="stat-value-row">
-                                    <span className="stat-value">{stat.value}</span>
+                        <StaggerItem key={stat.label}>
+                            <Card className="stat-card">
+                                <div className="stat-icon-wrapper" data-color={stat.color}>
+                                    <stat.icon size={24} />
                                 </div>
-                            </div>
-                        </Card>
+                                <div className="stat-content">
+                                    <span className="stat-label">{stat.label}</span>
+                                    <div className="stat-value-row">
+                                        <span className="stat-value">{stat.value}</span>
+                                    </div>
+                                </div>
+                            </Card>
+                        </StaggerItem>
                     ))}
-                </div>
+                </StaggerContainer>
 
                 <div className="dashboard-grid">
                     {/* Agent Performance */}
@@ -183,14 +187,14 @@ export function Dashboard() {
                         </CardHeader>
                         <CardContent>
                             <div className="quick-actions">
-                                <Button variant="secondary" icon={Ticket} fullWidth>
+                                <Button variant="secondary" icon={Ticket} fullWidth onClick={() => navigate('/tickets')}>
                                     Create Ticket
                                 </Button>
-                                <Button variant="secondary" icon={Users} fullWidth>
+                                <Button variant="secondary" icon={Users} fullWidth onClick={() => navigate('/contacts')}>
                                     Add Contact
                                 </Button>
-                                <Button variant="secondary" icon={MessageSquare} fullWidth>
-                                    Start Chat
+                                <Button variant="secondary" icon={MessageSquare} fullWidth onClick={() => navigate('/knowledge-base')}>
+                                    Knowledge Base
                                 </Button>
                             </div>
                         </CardContent>

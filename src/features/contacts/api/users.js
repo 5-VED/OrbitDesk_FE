@@ -55,6 +55,11 @@ export const userService = {
         const response = await api.get('/role');
         return response.data;
     },
+
+    disableUser: async (userId) => {
+        const response = await api.patch('/user/disable-user', { userId });
+        return response.data;
+    },
 };
 
 export default userService;

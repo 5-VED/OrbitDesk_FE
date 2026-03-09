@@ -27,10 +27,13 @@ import {
     setStatusFilter,
     setPriorityFilter,
     setSearchQuery,
+    setAssigneeFilter,
+    setChannelFilter,
     setPage,
     setPageSize,
     setSelectedRows,
     clearSelectedRows,
+    resetFilters,
     selectTickets,
     selectTicketsLoading,
     selectTicketsFilters,
@@ -38,6 +41,7 @@ import {
     selectTicketsSelectedRows,
 } from '../store/slices/ticketsSlice';
 import { getFilterStatusOptions, getFilterPriorityOptions } from '../utils/ticketConstants';
+import { useSocketEvent } from '../hooks/useSocket';
 import { toast } from 'react-hot-toast';
 import './TicketsList.css';
 
@@ -117,16 +121,29 @@ export function TicketsList() {
     const pagination = useAppSelector(selectTicketsPagination);
     const selectedRows = useAppSelector(selectTicketsSelectedRows);
 
-    // Local UI state (ephemeral modal states)
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [editingTicket, setEditingTicket] = useState(null);
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-    // Fetch tickets when filters or pagination change
+    const activeFilterCount = [
+        filters.assignee ? 1 : 0,
+        filters.channel !== 'all' ? 1 : 0,
+    ].reduce((a, b) => a + b, 0);
+
+    useSocketEvent('ticket:created', () => {
+        dispatch(fetchTickets());
+        toast.success('New ticket received', { id: 'new-ticket' });
+    });
+
+    useSocketEvent('ticket:updated', () => {
+        dispatch(fetchTickets());
+    });
+
     useEffect(() => {
         dispatch(fetchTickets());
-    }, [dispatch, filters.status, filters.priority, pagination.page, pagination.limit]);
+    }, [dispatch, filters.status, filters.priority, filters.assignee, filters.channel, pagination.page, pagination.limit]);
 
     // Debounced search
     useEffect(() => {
@@ -319,11 +336,41 @@ export function TicketsList() {
                             value={filters.priority}
                             onChange={(e) => dispatch(setPriorityFilter(e.target.value))}
                         />
-                        <Button variant="ghost" icon={Filter}>
-                            More Filters
+                        <Button
+                            variant="ghost"
+                            icon={Filter}
+                            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                            className={showAdvancedFilters ? 'active-filter-btn' : ''}
+                        >
+                            More Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
                         </Button>
+                        {(filters.status !== 'all' || filters.priority !== 'all' || filters.search || activeFilterCount > 0) && (
+                            <Button variant="ghost" size="sm" onClick={() => dispatch(resetFilters())}>
+                                Clear All
+                            </Button>
+                        )}
                     </div>
                 </div>
+
+                {/* Advanced Filters Panel */}
+                {showAdvancedFilters && (
+                    <div className="tickets-advanced-filters">
+                        <div className="advanced-filter-item">
+                            <label>Channel</label>
+                            <Select
+                                options={[
+                                    { value: 'all', label: 'All Channels' },
+                                    { value: 'web', label: 'Web' },
+                                    { value: 'email', label: 'Email' },
+                                    { value: 'phone', label: 'Phone' },
+                                    { value: 'chat', label: 'Chat' },
+                                ]}
+                                value={filters.channel}
+                                onChange={(e) => dispatch(setChannelFilter(e.target.value))}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Bulk Actions */}
                 {selectedRows.length > 0 && (

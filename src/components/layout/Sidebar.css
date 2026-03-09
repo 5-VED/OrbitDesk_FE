@@ -142,3 +142,17 @@
     border-color: rgba(245, 158, 11, 0.5);
     color: #f59e0b !important;
 }
+
+/* Mobile sidebar: off-screen drawer */
+@media (max-width: 768px) {
+    .sidebar.sidebar-mobile {
+        transform: translateX(-100%);
+        transition: transform var(--transition-slow);
+        width: var(--sidebar-width);
+        z-index: 200;
+    }
+
+    .sidebar.sidebar-mobile.sidebar-mobile-open {
+        transform: translateX(0);
+    }
+}

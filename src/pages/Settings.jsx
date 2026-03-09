@@ -1,20 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Settings as SettingsIcon,
-    User,
     Bell,
     Shield,
     Zap,
     Link,
     Clock,
     Mail,
-    Save
+    Save,
+    Loader2
 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { Input, Select, Textarea } from '../components/ui/Input';
+import { Input, Select } from '../components/ui/Input';
 import { SlaPolicyList } from '../features/settings/components/SlaPolicyList';
+import { settingsService } from '../services/settings.service';
+import { toast } from 'react-hot-toast';
 import './Settings.css';
 
 const menuItems = [
@@ -45,26 +47,67 @@ const languageOptions = [
 
 export function Settings() {
     const [activeSection, setActiveSection] = useState('general');
-    const [settings, setSettings] = useState({
-        companyName: 'Acme Corp',
-        supportEmail: 'support@acme.com',
-        timezone: 'America/New_York',
-        language: 'en',
-        autoAssign: true,
-        emailNotifications: true,
-        slackNotifications: false,
-        twoFactor: true,
-    });
+    const [settings, setSettings] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
-    const handleChange = (field) => (e) => {
+    useEffect(() => {
+        const load = async () => {
+            try {
+                setLoading(true);
+                const res = await settingsService.get();
+                setSettings(res.data || {});
+            } catch (err) {
+                console.error('Failed to load settings:', err);
+                setSettings({
+                    general: { companyName: '', supportEmail: '', timezone: 'UTC', language: 'en' },
+                    notifications: {},
+                    security: { twoFactor: false },
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, []);
+
+    const general = settings.general || {};
+    const security = settings.security || {};
+
+    const handleChange = (section, field) => (e) => {
         const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-        setSettings(prev => ({ ...prev, [field]: value }));
+        setSettings(prev => ({
+            ...prev,
+            [section]: { ...prev[section], [field]: value },
+        }));
     };
+
+    const handleSave = async (category) => {
+        try {
+            setSaving(true);
+            const res = await settingsService.update(category, settings[category] || {});
+            setSettings(prev => ({ ...prev, [category]: res.data }));
+            toast.success('Settings saved successfully');
+        } catch (err) {
+            toast.error('Failed to save settings');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <PageContainer title="Settings">
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
+                    <Loader2 size={32} className="animate-spin" />
+                </div>
+            </PageContainer>
+        );
+    }
 
     return (
         <PageContainer title="Settings">
             <div className="settings-page">
-                {/* Settings Menu */}
                 <aside className="settings-menu">
                     <nav>
                         {menuItems.map((item) => (
@@ -80,39 +123,17 @@ export function Settings() {
                     </nav>
                 </aside>
 
-                {/* Settings Content */}
                 <div className="settings-content">
                     {activeSection === 'general' && (
                         <Card>
-                            <CardHeader>
-                                <CardTitle>General Settings</CardTitle>
-                            </CardHeader>
+                            <CardHeader><CardTitle>General Settings</CardTitle></CardHeader>
                             <CardContent>
-                                <form className="settings-form">
-                                    <Input
-                                        label="Company Name"
-                                        value={settings.companyName}
-                                        onChange={handleChange('companyName')}
-                                    />
-                                    <Input
-                                        label="Support Email"
-                                        type="email"
-                                        value={settings.supportEmail}
-                                        onChange={handleChange('supportEmail')}
-                                    />
-                                    <Select
-                                        label="Timezone"
-                                        options={timezoneOptions}
-                                        value={settings.timezone}
-                                        onChange={handleChange('timezone')}
-                                    />
-                                    <Select
-                                        label="Language"
-                                        options={languageOptions}
-                                        value={settings.language}
-                                        onChange={handleChange('language')}
-                                    />
-                                    <Button icon={Save}>Save Changes</Button>
+                                <form className="settings-form" onSubmit={(e) => { e.preventDefault(); handleSave('general'); }}>
+                                    <Input label="Company Name" value={general.appName || ''} onChange={handleChange('general', 'appName')} />
+                                    <Input label="Support Email" type="email" value={general.supportEmail || ''} onChange={handleChange('general', 'supportEmail')} />
+                                    <Select label="Timezone" options={timezoneOptions} value={general.timezone || 'UTC'} onChange={handleChange('general', 'timezone')} />
+                                    <Select label="Language" options={languageOptions} value={general.language || 'en'} onChange={handleChange('general', 'language')} />
+                                    <Button type="submit" icon={Save} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
                                 </form>
                             </CardContent>
                         </Card>
@@ -120,9 +141,7 @@ export function Settings() {
 
                     {activeSection === 'notifications' && (
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Notification Preferences</CardTitle>
-                            </CardHeader>
+                            <CardHeader><CardTitle>Notification Preferences</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="settings-toggles">
                                     <label className="toggle-item">
@@ -130,35 +149,26 @@ export function Settings() {
                                             <span className="toggle-label">Email Notifications</span>
                                             <span className="toggle-description">Receive email updates for ticket activity</span>
                                         </div>
-                                        <input
-                                            type="checkbox"
-                                            className="toggle-input"
-                                            checked={settings.emailNotifications}
-                                            onChange={handleChange('emailNotifications')}
-                                        />
+                                        <input type="checkbox" className="toggle-input" checked={settings.notifications?.emailNotifications ?? true} onChange={handleChange('notifications', 'emailNotifications')} />
                                     </label>
                                     <label className="toggle-item">
                                         <div className="toggle-info">
                                             <span className="toggle-label">Slack Notifications</span>
                                             <span className="toggle-description">Send notifications to Slack channels</span>
                                         </div>
-                                        <input
-                                            type="checkbox"
-                                            className="toggle-input"
-                                            checked={settings.slackNotifications}
-                                            onChange={handleChange('slackNotifications')}
-                                        />
+                                        <input type="checkbox" className="toggle-input" checked={settings.notifications?.slackNotifications ?? false} onChange={handleChange('notifications', 'slackNotifications')} />
                                     </label>
                                 </div>
+                                <Button icon={Save} disabled={saving} onClick={() => handleSave('notifications')} style={{ marginTop: '1rem' }}>
+                                    {saving ? 'Saving...' : 'Save Changes'}
+                                </Button>
                             </CardContent>
                         </Card>
                     )}
 
                     {activeSection === 'automation' && (
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Automation Rules</CardTitle>
-                            </CardHeader>
+                            <CardHeader><CardTitle>Automation Rules</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="settings-toggles">
                                     <label className="toggle-item">
@@ -166,17 +176,12 @@ export function Settings() {
                                             <span className="toggle-label">Auto-assign Tickets</span>
                                             <span className="toggle-description">Automatically assign new tickets to available agents</span>
                                         </div>
-                                        <input
-                                            type="checkbox"
-                                            className="toggle-input"
-                                            checked={settings.autoAssign}
-                                            onChange={handleChange('autoAssign')}
-                                        />
+                                        <input type="checkbox" className="toggle-input" checked={general.autoAssign ?? true} onChange={handleChange('general', 'autoAssign')} />
                                     </label>
                                 </div>
                                 <div className="automation-hint">
                                     <p>Configure more advanced automation rules in the Automation Center.</p>
-                                    <Button variant="secondary">Open Automation Center</Button>
+                                    <Button variant="secondary" disabled title="Coming soon">Open Automation Center</Button>
                                 </div>
                             </CardContent>
                         </Card>
@@ -184,9 +189,7 @@ export function Settings() {
 
                     {activeSection === 'security' && (
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Security Settings</CardTitle>
-                            </CardHeader>
+                            <CardHeader><CardTitle>Security Settings</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="settings-toggles">
                                     <label className="toggle-item">
@@ -194,18 +197,16 @@ export function Settings() {
                                             <span className="toggle-label">Two-Factor Authentication</span>
                                             <span className="toggle-description">Require 2FA for all team members</span>
                                         </div>
-                                        <input
-                                            type="checkbox"
-                                            className="toggle-input"
-                                            checked={settings.twoFactor}
-                                            onChange={handleChange('twoFactor')}
-                                        />
+                                        <input type="checkbox" className="toggle-input" checked={security.twoFactorRequired ?? false} onChange={handleChange('security', 'twoFactorRequired')} />
                                     </label>
                                 </div>
                                 <div className="security-actions">
-                                    <Button variant="secondary">View Login History</Button>
-                                    <Button variant="secondary">Manage API Keys</Button>
+                                    <Button variant="secondary" disabled title="Coming soon">View Login History</Button>
+                                    <Button variant="secondary" disabled title="Coming soon">Manage API Keys</Button>
                                 </div>
+                                <Button icon={Save} disabled={saving} onClick={() => handleSave('security')} style={{ marginTop: '1rem' }}>
+                                    {saving ? 'Saving...' : 'Save Changes'}
+                                </Button>
                             </CardContent>
                         </Card>
                     )}

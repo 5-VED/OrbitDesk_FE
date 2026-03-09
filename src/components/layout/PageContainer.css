@@ -40,6 +40,15 @@
     padding: var(--spacing-xl);
 }
 
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 150;
+    animation: fadeIn var(--transition-fast);
+}
+
 /* Responsive adjustments */
 @media (max-width: 1024px) {
     .page-main {

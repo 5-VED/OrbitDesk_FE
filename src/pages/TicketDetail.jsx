@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import {
     ArrowLeft,
     Send,
@@ -48,6 +49,7 @@ import {
 import { getStatusOptions, getPriorityOptions } from '../utils/ticketConstants';
 import { aiService } from '../services/ai.service';
 import { ratingService } from '../services/rating.service';
+import { useSocketEvent } from '../hooks/useSocket';
 import { toast } from 'react-hot-toast';
 import './TicketDetail.css';
 
@@ -72,6 +74,7 @@ export function TicketDetail() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [commentToDelete, setCommentToDelete] = useState(null);
     const replyEditorRef = useRef(null);
+    const conversationEndRef = useRef(null);
     const [isSmartReplyModalOpen, setIsSmartReplyModalOpen] = useState(false);
 
     // AI State
@@ -94,6 +97,37 @@ export function TicketDetail() {
             dispatch(clearTicketDetail());
         };
     }, [dispatch, ticketId]);
+
+    useSocketEvent('ticket:updated', (data) => {
+        if (data?.ticketId === ticketId) {
+            dispatch(fetchTicketDetail(ticketId));
+        }
+    });
+
+    useSocketEvent('comment:added', (data) => {
+        if (data?.ticketId === ticketId) {
+            dispatch(fetchTicketDetail(ticketId));
+            toast.success('New comment received', { id: 'new-comment' });
+        }
+    });
+
+    useEffect(() => {
+        if (comments.length > 0 || ticket) {
+            conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [comments.length, ticket?._id]);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (replyText && replyText !== '<p></p>') {
+                    handleSubmitReply();
+                }
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [replyText]);
 
     useEffect(() => {
         if (ticketId) {
@@ -480,7 +514,6 @@ export function TicketDetail() {
                                 </div>
                             </div>
 
-                            {/* Comments/Replies */}
                             {comments.map((comment) => (
                                 <div
                                     key={comment._id}
@@ -554,11 +587,12 @@ export function TicketDetail() {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div dangerouslySetInnerHTML={{ __html: comment.body }} />
+                                            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comment.body) }} />
                                         )}
                                     </div>
                                 </div>
                             ))}
+                            <div ref={conversationEndRef} />
                         </div>
 
                         {/* Reply Form */}
@@ -600,7 +634,7 @@ export function TicketDetail() {
                                 >
                                     AI Reply
                                 </Button>
-                                <Button type="submit" icon={Send} disabled={!replyText || replyText === '<p></p>' || submitting}>
+                                <Button type="submit" icon={Send} disabled={!replyText || replyText === '<p></p>' || submitting} title="Ctrl+Enter to send">
                                     {submitting ? 'Sending...' : (isInternal ? 'Add Note' : 'Send Reply')}
                                 </Button>
                             </div>

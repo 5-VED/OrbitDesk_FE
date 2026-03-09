@@ -239,3 +239,24 @@
         transform: translateY(0);
     }
 }
+
+/* Mobile navbar */
+.top-navbar.mobile {
+    left: 0;
+    gap: var(--spacing-sm);
+}
+
+.hamburger-btn {
+    flex-shrink: 0;
+}
+
+.mobile-search-expanded {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .top-navbar {
+        left: 0 !important;
+        padding: 0 var(--spacing-md);
+    }
+}
