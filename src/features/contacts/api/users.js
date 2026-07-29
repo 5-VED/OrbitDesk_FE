@@ -50,6 +50,11 @@ export const userService = {
         const response = await api.post('/user/bulk-delete', { ids });
         return response.data;
     },
+
+    getRoles: async () => {
+        const response = await api.get('/role');
+        return response.data;
+    },
 };
 
 export default userService;

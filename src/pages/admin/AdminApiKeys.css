@@ -1,0 +1,183 @@
+/* Page Layout */
+.admin-api-keys {
+    animation: fadeIn var(--transition-normal);
+}
+
+/* Create New Key Form */
+.admin-api-new-key {
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-api-new-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.admin-api-scopes-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.admin-api-scopes-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+}
+
+.admin-api-scopes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.admin-api-scope-check {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: var(--spacing-xs) 0;
+}
+
+.admin-api-scope-check input {
+    accent-color: var(--color-primary);
+}
+
+.admin-api-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--color-border-light);
+}
+
+/* Key List */
+.admin-api-keys-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.admin-api-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-2xl);
+    color: var(--color-text-tertiary);
+}
+
+/* Key Card */
+.admin-api-key-card {
+    transition: all var(--transition-fast);
+}
+
+.admin-api-key-card:hover {
+    border-color: var(--color-border-dark);
+}
+
+.admin-api-key-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+
+.admin-api-key-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.admin-api-key-name {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.admin-api-key-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.admin-api-key-action {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-md);
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.admin-api-key-action:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+}
+
+.admin-api-key-action.danger:hover {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+.admin-api-key-value {
+    margin-bottom: var(--spacing-md);
+}
+
+.admin-api-key-value code {
+    display: block;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    user-select: all;
+}
+
+.admin-api-key-masked {
+    letter-spacing: 2px;
+    -webkit-text-security: disc;
+}
+
+/* Key Meta */
+.admin-api-key-meta {
+    display: flex;
+    gap: var(--spacing-lg);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.admin-api-key-scopes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+}
+
+/* Info Banner */
+.admin-api-keys-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--color-warning-light);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-warning);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,207 @@
+.admin-system-health {
+    animation: fadeIn var(--transition-normal);
+}
+
+/* Overall Status Banner */
+.admin-health-overall {
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-health-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+.admin-health-banner.healthy {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.admin-health-banner.degraded {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.admin-health-banner.down {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+/* Service Grid */
+.admin-health-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-health-service-card {
+    transition: all var(--transition-fast);
+}
+
+.admin-health-service-card:hover {
+    border-color: var(--color-border-dark);
+    box-shadow: var(--shadow-md);
+}
+
+.admin-health-service-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-health-service-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    flex-shrink: 0;
+}
+
+.admin-health-service-icon[data-status="healthy"] {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.admin-health-service-icon[data-status="degraded"] {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.admin-health-service-icon[data-status="down"] {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+.admin-health-service-icon[data-status="checking"] {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-tertiary);
+}
+
+.admin-health-service-title {
+    flex: 1;
+}
+
+.admin-health-service-title h3 {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--spacing-xs);
+}
+
+/* Service Details */
+.admin-health-service-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.admin-health-service-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.admin-health-service-detail:last-child {
+    border-bottom: none;
+}
+
+.admin-health-detail-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+}
+
+.admin-health-detail-value {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+}
+
+/* System Stats Card */
+.admin-health-stats-card {
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-health-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-lg);
+}
+
+.admin-health-stat-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+.admin-health-stat-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: var(--radius-md);
+}
+
+.admin-health-stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.admin-health-stat-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+
+.admin-health-stat-value {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .admin-health-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-health-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-health-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}

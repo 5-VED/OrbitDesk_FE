@@ -1,18 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, Mail, Shield, Calendar, Camera, Save, X, Phone } from 'lucide-react';
+import { User, Mail, Shield, Calendar, Camera, Save, X, Phone, Loader2 } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Avatar } from '../components/ui/Avatar';
 import { Button } from '../components/ui/Button';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { updateUserProfile, selectCurrentUser, selectAuthLoading } from '../store/slices/authSlice';
+import { ratingService } from '../services/rating.service';
+import { ticketService } from '../features/tickets/api/tickets';
 import toast from 'react-hot-toast';
 import './Profile.css';
 
 export function Profile() {
     const dispatch = useAppDispatch();
     const user = useAppSelector(selectCurrentUser);
-    const authLoading = useAppSelector(selectAuthLoading);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         first_name: '',
@@ -21,8 +22,9 @@ export function Profile() {
         phone: ''
     });
     const [loading, setLoading] = useState(false);
+    const [stats, setStats] = useState({ assigned: '—', resolved: '—', rating: '—', slaCompliance: '—' });
+    const [statsLoading, setStatsLoading] = useState(true);
 
-    // Profile picture state
     const fileInputRef = useRef(null);
     const [profilePic, setProfilePic] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -39,10 +41,48 @@ export function Profile() {
         }
     }, [user]);
 
+    useEffect(() => {
+        if (!user?._id) return;
+        const fetchStats = async () => {
+            setStatsLoading(true);
+            try {
+                const [ratingRes, ticketsRes] = await Promise.allSettled([
+                    ratingService.getAgentRating(user._id),
+                    ticketService.list({ assignee_id: user._id, limit: 1 }),
+                ]);
+
+                let avgRating = '—';
+                if (ratingRes.status === 'fulfilled' && ratingRes.value?.data) {
+                    avgRating = ratingRes.value.data.avgRating?.toFixed(1) || '—';
+                }
+
+                let assigned = '—', resolved = '—';
+                if (ticketsRes.status === 'fulfilled' && ticketsRes.value?.data) {
+                    const tickets = ticketsRes.value.data;
+                    if (Array.isArray(tickets)) {
+                        assigned = tickets.length || 0;
+                        resolved = tickets.filter(t => t.status === 'solved' || t.status === 'closed').length || 0;
+                    }
+                }
+
+                setStats({
+                    assigned: assigned !== '—' ? assigned : user.ticketCount || '—',
+                    resolved,
+                    rating: avgRating !== '—' ? avgRating : user.avgRating || '—',
+                    slaCompliance: user.slaCompliance || '—',
+                });
+            } catch {
+                // fall back to defaults
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+        fetchStats();
+    }, [user?._id]);
+
     const handleEditToggle = () => {
         setIsEditing(!isEditing);
         if (!isEditing && user) {
-            // Reset form data to current user state when entering edit mode
             setFormData({
                 first_name: user.first_name || '',
                 last_name: user.last_name || '',
@@ -70,11 +110,10 @@ export function Profile() {
         }
     };
 
-    const getImageUrl = (url) => {
+const getImageUrl = (url) => {
         if (!url) return null;
         if (url.startsWith('http') || url.startsWith('blob:')) return url;
-        // Adjust for local dev if needed, typically Vite proxy handles /uploads
-        return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
+        return url;
     };
 
     const handleSave = async () => {
@@ -83,13 +122,11 @@ export function Profile() {
         setLoading(true);
         try {
             const data = new FormData();
-            // Append text fields
             data.append('first_name', formData.first_name);
             data.append('last_name', formData.last_name);
             data.append('email', formData.email);
             data.append('phone', formData.phone);
 
-            // Append profile picture if selected
             if (profilePic) {
                 data.append('profile_pic', profilePic);
             }
@@ -273,24 +310,30 @@ export function Profile() {
                             <CardTitle>Activity Overview</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="profile-stats-grid">
-                                <div className="profile-stat-box">
-                                    <span className="stat-number">12</span>
-                                    <span className="stat-label">Tickets Assigned</span>
+                            {statsLoading ? (
+                                <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--spacing-xl)' }}>
+                                    <Loader2 size={24} className="spin" />
                                 </div>
-                                <div className="profile-stat-box">
-                                    <span className="stat-number">45</span>
-                                    <span className="stat-label">Tickets Resolved</span>
+                            ) : (
+                                <div className="profile-stats-grid">
+                                    <div className="profile-stat-box">
+                                        <span className="stat-number">{stats.assigned}</span>
+                                        <span className="stat-label">Tickets Assigned</span>
+                                    </div>
+                                    <div className="profile-stat-box">
+                                        <span className="stat-number">{stats.resolved}</span>
+                                        <span className="stat-label">Tickets Resolved</span>
+                                    </div>
+                                    <div className="profile-stat-box">
+                                        <span className="stat-number">{stats.rating}</span>
+                                        <span className="stat-label">Avg Rating</span>
+                                    </div>
+                                    <div className="profile-stat-box">
+                                        <span className="stat-number">{stats.slaCompliance}</span>
+                                        <span className="stat-label">SLA Compliance</span>
+                                    </div>
                                 </div>
-                                <div className="profile-stat-box">
-                                    <span className="stat-number">4.8</span>
-                                    <span className="stat-label">Avg Rating</span>
-                                </div>
-                                <div className="profile-stat-box">
-                                    <span className="stat-number">98%</span>
-                                    <span className="stat-label">SLA Compliance</span>
-                                </div>
-                            </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>

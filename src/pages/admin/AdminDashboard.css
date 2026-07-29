@@ -6,6 +6,25 @@
     animation: fadeIn var(--transition-normal);
 }
 
+.admin-dashboard-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: var(--spacing-md);
+    color: var(--color-text-tertiary);
+}
+
+.admin-dashboard-loading .spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* Page Header */
 .admin-page-header {
     display: flex;

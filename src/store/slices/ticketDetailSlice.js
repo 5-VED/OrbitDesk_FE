@@ -30,8 +30,9 @@ export const fetchAgents = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const response = await userService.getAgents();
-            if (response.success && response.data) {
-                return response.data.map((agent) => ({
+            const agents = response?.data?.agents || response?.data || [];
+            if (response.success && Array.isArray(agents)) {
+                return agents.map((agent) => ({
                     value: agent._id,
                     label: `${agent.first_name} ${agent.last_name}`,
                 }));
