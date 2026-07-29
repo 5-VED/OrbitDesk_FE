@@ -1,21 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Users,
     Search,
     Plus,
-    Filter,
-    MoreVertical,
-    Mail,
-    Shield,
     UserCheck,
     UserX,
     Trash2,
     Edit,
     Download,
-    ChevronDown,
     X,
     Eye,
-    RefreshCw
+    Loader2
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -23,19 +18,8 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input, Select } from '@/components/ui/Input';
+import { userService } from '@/features/contacts/api/users';
 import './AdminUsers.css';
-
-// Mock data
-const mockUsers = [
-    { id: 1, first_name: 'Sarah', last_name: 'Chen', email: 'sarah.chen@acme.com', role: 'agent', status: 'active', organization: 'Acme Corp', group: 'Tier 1 Support', lastLogin: '2 hours ago', ticketsAssigned: 34 },
-    { id: 2, first_name: 'Mike', last_name: 'Johnson', email: 'mike.j@acme.com', role: 'agent', status: 'active', organization: 'Acme Corp', group: 'Tier 2 Support', lastLogin: '30 min ago', ticketsAssigned: 29 },
-    { id: 3, first_name: 'Emily', last_name: 'Davis', email: 'emily.d@acme.com', role: 'admin', status: 'active', organization: 'Acme Corp', group: null, lastLogin: '1 hour ago', ticketsAssigned: 0 },
-    { id: 4, first_name: 'Alex', last_name: 'Kim', email: 'alex.kim@techstart.io', role: 'agent', status: 'active', organization: 'TechStart', group: 'Billing', lastLogin: '5 hours ago', ticketsAssigned: 18 },
-    { id: 5, first_name: 'John', last_name: 'Smith', email: 'john.s@customer.com', role: 'customer', status: 'active', organization: 'Customer Inc', group: null, lastLogin: '1 day ago', ticketsAssigned: 0 },
-    { id: 6, first_name: 'Priya', last_name: 'Patel', email: 'priya.p@acme.com', role: 'agent', status: 'inactive', organization: 'Acme Corp', group: 'Tier 1 Support', lastLogin: '2 weeks ago', ticketsAssigned: 0 },
-    { id: 7, first_name: 'David', last_name: 'Lee', email: 'david.l@techstart.io', role: 'customer', status: 'active', organization: 'TechStart', group: null, lastLogin: '3 days ago', ticketsAssigned: 0 },
-    { id: 8, first_name: 'Jane', last_name: 'Cooper', email: 'jane.c@acme.com', role: 'admin', status: 'active', organization: 'Acme Corp', group: null, lastLogin: 'Just now', ticketsAssigned: 0 },
-];
 
 const roleOptions = [
     { value: '', label: 'All Roles' },
@@ -64,26 +48,39 @@ const getStatusBadgeVariant = (status) => {
 };
 
 export function AdminUsers() {
-    const [users] = useState(mockUsers);
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [activeDropdown, setActiveDropdown] = useState(null);
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const res = await userService.list();
+                setUsers(res?.data || []);
+            } catch {
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUsers();
+    }, []);
 
     const filteredUsers = users.filter((user) => {
         const matchesSearch = !searchQuery ||
             `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesRole = !roleFilter || user.role === roleFilter;
-        const matchesStatus = !statusFilter || user.status === statusFilter;
+        const matchesRole = !roleFilter || user.role_type === roleFilter;
+        const matchesStatus = !statusFilter || user.is_active === (statusFilter === 'active');
         return matchesSearch && matchesRole && matchesStatus;
     });
 
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            setSelectedUsers(filteredUsers.map(u => u.id));
+            setSelectedUsers(filteredUsers.map(u => u._id));
         } else {
             setSelectedUsers([]);
         }
@@ -97,10 +94,19 @@ export function AdminUsers() {
 
     const userCounts = {
         total: users.length,
-        admins: users.filter(u => u.role === 'admin').length,
-        agents: users.filter(u => u.role === 'agent').length,
-        customers: users.filter(u => u.role === 'customer').length,
+        admins: users.filter(u => u.role_type === 'admin').length,
+        agents: users.filter(u => u.role_type === 'agent').length,
+        customers: users.filter(u => u.role_type === 'customer').length,
     };
+
+    if (loading) {
+        return (
+            <div className="admin-dashboard-loading">
+                <Loader2 size={32} className="spin" />
+                <p>Loading users...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-users">
@@ -217,14 +223,14 @@ export function AdminUsers() {
                     <div className="admin-users-table-body">
                         {filteredUsers.map((user) => (
                             <div
-                                key={user.id}
-                                className={`admin-users-table-row ${selectedUsers.includes(user.id) ? 'selected' : ''}`}
+                                key={user._id}
+                                className={`admin-users-table-row ${selectedUsers.includes(user._id) ? 'selected' : ''}`}
                             >
                                 <div className="admin-users-col-check">
                                     <input
                                         type="checkbox"
-                                        checked={selectedUsers.includes(user.id)}
-                                        onChange={() => handleSelectUser(user.id)}
+                                        checked={selectedUsers.includes(user._id)}
+                                        onChange={() => handleSelectUser(user._id)}
                                     />
                                 </div>
                                 <div className="admin-users-col-user">
@@ -235,19 +241,21 @@ export function AdminUsers() {
                                     </div>
                                 </div>
                                 <div className="admin-users-col-role">
-                                    <Badge variant={getRoleBadgeVariant(user.role)}>{user.role}</Badge>
+                                    <Badge variant={getRoleBadgeVariant(user.role_type)}>{user.role_type}</Badge>
                                 </div>
                                 <div className="admin-users-col-status">
-                                    <Badge variant={getStatusBadgeVariant(user.status)}>{user.status}</Badge>
+                                    <Badge variant={getStatusBadgeVariant(user.is_active ? 'active' : 'inactive')}>
+                                        {user.is_active ? 'active' : 'inactive'}
+                                    </Badge>
                                 </div>
                                 <div className="admin-users-col-org">
-                                    <span className="admin-users-org-text">{user.organization}</span>
+                                    <span className="admin-users-org-text">{user.organization_id?.name || user.organization || '—'}</span>
                                 </div>
                                 <div className="admin-users-col-group">
                                     <span className="admin-users-group-text">{user.group || '—'}</span>
                                 </div>
                                 <div className="admin-users-col-login">
-                                    <span className="admin-users-login-text">{user.lastLogin}</span>
+                                    <span className="admin-users-login-text">{user.lastLogin || '—'}</span>
                                 </div>
                                 <div className="admin-users-col-actions">
                                     <div className="admin-users-action-btns">

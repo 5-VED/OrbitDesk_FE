@@ -152,9 +152,9 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
     };
 
     const getImageUrl = (url) => {
-        if (!url) return null;
+if (!url) return null;
         if (url.startsWith('http') || url.startsWith('blob:')) return url;
-        return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
+        return url;
     };
 
     return (
