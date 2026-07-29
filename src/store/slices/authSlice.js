@@ -115,8 +115,10 @@ const authSlice = createSlice({
             })
             .addCase(checkSession.rejected, (state) => {
                 state.loading = false;
-                state.user = null;
-                state.isAuthenticated = false;
+                if (!state.user) {
+                    state.user = null;
+                    state.isAuthenticated = false;
+                }
             });
 
         // Login

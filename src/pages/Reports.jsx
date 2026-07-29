@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Download,
-    Calendar,
     TrendingUp,
-    TrendingDown
+    TrendingDown,
+    Loader2
 } from 'lucide-react';
 import {
     LineChart,
@@ -23,57 +23,54 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Select } from '../components/ui/Input';
+import { reportService } from '../services/report.service';
 import './Reports.css';
-
-// Mock data
-const ticketTrendData = [
-    { name: 'Mon', created: 45, resolved: 38 },
-    { name: 'Tue', created: 52, resolved: 45 },
-    { name: 'Wed', created: 48, resolved: 52 },
-    { name: 'Thu', created: 61, resolved: 55 },
-    { name: 'Fri', created: 55, resolved: 48 },
-    { name: 'Sat', created: 32, resolved: 35 },
-    { name: 'Sun', created: 28, resolved: 30 },
-];
-
-const agentPerformanceData = [
-    { name: 'Sarah', tickets: 156, sla: 96 },
-    { name: 'Mike', tickets: 134, sla: 92 },
-    { name: 'Emily', tickets: 98, sla: 98 },
-    { name: 'Alex', tickets: 67, sla: 88 },
-    { name: 'Lisa', tickets: 245, sla: 94 },
-];
-
-const channelData = [
-    { name: 'Email', value: 45, color: '#3b82f6' },
-    { name: 'Chat', value: 30, color: '#10b981' },
-    { name: 'Phone', value: 15, color: '#f59e0b' },
-    { name: 'Web Form', value: 10, color: '#8b5cf6' },
-];
-
-const slaData = [
-    { name: 'Week 1', firstResponse: 95, resolution: 88 },
-    { name: 'Week 2', firstResponse: 93, resolution: 85 },
-    { name: 'Week 3', firstResponse: 97, resolution: 92 },
-    { name: 'Week 4', firstResponse: 94, resolution: 90 },
-];
-
-const summaryStats = [
-    { label: 'Total Tickets', value: '1,247', change: 12.5, trend: 'up' },
-    { label: 'Avg. Resolution Time', value: '4.2h', change: -8.3, trend: 'down' },
-    { label: 'Customer Satisfaction', value: '94%', change: 2.1, trend: 'up' },
-    { label: 'First Contact Resolution', value: '78%', change: 5.4, trend: 'up' },
-];
 
 const timeRangeOptions = [
     { value: '7d', label: 'Last 7 days' },
     { value: '30d', label: 'Last 30 days' },
     { value: '90d', label: 'Last 90 days' },
-    { value: 'custom', label: 'Custom range' },
 ];
 
 export function Reports() {
     const [timeRange, setTimeRange] = useState('7d');
+    const [summary, setSummary] = useState(null);
+    const [ticketTrends, setTicketTrends] = useState([]);
+    const [agentPerformance, setAgentPerformance] = useState([]);
+    const [channelData, setChannelData] = useState([]);
+    const [slaData, setSlaData] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchReports = async () => {
+            setLoading(true);
+            try {
+                const [summaryRes, trendsRes, agentsRes, channelRes, slaRes] = await Promise.all([
+                    reportService.getSummary({ range: timeRange }),
+                    reportService.getTicketTrends({ range: timeRange }),
+                    reportService.getAgentPerformance({ range: timeRange }),
+                    reportService.getChannelDistribution({ range: timeRange }),
+                    reportService.getSlaCompliance({ range: timeRange === '7d' ? '30d' : timeRange }),
+                ]);
+                setSummary(summaryRes?.data || null);
+                setTicketTrends(trendsRes?.data || []);
+                setAgentPerformance(agentsRes?.data || []);
+                setChannelData(channelRes?.data || []);
+                setSlaData(slaRes?.data || []);
+            } catch {
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchReports();
+    }, [timeRange]);
+
+    const summaryStats = summary ? [
+        { label: 'Total Tickets', value: summary.totalTickets?.value?.toLocaleString() || '0', change: summary.totalTickets?.change || 0, trend: summary.totalTickets?.change >= 0 ? 'up' : 'down' },
+        { label: 'Resolved Tickets', value: summary.resolvedTickets?.value?.toLocaleString() || '0', change: summary.resolvedTickets?.change || 0, trend: summary.resolvedTickets?.change >= 0 ? 'up' : 'down' },
+        { label: 'Customer Satisfaction', value: summary.satisfaction?.value || '0%', change: summary.satisfaction?.change || 0, trend: (summary.satisfaction?.change || 0) >= 0 ? 'up' : 'down' },
+        { label: 'First Contact Resolution', value: summary.firstContactResolution?.value || '0%', change: summary.firstContactResolution?.change || 0, trend: (summary.firstContactResolution?.change || 0) >= 0 ? 'up' : 'down' },
+    ] : [];
 
     return (
         <PageContainer
@@ -90,6 +87,13 @@ export function Reports() {
             }
         >
             <div className="reports-page">
+                {loading ? (
+                    <div className="admin-dashboard-loading">
+                        <Loader2 size={32} className="spin" />
+                        <p>Loading reports...</p>
+                    </div>
+                ) : (
+                <>
                 {/* Summary Stats */}
                 <div className="reports-summary">
                     {summaryStats.map((stat) => (
@@ -115,7 +119,7 @@ export function Reports() {
                         <CardContent>
                             <div className="chart-container">
                                 <ResponsiveContainer width="100%" height={300}>
-                                    <LineChart data={ticketTrendData}>
+                                    <LineChart data={ticketTrends}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                                         <XAxis dataKey="name" stroke="var(--color-text-tertiary)" />
                                         <YAxis stroke="var(--color-text-tertiary)" />
@@ -166,7 +170,7 @@ export function Reports() {
                         <CardContent>
                             <div className="chart-container">
                                 <ResponsiveContainer width="100%" height={250}>
-                                    <BarChart data={agentPerformanceData} layout="vertical">
+                                    <BarChart data={agentPerformance} layout="vertical">
                                         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                                         <XAxis type="number" stroke="var(--color-text-tertiary)" />
                                         <YAxis dataKey="name" type="category" stroke="var(--color-text-tertiary)" width={50} />
@@ -260,6 +264,8 @@ export function Reports() {
                     </Card>
                 </div>
             </div>
+                </>
+            )}
         </PageContainer>
     );
 }

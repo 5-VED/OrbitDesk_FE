@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { logoutUser, selectCurrentUser } from '../../store/slices/authSlice';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { Avatar } from '../ui/Avatar';
+import { notificationService } from '../../services/notification.service';
 import './TopNavbar.css';
 
 export function TopNavbar({ collapsed }) {
@@ -13,13 +14,33 @@ export function TopNavbar({ collapsed }) {
     const user = useAppSelector(selectCurrentUser);
     const [searchValue, setSearchValue] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [notifications, setNotifications] = useState([]);
+    const [isNotifOpen, setIsNotifOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const notifRef = useRef(null);
 
-    // Close dropdown when clicking outside
+    useEffect(() => {
+        const fetchNotifs = async () => {
+            try {
+                const res = await notificationService.list();
+                setNotifications(res?.data || []);
+                setUnreadCount(res?.unreadCount || 0);
+            } catch {
+            }
+        };
+        fetchNotifs();
+        const interval = setInterval(fetchNotifs, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsDropdownOpen(false);
+            }
+            if (notifRef.current && !notifRef.current.contains(event.target)) {
+                setIsNotifOpen(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -50,10 +71,40 @@ export function TopNavbar({ collapsed }) {
             <div className="top-navbar-actions">
                 <ThemeToggle />
 
-                <button className="navbar-icon-btn notification-btn">
-                    <Bell size={20} />
-                    <span className="notification-badge">3</span>
-                </button>
+                <div className="navbar-notif-container" ref={notifRef}>
+                    <button className="navbar-icon-btn notification-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
+                        <Bell size={20} />
+                        {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+                    </button>
+                    {isNotifOpen && (
+                        <div className="navbar-notif-dropdown">
+                            <div className="notif-dropdown-header">
+                                <span>Notifications</span>
+                                {unreadCount > 0 && (
+                                    <button className="notif-mark-read" onClick={async () => {
+                                        await notificationService.markAllRead();
+                                        setUnreadCount(0);
+                                        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                                    }}>Mark all read</button>
+                                )}
+                            </div>
+                            <div className="notif-dropdown-body">
+                                {notifications.length === 0 ? (
+                                    <div className="notif-empty">No notifications</div>
+                                ) : (
+                                    notifications.slice(0, 10).map((n) => (
+                                        <div key={n._id} className={`notif-item ${n.isRead ? '' : 'unread'}`}>
+                                            <div className="notif-item-content">
+                                                <span className="notif-item-title">{n.title}</span>
+                                                <span className="notif-item-message">{n.message}</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
 
                 <div className="navbar-user-container" ref={dropdownRef}>
                     <div

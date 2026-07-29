@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Building2,
     Plus,
@@ -9,39 +9,48 @@ import {
     Users,
     Ticket,
     Globe,
-    X
+    X,
+    Loader2
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
+import { organizationService } from '@/features/organizations/api/organizations';
 import './AdminOrganizations.css';
 
-const mockOrgs = [
-    { id: 1, name: 'Acme Corp', domain: 'acme.com', plan: 'Enterprise', status: 'active', users: 48, tickets: 124, slaPolicy: 'Premium Support', logo: null },
-    { id: 2, name: 'TechStart Inc', domain: 'techstart.io', plan: 'Business', status: 'active', users: 23, tickets: 67, slaPolicy: 'Standard Support', logo: null },
-    { id: 3, name: 'Global Solutions', domain: 'globalsolutions.com', plan: 'Enterprise', status: 'active', users: 89, tickets: 203, slaPolicy: 'Premium Support', logo: null },
-    { id: 4, name: 'StartupXYZ', domain: 'startupxyz.com', plan: 'Free', status: 'inactive', users: 5, tickets: 12, slaPolicy: 'Free Tier', logo: null },
-    { id: 5, name: 'MegaCorp Ltd', domain: 'megacorp.co', plan: 'Business', status: 'active', users: 34, tickets: 89, slaPolicy: 'Standard Support', logo: null },
-    { id: 6, name: 'NewCorp Inc', domain: 'newcorp.com', plan: 'Business', status: 'active', users: 12, tickets: 28, slaPolicy: 'Standard Support', logo: null },
-];
-
-const planColors = {
-    Enterprise: 'primary',
-    Business: 'warning',
-    Free: 'default',
-};
-
 export function AdminOrganizations() {
-    const [orgs] = useState(mockOrgs);
+    const [orgs, setOrgs] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+    useEffect(() => {
+        const fetchOrgs = async () => {
+            try {
+                const res = await organizationService.list();
+                setOrgs(res?.data || []);
+            } catch {
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchOrgs();
+    }, []);
+
     const filteredOrgs = orgs.filter(org =>
-        !searchQuery || org.name.toLowerCase().includes(searchQuery.toLowerCase()) || org.domain.toLowerCase().includes(searchQuery.toLowerCase())
+        !searchQuery || org.name.toLowerCase().includes(searchQuery.toLowerCase()) || (org.domains || []).some(d => d.toLowerCase().includes(searchQuery.toLowerCase()))
     );
+
+    if (loading) {
+        return (
+            <div className="admin-dashboard-loading">
+                <Loader2 size={32} className="spin" />
+                <p>Loading organizations...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-orgs">
@@ -80,7 +89,7 @@ export function AdminOrganizations() {
             {/* Org Cards Grid */}
             <div className="admin-orgs-grid">
                 {filteredOrgs.map((org) => (
-                    <Card key={org.id} className="admin-org-card" hover>
+                    <Card key={org._id} className="admin-org-card" hover>
                         <div className="admin-org-card-top">
                             <div className="admin-org-avatar">
                                 <Building2 size={24} />
@@ -94,24 +103,25 @@ export function AdminOrganizations() {
                         <h3 className="admin-org-name">{org.name}</h3>
                         <div className="admin-org-domain">
                             <Globe size={13} />
-                            <span>{org.domain}</span>
+                            <span>{(org.domains || [])[0] || 'No domain'}</span>
                         </div>
                         <div className="admin-org-badges">
-                            <Badge variant={planColors[org.plan]}>{org.plan}</Badge>
-                            <Badge variant={org.status === 'active' ? 'success' : 'default'}>{org.status}</Badge>
+                            <Badge variant={org.is_active ? 'success' : 'default'}>
+                                {org.is_active ? 'active' : 'inactive'}
+                            </Badge>
                         </div>
                         <div className="admin-org-stats">
                             <div className="admin-org-stat">
                                 <Users size={14} />
-                                <span>{org.users} users</span>
+                                <span>{org.userCount || 0} users</span>
                             </div>
                             <div className="admin-org-stat">
                                 <Ticket size={14} />
-                                <span>{org.tickets} tickets</span>
+                                <span>{org.ticketCount || 0} tickets</span>
                             </div>
                         </div>
                         <div className="admin-org-sla">
-                            SLA: <strong>{org.slaPolicy}</strong>
+                            SLA: <strong>{org.slaPolicy || 'Default'}</strong>
                         </div>
                     </Card>
                 ))}

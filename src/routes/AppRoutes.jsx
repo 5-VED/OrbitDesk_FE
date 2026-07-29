@@ -11,6 +11,7 @@ const NotFound = lazy(() => import('@/pages/NotFound').then(module => ({ default
 // Lazy Load Pages
 const Login = lazy(() => import('@/pages/auth/Login').then(module => ({ default: module.Login })));
 const Signup = lazy(() => import('@/pages/auth/Signup').then(module => ({ default: module.Signup })));
+const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPassword').then(module => ({ default: module.ForgotPassword })));
 const Dashboard = lazy(() => import('@/pages/Dashboard').then(module => ({ default: module.Dashboard })));
 const TicketsList = lazy(() => import('@/pages/TicketsList').then(module => ({ default: module.TicketsList })));
 const TicketDetail = lazy(() => import('@/pages/TicketDetail').then(module => ({ default: module.TicketDetail })));
@@ -22,6 +23,7 @@ const Reports = lazy(() => import('@/pages/Reports').then(module => ({ default: 
 const KnowledgeBase = lazy(() => import('@/pages/KnowledgeBase').then(module => ({ default: module.KnowledgeBase })));
 const Settings = lazy(() => import('@/pages/Settings').then(module => ({ default: module.Settings })));
 const Profile = lazy(() => import('@/pages/Profile').then(module => ({ default: module.Profile })));
+const Help = lazy(() => import('@/pages/Help').then(module => ({ default: module.Help })));
 
 // Lazy Load Admin Pages
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
@@ -32,6 +34,8 @@ const AdminGroups = lazy(() => import('@/pages/admin/AdminGroups').then(module =
 const AdminSla = lazy(() => import('@/pages/admin/AdminSla').then(module => ({ default: module.AdminSla })));
 const AdminAuditLog = lazy(() => import('@/pages/admin/AdminAuditLog').then(module => ({ default: module.AdminAuditLog })));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings').then(module => ({ default: module.AdminSettings })));
+const AdminApiKeys = lazy(() => import('@/pages/admin/AdminApiKeys').then(module => ({ default: module.AdminApiKeys })));
+const AdminSystemHealth = lazy(() => import('@/pages/admin/AdminSystemHealth').then(module => ({ default: module.AdminSystemHealth })));
 
 export const AppRoutes = () => {
     return (
@@ -40,6 +44,7 @@ export const AppRoutes = () => {
                 {/* Public Routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
 
                 {/* Protected Routes */}
                 <Route element={<ProtectedRoute />}>
@@ -55,6 +60,7 @@ export const AppRoutes = () => {
                     <Route path="/knowledge-base" element={<KnowledgeBase />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/help" element={<Help />} />
                 </Route>
 
                 {/* Admin Routes — requires admin role */}
@@ -68,6 +74,8 @@ export const AppRoutes = () => {
                         <Route path="sla-policies" element={<AdminSla />} />
                         <Route path="audit-log" element={<AdminAuditLog />} />
                         <Route path="settings" element={<AdminSettings />} />
+                        <Route path="api-keys" element={<AdminApiKeys />} />
+                        <Route path="system-health" element={<AdminSystemHealth />} />
                     </Route>
                 </Route>
 

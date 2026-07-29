@@ -477,3 +477,63 @@
     background-color: #fee2e2;
     color: #991b1b;
 }
+
+/* Agent Rating */
+.rating-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    text-align: center;
+}
+
+.rating-agent-name {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.rating-stars {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.rating-star {
+    color: var(--color-text-tertiary);
+    transition: all 0.15s ease;
+}
+
+.rating-star.filled {
+    color: #f59e0b;
+    filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.3));
+}
+
+.rating-star:hover {
+    transform: scale(1.15);
+}
+
+.rating-feedback-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    font-family: inherit;
+    resize: vertical;
+    min-height: 48px;
+}
+
+.rating-feedback-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.rating-submitted-hint {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    margin: 0;
+}
