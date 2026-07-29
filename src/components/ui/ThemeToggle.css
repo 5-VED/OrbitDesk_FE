@@ -17,11 +17,3 @@
     background-color: var(--color-bg-hover);
     color: var(--color-text-primary);
 }
-
-.theme-toggle svg {
-    transition: transform var(--transition-normal);
-}
-
-.theme-toggle:hover svg {
-    transform: rotate(15deg);
-}

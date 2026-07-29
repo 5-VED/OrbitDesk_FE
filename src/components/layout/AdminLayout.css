@@ -6,7 +6,7 @@
     margin-left: var(--sidebar-width);
     margin-top: var(--navbar-height);
     min-height: calc(100vh - var(--navbar-height));
-    background-color: var(--color-bg-secondary);
+    background-color: var(--color-bg-primary);
     transition: margin-left var(--transition-normal);
     padding: var(--spacing-xl);
 }
@@ -15,9 +15,18 @@
     margin-left: var(--sidebar-collapsed-width);
 }
 
+/* Mobile sidebar backdrop */
+.admin-sidebar-backdrop {
+    display: none;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .admin-main {
+        margin-left: var(--sidebar-collapsed-width);
+    }
+
+    .admin-main.expanded {
         margin-left: var(--sidebar-collapsed-width);
     }
 }
@@ -26,5 +35,18 @@
     .admin-main {
         margin-left: 0;
         padding: var(--spacing-md);
+    }
+
+    .admin-main.expanded {
+        margin-left: 0;
+    }
+
+    .admin-sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 95;
+        animation: fadeIn 0.2s ease;
     }
 }

@@ -206,11 +206,11 @@
 }
 
 .admin-sla-progress[data-status="good"] {
-    background: linear-gradient(90deg, #10b981, #34d399);
+    background: var(--color-success);
 }
 
 .admin-sla-progress[data-status="warning"] {
-    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    background: var(--color-warning);
 }
 
 .admin-sla-target {

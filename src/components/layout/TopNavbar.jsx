@@ -1,4 +1,4 @@
-import { Search, Bell, ChevronDown, LogOut, Settings, User } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut, Settings, User, Menu, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -7,15 +7,16 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { Avatar } from '../ui/Avatar';
 import './TopNavbar.css';
 
-export function TopNavbar({ collapsed }) {
+export function TopNavbar({ collapsed, onToggleMobile }) {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const user = useAppSelector(selectCurrentUser);
     const [searchValue, setSearchValue] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const searchRef = useRef(null);
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -28,6 +29,17 @@ export function TopNavbar({ collapsed }) {
         };
     }, []);
 
+    // Close mobile search on escape
+    useEffect(() => {
+        function handleEsc(e) {
+            if (e.key === 'Escape' && searchOpen) {
+                setSearchOpen(false);
+            }
+        }
+        document.addEventListener('keydown', handleEsc);
+        return () => document.removeEventListener('keydown', handleEsc);
+    }, [searchOpen]);
+
     const handleLogout = () => {
         dispatch(logoutUser());
         navigate('/login');
@@ -35,16 +47,35 @@ export function TopNavbar({ collapsed }) {
 
     return (
         <header className={`top-navbar ${collapsed ? 'collapsed' : ''}`}>
-            <div className="top-navbar-search">
-                <Search size={18} className="search-icon" />
-                <input
-                    type="text"
-                    placeholder="Search tickets, contacts, articles..."
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    className="search-input"
-                />
-                <kbd className="search-shortcut">⌘K</kbd>
+            <div className="top-navbar-left">
+                <button
+                    className="mobile-menu-btn"
+                    onClick={onToggleMobile}
+                    aria-label="Toggle menu"
+                >
+                    <Menu size={20} />
+                </button>
+
+                <div className={`top-navbar-search ${searchOpen ? 'search-expanded' : ''}`}>
+                    <Search size={18} className="search-icon" />
+                    <input
+                        ref={searchRef}
+                        type="text"
+                        placeholder="Search tickets, contacts, articles..."
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        className="search-input"
+                    />
+                    <kbd className="search-shortcut">⌘K</kbd>
+                </div>
+
+                <button
+                    className="mobile-search-toggle"
+                    onClick={() => setSearchOpen(!searchOpen)}
+                    aria-label="Toggle search"
+                >
+                    {searchOpen ? <X size={20} /> : <Search size={20} />}
+                </button>
             </div>
 
             <div className="top-navbar-actions">

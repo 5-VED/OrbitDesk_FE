@@ -30,7 +30,7 @@
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, var(--color-success-light), rgba(16, 185, 129, 0.1));
+    background: var(--color-success-light);
     color: var(--color-success);
 }
 

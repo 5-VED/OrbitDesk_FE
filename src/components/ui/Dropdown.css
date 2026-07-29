@@ -1,0 +1,195 @@
+.dropdown-container {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-family: var(--font-family);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    user-select: none;
+    gap: var(--spacing-sm);
+    min-height: 36px;
+}
+
+.dropdown-trigger:hover {
+    border-color: var(--color-border-dark);
+    background: var(--color-bg-hover);
+}
+
+.dropdown-trigger-open {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.dropdown-trigger:focus-visible {
+    outline: 2px solid var(--color-info);
+    outline-offset: 2px;
+}
+
+.dropdown-trigger-value {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+    overflow: hidden;
+}
+
+.dropdown-trigger-placeholder {
+    color: var(--color-text-tertiary);
+}
+
+.dropdown-trigger-arrow {
+    flex-shrink: 0;
+    color: var(--color-text-tertiary);
+    transition: transform var(--transition-fast);
+}
+
+.dropdown-trigger-open .dropdown-trigger-arrow {
+    transform: rotate(180deg);
+}
+
+/* Panel */
+.dropdown-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    min-width: 180px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    padding: 4px;
+    z-index: 200;
+    animation: dropdownIn 120ms ease-out;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.dropdown-align-end {
+    left: auto;
+    right: 0;
+}
+
+@keyframes dropdownIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Group label */
+.dropdown-group-label {
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-tertiary);
+}
+
+/* Item */
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    width: 100%;
+    padding: 7px 10px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: var(--font-weight-medium);
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.dropdown-item:hover,
+.dropdown-item-active {
+    background: rgba(247, 248, 250, 0.05);
+}
+
+.dropdown-item-selected {
+    background: rgba(244, 67, 54, 0.1);
+    color: var(--color-primary);
+}
+
+.dropdown-item-selected:hover,
+.dropdown-item-selected.dropdown-item-active {
+    background: rgba(244, 67, 54, 0.15);
+}
+
+.dropdown-item-destructive {
+    color: var(--color-error);
+}
+
+.dropdown-item-destructive:hover,
+.dropdown-item-destructive.dropdown-item-active {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.dropdown-item-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.dropdown-item:focus-visible {
+    outline: 2px solid var(--color-info);
+    outline-offset: -2px;
+}
+
+/* Dot */
+.dropdown-item-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Label */
+.dropdown-item-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Check */
+.dropdown-item-check {
+    flex-shrink: 0;
+    color: var(--color-primary);
+}
+
+/* Divider */
+.dropdown-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 4px 8px;
+}
+
+/* prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    .dropdown-panel {
+        animation-duration: 0.01ms;
+        animation-name: none;
+    }
+}

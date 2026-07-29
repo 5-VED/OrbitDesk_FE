@@ -1,3 +1,10 @@
+.dropdown-trigger-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
 .ticket-header {
     display: flex;
     align-items: center;
@@ -32,6 +39,7 @@
 }
 
 .ticket-header-info .ticket-subject {
+    font-family: var(--font-heading);
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-primary);
@@ -64,8 +72,8 @@
 }
 
 .conversation-list {
-    max-height: 500px;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .conversation-message {
@@ -122,7 +130,6 @@
     font-size: var(--font-size-sm);
     line-height: var(--line-height-relaxed);
     color: var(--color-text-primary);
-    white-space: pre-wrap;
 }
 
 /* Reply Form */
@@ -366,8 +373,8 @@
 }
 
 .message-action-btn.danger:hover {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: var(--color-danger);
+    background-color: var(--color-error-light);
+    color: var(--color-error);
 }
 
 .message-action-btn:disabled {
@@ -421,7 +428,7 @@
 }
 
 .edit-action-btn.cancel {
-    background-color: var(--color-bg-secondary);
+    background-color: var(--color-bg-tertiary);
     color: var(--color-text-secondary);
 }
 
@@ -435,7 +442,7 @@
 }
 
 .edit-action-btn.save:hover {
-    background-color: var(--color-primary-dark, #4f46e5);
+    background-color: var(--color-primary-hover);
 }
 
 .edit-action-btn:disabled {
@@ -444,12 +451,12 @@
 }
 
 .ai-reply-btn {
-    color: #9333ea;
+    color: var(--color-info);
 }
 
 .ai-reply-btn:hover {
-    background-color: #f3e8ff;
-    color: #7e22ce;
+    background-color: var(--color-info-light);
+    color: var(--color-info);
 }
 
 /* Sentiment Badge */
@@ -458,22 +465,22 @@
     align-items: center;
     gap: 4px;
     padding: 4px 8px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     font-size: 12px;
     font-weight: 500;
 }
 
 .sentiment-badge.positive {
-    background-color: #dcfce7;
-    color: #166534;
+    background-color: var(--color-success-light);
+    color: var(--color-success);
 }
 
 .sentiment-badge.neutral {
-    background-color: #f3f4f6;
-    color: #374151;
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
 }
 
 .sentiment-badge.negative {
-    background-color: #fee2e2;
-    color: #991b1b;
+    background-color: var(--color-error-light);
+    color: var(--color-error);
 }

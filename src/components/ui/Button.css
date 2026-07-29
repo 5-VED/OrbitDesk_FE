@@ -38,7 +38,7 @@
 /* Variants */
 .btn-primary {
     background-color: var(--color-primary);
-    color: var(--color-text-inverse);
+    color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -66,12 +66,12 @@
 }
 
 .btn-danger {
-    background-color: var(--color-danger);
+    background-color: var(--color-error);
     color: white;
 }
 
 .btn-danger:hover:not(:disabled) {
-    background-color: #dc2626;
+    background-color: #DC2626;
 }
 
 .btn-success {
@@ -80,7 +80,7 @@
 }
 
 .btn-success:hover:not(:disabled) {
-    background-color: #059669;
+    background-color: #16A34A;
 }
 
 /* States */

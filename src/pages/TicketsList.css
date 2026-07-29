@@ -19,15 +19,17 @@
     gap: var(--spacing-sm);
     flex: 1;
     max-width: 320px;
-    height: 40px;
+    height: 36px;
     padding: 0 var(--spacing-md);
-    background-color: var(--color-bg-primary);
+    background-color: var(--color-bg-tertiary);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+    transition: border-color var(--transition-fast);
 }
 
 .tickets-search:focus-within {
     border-color: var(--color-primary);
+    background-color: var(--color-bg-secondary);
 }
 
 .tickets-search svg {
@@ -71,7 +73,7 @@
 }
 
 .tickets-bulk-actions .danger {
-    color: var(--color-danger);
+    color: var(--color-error);
 }
 
 /* Table Links */
@@ -198,4 +200,51 @@
 .page-ellipsis {
     padding: 0 var(--spacing-xs);
     color: var(--color-text-tertiary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tickets-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tickets-search {
+        max-width: none;
+    }
+
+    .tickets-filter-group {
+        flex-wrap: wrap;
+    }
+
+    .tickets-filter-group .input-wrapper {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .tickets-bulk-actions {
+        flex-wrap: wrap;
+    }
+
+    .tickets-pagination {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-md);
+    }
+
+    .pagination-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .pagination-controls {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 640px) {
+    .tickets-filter-group .input-wrapper {
+        flex: 1 1 100%;
+    }
 }

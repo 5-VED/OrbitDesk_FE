@@ -56,11 +56,17 @@ const adminNavSections = [
     },
 ];
 
-export function AdminSidebar({ collapsed, onToggle }) {
+export function AdminSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
     const navigate = useNavigate();
 
+    const handleNavClick = () => {
+        if (mobileOpen && onMobileClose) {
+            onMobileClose();
+        }
+    };
+
     return (
-        <aside className={`admin-sidebar ${collapsed ? 'admin-sidebar-collapsed' : ''}`}>
+        <aside className={`admin-sidebar ${collapsed ? 'admin-sidebar-collapsed' : ''} ${mobileOpen ? 'admin-sidebar-mobile-open' : ''}`}>
             <div className="admin-sidebar-header">
                 {!collapsed && (
                     <div className="admin-sidebar-logo">
@@ -68,61 +74,43 @@ export function AdminSidebar({ collapsed, onToggle }) {
                         <span className="admin-sidebar-logo-text">Admin Panel</span>
                     </div>
                 )}
-                <button
-                    className="admin-sidebar-toggle"
-                    onClick={onToggle}
-                    aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                >
-                    {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-                </button>
+                {collapsed && (
+                    <div className="admin-sidebar-logo admin-sidebar-logo-small">
+                        <div className="admin-sidebar-logo-icon">A</div>
+                    </div>
+                )}
             </div>
 
-            {/* Back to app button */}
-            <div className="admin-sidebar-back">
-                <button
-                    className="admin-back-btn"
-                    onClick={() => navigate('/dashboard')}
-                    title={collapsed ? 'Back to App' : undefined}
-                >
-                    <ArrowLeft size={18} />
-                    {!collapsed && <span>Back to App</span>}
-                </button>
+            <div className="admin-sidebar-return" onClick={() => { navigate('/'); handleNavClick(); }}>
+                <ArrowLeft size={16} />
+                {!collapsed && <span>Back to App</span>}
             </div>
 
             <nav className="admin-sidebar-nav">
                 {adminNavSections.map((section) => (
                     <div key={section.title} className="admin-nav-section">
-                        {!collapsed && (
-                            <span className="admin-nav-section-title">{section.title}</span>
-                        )}
-                        <ul className="admin-nav-list">
-                            {section.items.map((item) => (
-                                <li key={item.path}>
-                                    <NavLink
-                                        to={item.path}
-                                        end={item.end}
-                                        className={({ isActive }) =>
-                                            `admin-nav-item ${isActive ? 'active' : ''}`
-                                        }
-                                        title={collapsed ? item.label : undefined}
-                                    >
-                                        <item.icon size={20} />
-                                        {!collapsed && <span>{item.label}</span>}
-                                    </NavLink>
-                                </li>
-                            ))}
-                        </ul>
+                        {!collapsed && <div className="admin-nav-section-title">{section.title}</div>}
+                        {section.items.map((item) => (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                end={item.end}
+                                className={({ isActive }) =>
+                                    `admin-nav-item ${isActive ? 'admin-nav-item-active' : ''}`
+                                }
+                                onClick={handleNavClick}
+                            >
+                                <item.icon size={20} />
+                                {!collapsed && <span>{item.label}</span>}
+                            </NavLink>
+                        ))}
                     </div>
                 ))}
             </nav>
 
-            <div className="admin-sidebar-footer">
-                {!collapsed && (
-                    <div className="admin-sidebar-version">
-                        <span>OrbitDesk Admin</span>
-                        <span className="admin-version-tag">v1.0</span>
-                    </div>
-                )}
+            <div className="admin-sidebar-collapse-btn" onClick={onToggle}>
+                {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+                {!collapsed && <span>Collapse</span>}
             </div>
         </aside>
     );

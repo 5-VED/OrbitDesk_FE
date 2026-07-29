@@ -1,14 +1,10 @@
-/* ============================================
-   ADMIN TOPBAR
-   ============================================ */
-
 .admin-topbar {
     position: fixed;
     top: 0;
     right: 0;
     left: var(--sidebar-width);
     height: var(--navbar-height);
-    background-color: var(--color-bg-primary);
+    background-color: var(--color-bg-secondary);
     border-bottom: 1px solid var(--color-border);
     display: flex;
     align-items: center;
@@ -35,6 +31,7 @@
 }
 
 .admin-breadcrumb-label {
+    font-family: var(--font-heading);
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-primary);
@@ -48,9 +45,9 @@
     font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #f59e0b;
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.08));
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    border: 1px solid rgba(244, 67, 54, 0.2);
     border-radius: var(--radius-full);
 }
 
@@ -113,7 +110,7 @@
 
 .admin-navbar-user-role {
     font-size: var(--font-size-xs);
-    color: #f59e0b;
+    color: var(--color-primary);
     line-height: 1.2;
 }
 
@@ -132,7 +129,7 @@
     top: calc(100% + 8px);
     right: 0;
     width: 240px;
-    background-color: var(--color-bg-primary);
+    background-color: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
@@ -184,11 +181,11 @@
 }
 
 .admin-dropdown-item.danger {
-    color: var(--color-danger);
+    color: var(--color-error);
 }
 
 .admin-dropdown-item.danger:hover {
-    background-color: var(--color-danger-light);
+    background-color: var(--color-error-light);
 }
 
 @media (max-width: 1024px) {
@@ -200,5 +197,45 @@
 @media (max-width: 768px) {
     .admin-topbar {
         left: 0;
+        padding: 0 var(--spacing-md);
+    }
+
+    .admin-navbar-user-info {
+        display: none;
+    }
+
+    .admin-navbar-chevron {
+        display: none;
+    }
+
+    .admin-breadcrumb-badge {
+        display: none;
+    }
+}
+
+/* Mobile menu button */
+.admin-mobile-menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.admin-mobile-menu-btn:hover {
+    background-color: var(--color-bg-hover);
+    color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+    .admin-mobile-menu-btn {
+        display: flex;
     }
 }

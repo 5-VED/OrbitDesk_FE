@@ -15,15 +15,17 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+    padding: var(--spacing-lg);
 }
 
 .stat-icon-wrapper {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-lg);
+    flex-shrink: 0;
 }
 
 .stat-icon-wrapper[data-color="primary"] {
@@ -37,8 +39,8 @@
 }
 
 .stat-icon-wrapper[data-color="danger"] {
-    background-color: var(--color-danger-light);
-    color: var(--color-danger);
+    background-color: var(--color-error-light);
+    color: var(--color-error);
 }
 
 .stat-icon-wrapper[data-color="success"] {
@@ -85,8 +87,8 @@
 }
 
 .stat-change.down {
-    background-color: var(--color-danger-light);
-    color: var(--color-danger);
+    background-color: var(--color-error-light);
+    color: var(--color-error);
 }
 
 /* Dashboard Grid */
@@ -94,6 +96,109 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-lg);
+}
+
+/* Circular Progress Rings */
+.health-rings {
+    display: flex;
+    justify-content: space-around;
+    gap: var(--spacing-lg);
+}
+
+.health-ring-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.circular-progress {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.circular-progress-value {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.circular-progress-number {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.health-ring-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.health-ring-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.health-ring-status {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+}
+
+.health-ring-status.on-track {
+    color: var(--color-success);
+}
+
+.health-ring-status.at-risk {
+    color: var(--color-warning);
+}
+
+/* Today's Focus */
+.focus-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.focus-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) 0;
+}
+
+.focus-item-priority {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.focus-item-priority.priority-high   { background-color: var(--color-error); }
+.focus-item-priority.priority-medium { background-color: var(--color-warning); }
+.focus-item-priority.priority-low    { background-color: var(--color-success); }
+
+.focus-item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.focus-item-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+}
+
+.focus-item-meta {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
 }
 
 /* Activity Card */
@@ -137,7 +242,7 @@
     color: var(--color-text-tertiary);
 }
 
-/* Agents Card */
+/* Agent Capacity */
 .agents-list {
     display: flex;
     flex-direction: column;
@@ -157,10 +262,20 @@
     gap: var(--spacing-sm);
 }
 
+.agent-details {
+    display: flex;
+    flex-direction: column;
+}
+
 .agent-name {
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     color: var(--color-text-primary);
+}
+
+.agent-status-text {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
 }
 
 .agent-stats {
@@ -172,7 +287,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 60px;
+    min-width: 50px;
 }
 
 .agent-stat-value {
@@ -186,67 +301,60 @@
     color: var(--color-text-tertiary);
 }
 
-/* SLA Card */
-.sla-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg);
+/* AI Signals */
+.ai-signals-card .card-title {
+    width: 100%;
 }
 
-.sla-item {
+.ai-signals-header {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-}
-
-.sla-header {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: var(--spacing-sm);
 }
 
-.sla-label {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
+.ai-signals-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
 }
 
-.sla-value {
+.ai-signal-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background-color: var(--color-bg-primary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+}
+
+.ai-signal-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    background-color: var(--color-info-light);
+    color: var(--color-info);
+    flex-shrink: 0;
+}
+
+.ai-signal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ai-signal-text {
     font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
     color: var(--color-text-primary);
+    line-height: var(--line-height-normal);
 }
 
-.sla-bar {
-    height: 8px;
-    background-color: var(--color-bg-tertiary);
-    border-radius: var(--radius-full);
-    overflow: hidden;
-}
-
-.sla-progress {
-    height: 100%;
-    border-radius: var(--radius-full);
-    transition: width var(--transition-slow);
-}
-
-.sla-progress[data-status="good"] {
-    background-color: var(--color-success);
-}
-
-.sla-progress[data-status="warning"] {
-    background-color: var(--color-warning);
-}
-
-.sla-target {
+.ai-signal-meta {
     font-size: var(--font-size-xs);
     color: var(--color-text-tertiary);
-}
-
-/* Quick Actions */
-.quick-actions {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
 }
 
 /* Responsive */
@@ -257,6 +365,10 @@
 
     .dashboard-grid {
         grid-template-columns: 1fr;
+    }
+
+    .health-rings {
+        flex-wrap: wrap;
     }
 }
 

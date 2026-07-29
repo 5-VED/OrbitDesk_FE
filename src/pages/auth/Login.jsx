@@ -93,8 +93,8 @@ export function Login() {
                 <div className="auth-card">
                     <div className="auth-header">
                         <div className="auth-logo">
-                            <div className="auth-logo-icon">S</div>
-                            <span className="auth-logo-text">SupportDesk</span>
+                            <div className="auth-logo-icon">O</div>
+                            <span className="auth-logo-text">OrbitDesk</span>
                         </div>
                         <h1 className="auth-title">Welcome back</h1>
                         <p className="auth-subtitle">Sign in to your account to continue</p>
