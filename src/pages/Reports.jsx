@@ -263,9 +263,9 @@ export function Reports() {
                         </CardContent>
                     </Card>
                 </div>
-            </div>
                 </>
-            )}
+                )}
+            </div>
         </PageContainer>
     );
 }
