@@ -1,4 +1,4 @@
-import { Search, Bell, ChevronDown, LogOut, User, ArrowLeft } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut, User, ArrowLeft, Menu } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -7,7 +7,7 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { Avatar } from '../ui/Avatar';
 import './AdminTopbar.css';
 
-export function AdminTopbar({ collapsed }) {
+export function AdminTopbar({ collapsed, onToggleMobile }) {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const user = useAppSelector(selectCurrentUser);
@@ -34,6 +34,13 @@ export function AdminTopbar({ collapsed }) {
     return (
         <header className={`admin-topbar ${collapsed ? 'collapsed' : ''}`}>
             <div className="admin-topbar-left">
+                <button
+                    className="admin-mobile-menu-btn"
+                    onClick={onToggleMobile}
+                    aria-label="Toggle menu"
+                >
+                    <Menu size={20} />
+                </button>
                 <div className="admin-topbar-breadcrumb">
                     <span className="admin-breadcrumb-label">Administration</span>
                     <span className="admin-breadcrumb-badge">Admin</span>

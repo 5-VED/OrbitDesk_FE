@@ -1,5 +1,5 @@
 .data-table-wrapper {
-    background-color: var(--color-bg-primary);
+    background-color: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     overflow: hidden;
@@ -16,7 +16,7 @@
     text-align: left;
     font-weight: var(--font-weight-medium);
     color: var(--color-text-secondary);
-    background-color: var(--color-bg-secondary);
+    background-color: var(--color-bg-primary);
     border-bottom: 1px solid var(--color-border);
     white-space: nowrap;
 }
@@ -33,7 +33,7 @@
 }
 
 .data-table tbody tr:hover {
-    background-color: var(--color-bg-secondary);
+    background-color: var(--color-bg-hover);
 }
 
 .data-table tbody tr.selected {
@@ -117,5 +117,17 @@
 @keyframes spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .data-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table {
+        min-width: 600px;
     }
 }

@@ -48,8 +48,8 @@
 }
 
 .badge-danger {
-    background-color: var(--color-danger-light);
-    color: var(--color-danger);
+    background-color: var(--color-error-light);
+    color: var(--color-error);
 }
 
 .badge-info {

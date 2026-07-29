@@ -14,19 +14,18 @@ import {
     ChevronRight,
     Shield
 } from 'lucide-react';
-import { useState } from 'react';
 import { useAppSelector } from '@/store/hooks';
 import { selectCurrentUser } from '@/store/slices/authSlice';
 import './Sidebar.css';
 
 const navItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/tickets', icon: Ticket, label: 'Tickets' },
-    { path: '/contacts', icon: Users, label: 'Contacts' },
+    { path: '/', icon: LayoutDashboard, label: 'Workspace' },
+    { path: '/tickets', icon: Ticket, label: 'Work Items' },
+    { path: '/contacts', icon: Users, label: 'People' },
     { path: '/agents', icon: UserCircle, label: 'Agents' },
     { path: '/groups', icon: UsersRound, label: 'Groups' },
     { path: '/organizations', icon: Building2, label: 'Organizations', adminOnly: true },
-    { path: '/reports', icon: BarChart3, label: 'Reports' },
+    { path: '/reports', icon: BarChart3, label: 'Insights' },
     { path: '/knowledge-base', icon: BookOpen, label: 'Knowledge Base' },
 ];
 
@@ -35,19 +34,25 @@ const bottomItems = [
     { path: '/help', icon: HelpCircle, label: 'Help' },
 ];
 
-export function Sidebar({ collapsed, onToggle }) {
+export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
     const user = useAppSelector(selectCurrentUser);
     const isAdmin = user?.role_type === 'admin';
 
     const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
+    const handleNavClick = () => {
+        if (mobileOpen && onMobileClose) {
+            onMobileClose();
+        }
+    };
+
     return (
-        <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
+        <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileOpen ? 'sidebar-mobile-open' : ''}`}>
             <div className="sidebar-header">
-                {!collapsed && (
+                {(!collapsed || mobileOpen) && (
                     <div className="sidebar-logo">
-                        <div className="sidebar-logo-icon">S</div>
-                        <span className="sidebar-logo-text">SupportDesk</span>
+                        <div className="sidebar-logo-icon">O</div>
+                        <span className="sidebar-logo-text">OrbitDesk</span>
                     </div>
                 )}
                 <button
@@ -65,13 +70,15 @@ export function Sidebar({ collapsed, onToggle }) {
                         <li key={item.path}>
                             <NavLink
                                 to={item.path}
+                                onClick={handleNavClick}
                                 className={({ isActive }) =>
                                     `sidebar-nav-item ${isActive ? 'active' : ''}`
                                 }
                                 title={collapsed ? item.label : undefined}
                             >
                                 <item.icon size={20} />
-                                {!collapsed && <span>{item.label}</span>}
+                                {(!collapsed || mobileOpen) && <span>{item.label}</span>}
+                                <span className="sidebar-active-dot" />
                             </NavLink>
                         </li>
                     ))}
@@ -84,13 +91,15 @@ export function Sidebar({ collapsed, onToggle }) {
                         <li>
                             <NavLink
                                 to="/admin"
+                                onClick={handleNavClick}
                                 className={({ isActive }) =>
                                     `sidebar-nav-item sidebar-admin-link ${isActive ? 'active' : ''}`
                                 }
                                 title={collapsed ? 'Admin Panel' : undefined}
                             >
                                 <Shield size={20} />
-                                {!collapsed && <span>Admin Panel</span>}
+                                {(!collapsed || mobileOpen) && <span>Admin Panel</span>}
+                                <span className="sidebar-active-dot" />
                             </NavLink>
                         </li>
                     )}
@@ -98,13 +107,15 @@ export function Sidebar({ collapsed, onToggle }) {
                         <li key={item.path}>
                             <NavLink
                                 to={item.path}
+                                onClick={handleNavClick}
                                 className={({ isActive }) =>
                                     `sidebar-nav-item ${isActive ? 'active' : ''}`
                                 }
                                 title={collapsed ? item.label : undefined}
                             >
                                 <item.icon size={20} />
-                                {!collapsed && <span>{item.label}</span>}
+                                {(!collapsed || mobileOpen) && <span>{item.label}</span>}
+                                <span className="sidebar-active-dot" />
                             </NavLink>
                         </li>
                     ))}

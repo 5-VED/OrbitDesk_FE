@@ -156,8 +156,8 @@ export function Signup() {
                 <div className="auth-card">
                     <div className="auth-header">
                         <div className="auth-logo">
-                            <div className="auth-logo-icon">S</div>
-                            <span className="auth-logo-text">SupportDesk</span>
+                            <div className="auth-logo-icon">O</div>
+                            <span className="auth-logo-text">OrbitDesk</span>
                         </div>
                         <h1 className="auth-title">Create your account</h1>
                         <p className="auth-subtitle">Start your 14-day free trial</p>

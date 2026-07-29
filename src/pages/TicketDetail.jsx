@@ -12,6 +12,7 @@ import {
     Trash2,
     Check,
     X,
+    ChevronDown,
     Sparkles,
     FileText,
     Smile,
@@ -25,6 +26,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import { StatusBadge, PriorityBadge } from '../components/ui/Badge';
 import { Avatar } from '../components/ui/Avatar';
 import { Select } from '../components/ui/Input';
+import { Dropdown } from '../components/ui/Dropdown';
 import { RichTextEditor } from '../components/editor/RichTextEditor';
 import { Modal } from '../components/ui/Modal';
 import { SmartReplyModal } from '../components/ai/SmartReplyModal';
@@ -73,6 +75,32 @@ export function TicketDetail() {
     const [commentToDelete, setCommentToDelete] = useState(null);
     const replyEditorRef = useRef(null);
     const [isSmartReplyModalOpen, setIsSmartReplyModalOpen] = useState(false);
+
+    const statusDotColors = {
+        new: '#3B82F6',
+        open: '#F44336',
+        pending: '#F59E0B',
+        hold: '#A2A8B5',
+        solved: '#22C55E',
+        closed: '#6B7280',
+    };
+
+    const priorityDotColors = {
+        low: '#A2A8B5',
+        normal: '#3B82F6',
+        high: '#F59E0B',
+        urgent: '#EF4444',
+    };
+
+    const statusWithDots = getStatusOptions().map(opt => ({
+        ...opt,
+        dotColor: statusDotColors[opt.value],
+    }));
+
+    const priorityWithDots = getPriorityOptions().map(opt => ({
+        ...opt,
+        dotColor: priorityDotColors[opt.value],
+    }));
 
     // AI State
     const [sentiment, setSentiment] = useState(null);
@@ -166,8 +194,7 @@ export function TicketDetail() {
         }
     };
 
-    const handleStatusChange = async (e) => {
-        const newStatus = e.target.value;
+    const handleStatusChange = async (newStatus) => {
         try {
             await dispatch(updateTicketStatus({ ticketId, status: newStatus })).unwrap();
             toast.success('Status updated');
@@ -176,8 +203,7 @@ export function TicketDetail() {
         }
     };
 
-    const handlePriorityChange = async (e) => {
-        const newPriority = e.target.value;
+    const handlePriorityChange = async (newPriority) => {
         try {
             await dispatch(updateTicketPriority({ ticketId, priority: newPriority })).unwrap();
             toast.success('Priority updated');
@@ -186,8 +212,7 @@ export function TicketDetail() {
         }
     };
 
-    const handleAssigneeChange = async (e) => {
-        const newAssignee = e.target.value;
+    const handleAssigneeChange = async (newAssignee) => {
         try {
             await dispatch(assignTicket({ ticketId, assigneeId: newAssignee })).unwrap();
             toast.success('Ticket assigned');
@@ -668,26 +693,62 @@ export function TicketDetail() {
                             <div className="property-list">
                                 <div className="property-item">
                                     <label>Status</label>
-                                    <Select
-                                        options={getStatusOptions()}
+                                    <Dropdown
                                         value={ticket.status}
                                         onChange={handleStatusChange}
+                                        items={statusWithDots}
+                                        trigger={(selected) => (
+                                            <>
+                                                {selected?.dotColor && (
+                                                    <span
+                                                        className="dropdown-trigger-dot"
+                                                        style={{ backgroundColor: selected.dotColor }}
+                                                    />
+                                                )}
+                                                <span className="dropdown-trigger-value">
+                                                    {selected?.label || 'Select status'}
+                                                </span>
+                                                <ChevronDown size={14} className="dropdown-trigger-arrow" />
+                                            </>
+                                        )}
                                     />
                                 </div>
                                 <div className="property-item">
                                     <label>Priority</label>
-                                    <Select
-                                        options={getPriorityOptions()}
+                                    <Dropdown
                                         value={ticket.priority}
                                         onChange={handlePriorityChange}
+                                        items={priorityWithDots}
+                                        trigger={(selected) => (
+                                            <>
+                                                {selected?.dotColor && (
+                                                    <span
+                                                        className="dropdown-trigger-dot"
+                                                        style={{ backgroundColor: selected.dotColor }}
+                                                    />
+                                                )}
+                                                <span className="dropdown-trigger-value">
+                                                    {selected?.label || 'Select priority'}
+                                                </span>
+                                                <ChevronDown size={14} className="dropdown-trigger-arrow" />
+                                            </>
+                                        )}
                                     />
                                 </div>
                                 <div className="property-item">
                                     <label>Assigned To</label>
-                                    <Select
-                                        options={[{ value: '', label: 'Unassigned' }, ...agents]}
+                                    <Dropdown
                                         value={ticket.assignee_id?._id || ''}
                                         onChange={handleAssigneeChange}
+                                        items={[
+                                            { value: '', label: 'Unassigned' },
+                                            ...agents,
+                                        ]}
+                                        trigger={(selected) => (
+                                            <span className="dropdown-trigger-value">
+                                                {selected?.label || 'Unassigned'}
+                                            </span>
+                                        )}
                                     />
                                 </div>
                                 <div className="property-item">

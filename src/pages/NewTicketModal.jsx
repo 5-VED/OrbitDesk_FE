@@ -2,13 +2,37 @@ import { useState, useEffect } from 'react';
 import { Modal } from '../components/ui/Modal';
 import { Input, Textarea, Select } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { Dropdown } from '../components/ui/Dropdown';
 import { userService } from '../features/contacts/api/users';
 import { groupService } from '../features/groups/api/groups';
-import { getPriorityOptions, getTypeOptions } from '../utils/ticketConstants';
+import { getPriorityOptions, getTypeOptions, getStatusColor, getPriorityColor } from '../utils/ticketConstants';
 import { aiService } from '../services/ai.service';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Bug, HelpCircle, ListChecks, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import './NewTicketModal.css';
+
+const typeIconChip = {
+    question: { icon: HelpCircle, variant: 'info' },
+    incident: { icon: AlertTriangle, variant: 'warning' },
+    problem: { icon: Bug, variant: 'danger' },
+    task: { icon: ListChecks, variant: 'success' },
+};
+
+const statusDotColors = {
+    new: 'var(--color-info)',
+    open: 'var(--color-primary)',
+    pending: 'var(--color-warning)',
+    hold: 'var(--color-text-tertiary)',
+    solved: 'var(--color-success)',
+    closed: 'var(--color-text-secondary)',
+};
+
+const priorityDotColors = {
+    low: 'var(--color-text-secondary)',
+    normal: 'var(--color-info)',
+    high: 'var(--color-warning)',
+    urgent: 'var(--color-error)',
+};
 
 export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
     const [formData, setFormData] = useState({
@@ -178,11 +202,15 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
         }
     };
 
+    const chipConfig = ticket ? typeIconChip[ticket.type] : null;
+
     return (
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={ticket ? "Edit Ticket" : "Create New Ticket"}
+            eyebrow={ticket ? 'Edit Work Item' : 'New Work Item'}
+            iconChip={chipConfig}
+            title={ticket ? `#${ticket._id?.slice(-6).toUpperCase()} - ${ticket.subject}` : 'Create New Ticket'}
             size="large"
             footer={
                 <>
