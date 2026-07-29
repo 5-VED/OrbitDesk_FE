@@ -56,11 +56,11 @@ export const AppRoutes = () => {
                     <Route path="/contacts" element={<Contacts />} />
                     <Route path="/groups" element={<Groups />} />
                     <Route path="/organizations" element={<Organizations />} />
-                    <Route path="/reports" element={<Reports />} />
                     <Route path="/knowledge-base" element={<KnowledgeBase />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/help" element={<Help />} />
+                    {/* <Route path="/reports" element={<Reports />} /> */}
                 </Route>
 
                 {/* Admin Routes — requires admin role */}
