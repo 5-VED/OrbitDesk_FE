@@ -8,6 +8,9 @@ import { Loader } from '@/components/ui/Loader';
 // 404 Page
 const NotFound = lazy(() => import('@/pages/NotFound').then(module => ({ default: module.NotFound })));
 
+// Landing Page (public)
+const LandingPage = lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
+
 // Lazy Load Pages
 const Login = lazy(() => import('@/pages/auth/Login').then(module => ({ default: module.Login })));
 const Signup = lazy(() => import('@/pages/auth/Signup').then(module => ({ default: module.Signup })));
@@ -37,18 +40,20 @@ const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings').then(modu
 const AdminApiKeys = lazy(() => import('@/pages/admin/AdminApiKeys').then(module => ({ default: module.AdminApiKeys })));
 const AdminSystemHealth = lazy(() => import('@/pages/admin/AdminSystemHealth').then(module => ({ default: module.AdminSystemHealth })));
 
+const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications').then(module => ({ default: module.AdminNotifications })));
+
 export const AppRoutes = () => {
     return (
         <Suspense fallback={<Loader fullScreen />}>
             <Routes>
                 {/* Public Routes */}
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
 
                 {/* Protected Routes */}
                 <Route element={<ProtectedRoute />}>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/tickets" element={<TicketsList />} />
                     <Route path="/tickets/:ticketId" element={<TicketDetail />} />
@@ -60,7 +65,7 @@ export const AppRoutes = () => {
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/help" element={<Help />} />
-                    {/* <Route path="/reports" element={<Reports />} /> */}
+                    <Route path="/reports" element={<Reports />} />
                 </Route>
 
                 {/* Admin Routes — requires admin role */}
@@ -76,6 +81,7 @@ export const AppRoutes = () => {
                         <Route path="settings" element={<AdminSettings />} />
                         <Route path="api-keys" element={<AdminApiKeys />} />
                         <Route path="system-health" element={<AdminSystemHealth />} />
+                        <Route path="notifications" element={<AdminNotifications />} />
                     </Route>
                 </Route>
 
