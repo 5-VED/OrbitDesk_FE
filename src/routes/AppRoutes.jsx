@@ -22,6 +22,7 @@ const Agents = lazy(() => import('@/pages/Agents').then(module => ({ default: mo
 const Contacts = lazy(() => import('@/pages/Contacts').then(module => ({ default: module.Contacts })));
 const Groups = lazy(() => import('@/pages/Groups').then(module => ({ default: module.Groups })));
 const Organizations = lazy(() => import('@/pages/Organizations').then(module => ({ default: module.Organizations })));
+// v1.1: Reports route deferred — import kept so re-enabling is one line.
 const Reports = lazy(() => import('@/pages/Reports').then(module => ({ default: module.Reports })));
 const KnowledgeBase = lazy(() => import('@/pages/KnowledgeBase').then(module => ({ default: module.KnowledgeBase })));
 const Settings = lazy(() => import('@/pages/Settings').then(module => ({ default: module.Settings })));
@@ -57,15 +58,17 @@ export const AppRoutes = () => {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/tickets" element={<TicketsList />} />
                     <Route path="/tickets/:ticketId" element={<TicketDetail />} />
+                    {/* /tickets/:id is served by the :ticketId detail route above */}
                     <Route path="/agents" element={<Agents />} />
                     <Route path="/contacts" element={<Contacts />} />
                     <Route path="/groups" element={<Groups />} />
                     <Route path="/organizations" element={<Organizations />} />
                     <Route path="/knowledge-base" element={<KnowledgeBase />} />
+                    <Route path="/kb" element={<KnowledgeBase />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/help" element={<Help />} />
-                    <Route path="/reports" element={<Reports />} />
+                    {/* // v1.1: <Route path="/reports" element={<Reports />} /> */}
                 </Route>
 
                 {/* Admin Routes — requires admin role */}
@@ -81,6 +84,7 @@ export const AppRoutes = () => {
                         <Route path="settings" element={<AdminSettings />} />
                         <Route path="api-keys" element={<AdminApiKeys />} />
                         <Route path="system-health" element={<AdminSystemHealth />} />
+                        <Route path="health" element={<AdminSystemHealth />} />
                         <Route path="notifications" element={<AdminNotifications />} />
                     </Route>
                 </Route>
