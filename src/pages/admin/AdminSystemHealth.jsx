@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react';
 import {
-    Activity,
+    Box,
+    Card,
+    CardContent,
+    Typography,
+    Button as MuiButton,
+    Alert,
+    CircularProgress,
+    Stack,
+    Paper,
+    Divider
+} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import {
     Database,
     Server,
     RefreshCw,
@@ -8,15 +20,11 @@ import {
     CheckCircle2,
     AlertTriangle,
     XCircle,
-    Loader2,
     HardDrive,
     Wifi,
     Zap
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import './AdminSystemHealth.css';
 
 const INITIAL_SERVICES = [
     { id: 'api', name: 'API Server', icon: Server, status: 'checking', uptime: null, version: null },
@@ -98,126 +106,159 @@ export function AdminSystemHealth() {
     };
 
     return (
-        <div className="admin-system-health">
-            <div className="admin-page-header">
-                <div>
-                    <h1 className="admin-page-title">System Health</h1>
-                    <p className="admin-page-subtitle">
+        <Stack spacing={3}>
+            {/* Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                <Box>
+                    <Typography variant="h5" fontWeight={800}>System Health</Typography>
+                    <Typography variant="body2" color="text.secondary">
                         Monitor service status and system performance
                         {lastChecked && ` — Last checked: ${lastChecked.toLocaleTimeString()}`}
-                    </p>
-                </div>
-                <div className="admin-page-actions">
-                    <Button icon={RefreshCw} onClick={checkHealth} disabled={loading}>
-                        {loading ? 'Checking...' : 'Refresh'}
-                    </Button>
-                </div>
-            </div>
+                    </Typography>
+                </Box>
+                <MuiButton
+                    variant="outlined"
+                    color="inherit"
+                    startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <RefreshCw size={16} />}
+                    onClick={checkHealth}
+                    disabled={loading}
+                    sx={{ textTransform: 'none' }}
+                >
+                    {loading ? 'Checking...' : 'Refresh'}
+                </MuiButton>
+            </Box>
 
-            {/* Overall Status */}
-            <div className="admin-health-overall">
-                {services.every(s => s.status === 'healthy') && (
-                    <div className="admin-health-banner healthy">
-                        <CheckCircle2 size={20} />
-                        <span>All systems operational</span>
-                    </div>
-                )}
-                {services.some(s => s.status === 'degraded') && (
-                    <div className="admin-health-banner degraded">
-                        <AlertTriangle size={20} />
-                        <span>Some services are experiencing issues</span>
-                    </div>
-                )}
-                {services.some(s => s.status === 'down') && (
-                    <div className="admin-health-banner down">
-                        <XCircle size={20} />
-                        <span>One or more services are down</span>
-                    </div>
-                )}
-            </div>
+            {/* Overall Status Banner */}
+            {services.every(s => s.status === 'healthy') && (
+                <Alert severity="success" icon={<CheckCircle2 size={20} />}>
+                    All systems operational
+                </Alert>
+            )}
+            {services.some(s => s.status === 'degraded') && (
+                <Alert severity="warning" icon={<AlertTriangle size={20} />}>
+                    Some services are experiencing degraded performance
+                </Alert>
+            )}
+            {services.some(s => s.status === 'down') && (
+                <Alert severity="error" icon={<XCircle size={20} />}>
+                    One or more critical services are down
+                </Alert>
+            )}
 
-            {/* Service Cards */}
-            <div className="admin-health-grid">
+            {/* Service Cards Grid */}
+            <Grid container spacing={3}>
                 {services.map(service => (
-                    <Card key={service.id} className="admin-health-service-card">
-                        <CardContent>
-                            <div className="admin-health-service-header">
-                                <div className="admin-health-service-icon" data-status={service.status}>
-                                    <service.icon size={24} />
-                                </div>
-                                <div className="admin-health-service-title">
-                                    <h3>{service.name}</h3>
+                    <Grid key={service.id} size={{ xs: 12, sm: 6, lg: 3 }}>
+                        <Card variant="outlined" sx={{ height: '100%', borderRadius: 2 }}>
+                            <CardContent sx={{ p: 2.5 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Box
+                                        sx={{
+                                            width: 44,
+                                            height: 44,
+                                            borderRadius: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            bgcolor: service.status === 'healthy' ? 'rgba(34, 197, 94, 0.1)' : service.status === 'down' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                                            color: service.status === 'healthy' ? 'success.main' : service.status === 'down' ? 'error.main' : 'warning.main'
+                                        }}
+                                    >
+                                        <service.icon size={22} />
+                                    </Box>
                                     {getStatusBadge(service.status)}
-                                </div>
-                            </div>
-                            <div className="admin-health-service-details">
-                                {service.latency !== null && service.latency !== undefined && (
-                                    <div className="admin-health-service-detail">
-                                        <span className="admin-health-detail-label">Latency</span>
-                                        <span className="admin-health-detail-value">
-                                            {typeof service.latency === 'number' ? `${service.latency}ms` : service.latency}
-                                        </span>
-                                    </div>
-                                )}
-                                {service.uptime !== null && service.uptime !== undefined && (
-                                    <div className="admin-health-service-detail">
-                                        <span className="admin-health-detail-label">Uptime</span>
-                                        <span className="admin-health-detail-value">
-                                            {typeof service.uptime === 'number' ? `${Math.floor(service.uptime / 3600)}h ${Math.floor((service.uptime % 3600) / 60)}m` : service.uptime}
-                                        </span>
-                                    </div>
-                                )}
-                                {service.version && (
-                                    <div className="admin-health-service-detail">
-                                        <span className="admin-health-detail-label">Version</span>
-                                        <span className="admin-health-detail-value">{service.version}</span>
-                                    </div>
-                                )}
-                                {service.connections !== null && service.connections !== undefined && (
-                                    <div className="admin-health-service-detail">
-                                        <span className="admin-health-detail-label">Connections</span>
-                                        <span className="admin-health-detail-value">{service.connections}</span>
-                                    </div>
-                                )}
-                                {service.hitRate !== null && service.hitRate !== undefined && (
-                                    <div className="admin-health-service-detail">
-                                        <span className="admin-health-detail-label">Hit Rate</span>
-                                        <span className="admin-health-detail-value">{service.hitRate}</span>
-                                    </div>
-                                )}
-                                {service.topics !== null && service.topics !== undefined && (
-                                    <div className="admin-health-service-detail">
-                                        <span className="admin-health-detail-label">Topics</span>
-                                        <span className="admin-health-detail-value">{service.topics}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+                                </Box>
 
-            {/* System Stats */}
-            <Card className="admin-health-stats-card">
-                <CardHeader>
-                    <CardTitle>System Resources</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="admin-health-stats-grid">
+                                <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                                    {service.name}
+                                </Typography>
+
+                                <Stack spacing={1} divider={<Divider />}>
+                                    {service.latency !== null && service.latency !== undefined && (
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                            <Typography variant="body2" color="text.secondary">Latency</Typography>
+                                            <Typography variant="body2" fontWeight={600}>
+                                                {typeof service.latency === 'number' ? `${service.latency}ms` : service.latency}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                    {service.uptime !== null && service.uptime !== undefined && (
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                            <Typography variant="body2" color="text.secondary">Uptime</Typography>
+                                            <Typography variant="body2" fontWeight={600}>
+                                                {typeof service.uptime === 'number' ? `${Math.floor(service.uptime / 3600)}h ${Math.floor((service.uptime % 3600) / 60)}m` : service.uptime}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                    {service.version && (
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                            <Typography variant="body2" color="text.secondary">Version</Typography>
+                                            <Typography variant="body2" fontWeight={600}>{service.version}</Typography>
+                                        </Box>
+                                    )}
+                                    {service.connections !== null && service.connections !== undefined && (
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                            <Typography variant="body2" color="text.secondary">Connections</Typography>
+                                            <Typography variant="body2" fontWeight={600}>{service.connections}</Typography>
+                                        </Box>
+                                    )}
+                                    {service.hitRate !== null && service.hitRate !== undefined && (
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                            <Typography variant="body2" color="text.secondary">Hit Rate</Typography>
+                                            <Typography variant="body2" fontWeight={600}>{service.hitRate}</Typography>
+                                        </Box>
+                                    )}
+                                    {service.topics !== null && service.topics !== undefined && (
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                            <Typography variant="body2" color="text.secondary">Topics</Typography>
+                                            <Typography variant="body2" fontWeight={600}>{service.topics}</Typography>
+                                        </Box>
+                                    )}
+                                </Stack>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
+
+            {/* System Resources Card */}
+            <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                <CardContent sx={{ p: 3 }}>
+                    <Typography variant="h6" fontWeight={700} sx={{ mb: 2.5 }}>
+                        System Resources
+                    </Typography>
+                    <Grid container spacing={3}>
                         {systemStats.map(stat => (
-                            <div key={stat.label} className="admin-health-stat-item">
-                                <div className="admin-health-stat-icon">
-                                    <stat.icon size={20} />
-                                </div>
-                                <div className="admin-health-stat-info">
-                                    <span className="admin-health-stat-label">{stat.label}</span>
-                                    <span className="admin-health-stat-value">{stat.value}</span>
-                                </div>
-                            </div>
+                            <Grid key={stat.label} size={{ xs: 6, md: 3 }}>
+                                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Box
+                                        sx={{
+                                            width: 40,
+                                            height: 40,
+                                            borderRadius: 2,
+                                            bgcolor: 'action.hover',
+                                            color: 'primary.main',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <stat.icon size={20} />
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {stat.label}
+                                        </Typography>
+                                        <Typography variant="h6" fontWeight={700}>
+                                            {stat.value}
+                                        </Typography>
+                                    </Box>
+                                </Paper>
+                            </Grid>
                         ))}
-                    </div>
+                    </Grid>
                 </CardContent>
             </Card>
-        </div>
+        </Stack>
     );
 }

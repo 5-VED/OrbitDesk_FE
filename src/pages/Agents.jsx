@@ -1,12 +1,18 @@
-
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import {
     Plus,
     Search,
     Star,
     Mail,
-    MoreHorizontal,
     Edit2,
     Trash2
 } from 'lucide-react';
@@ -18,7 +24,6 @@ import { Badge } from '../components/ui/Badge';
 import { AgentModal } from './AgentModal';
 import { userService } from '../features/contacts/api/users';
 import { toast } from 'react-hot-toast';
-import './Agents.css';
 
 const statusColors = {
     online: 'success',
@@ -34,6 +39,7 @@ export function Agents() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedAgent, setSelectedAgent] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [statusFilter, setStatusFilter] = useState('all');
 
     const fetchAgents = async () => {
         setIsLoading(true);
@@ -45,7 +51,6 @@ export function Agents() {
             }
         } catch (error) {
             console.error('Failed to fetch agents', error);
-            // Silently fail — no agents to show is not an error condition
         } finally {
             setIsLoading(false);
         }
@@ -59,10 +64,12 @@ export function Agents() {
         const lowerQuery = searchQuery.toLowerCase();
         const filtered = agents.filter(agent => {
             const fullName = `${agent.first_name} ${agent.last_name}`.toLowerCase();
-            return fullName.includes(lowerQuery) || agent.email.toLowerCase().includes(lowerQuery);
+            const matchesQuery = fullName.includes(lowerQuery) || agent.email.toLowerCase().includes(lowerQuery);
+            const matchesStatus = statusFilter === 'all' || agent.status === statusFilter;
+            return matchesQuery && matchesStatus;
         });
         setFilteredAgents(filtered);
-    }, [searchQuery, agents]);
+    }, [searchQuery, agents, statusFilter]);
 
     const handleEdit = (agent) => {
         setSelectedAgent(agent);
@@ -70,15 +77,15 @@ export function Agents() {
     };
 
     const handleDelete = async (agentId) => {
-        if (!window.confirm("Are you sure you want to delete this agent?")) return;
+        if (!window.confirm('Are you sure you want to delete this agent?')) return;
 
         try {
             await userService.delete(agentId);
-            toast.success("Agent deleted successfully");
+            toast.success('Agent deleted successfully');
             fetchAgents();
         } catch (error) {
-            console.error("Delete failed", error);
-            toast.error("Failed to delete agent");
+            console.error('Delete failed', error);
+            toast.error('Failed to delete agent');
         }
     };
 
@@ -93,10 +100,17 @@ export function Agents() {
         setSelectedAgent(null);
     };
 
+    const onlineCount = agents.filter(a => a.status === 'online').length;
+    const offlineCount = agents.filter(a => a.status === 'offline' || !a.status).length;
+
     return (
         <PageContainer
             title="Agents"
-            actions={<Button icon={Plus} onClick={() => { setSelectedAgent(null); setIsModalOpen(true); }}>Add Agent</Button>}
+            actions={
+                <Button icon={Plus} onClick={() => { setSelectedAgent(null); setIsModalOpen(true); }}>
+                    Add Agent
+                </Button>
+            }
         >
             <AgentModal
                 isOpen={isModalOpen}
@@ -105,97 +119,207 @@ export function Agents() {
                 agent={selectedAgent}
             />
 
-            <div className="agents-page">
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {/* Search and Filters */}
-                <div className="agents-toolbar">
-                    <div className="agents-search">
-                        <Search size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search agents..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <div className="agents-filters">
-                        <Badge variant="primary" size="lg">All ({agents.length})</Badge>
-                        <Badge variant="success" size="lg" dot>Online ({agents.filter(a => a.status === 'online').length})</Badge>
-                        <Badge variant="default" size="lg">Offline ({agents.filter(a => a.status === 'offline').length})</Badge>
-                    </div>
-                </div>
+                <Paper
+                    variant="outlined"
+                    sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: { xs: 'stretch', sm: 'center' },
+                        justifyContent: 'space-between',
+                        gap: 2,
+                    }}
+                >
+                    <OutlinedInput
+                        size="small"
+                        placeholder="Search agents..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        startAdornment={
+                            <InputAdornment position="start">
+                                <Search size={18} style={{ opacity: 0.6 }} />
+                            </InputAdornment>
+                        }
+                        sx={{ width: { xs: '100%', sm: 300 }, borderRadius: 1.5 }}
+                    />
+
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <Box onClick={() => setStatusFilter('all')} sx={{ cursor: 'pointer' }}>
+                            <Badge variant={statusFilter === 'all' ? 'primary' : 'default'} size="md">
+                                All ({agents.length})
+                            </Badge>
+                        </Box>
+                        <Box onClick={() => setStatusFilter('online')} sx={{ cursor: 'pointer' }}>
+                            <Badge variant={statusFilter === 'online' ? 'success' : 'default'} size="md" dot>
+                                Online ({onlineCount})
+                            </Badge>
+                        </Box>
+                        <Box onClick={() => setStatusFilter('offline')} sx={{ cursor: 'pointer' }}>
+                            <Badge variant={statusFilter === 'offline' ? 'primary' : 'default'} size="md">
+                                Offline ({offlineCount})
+                            </Badge>
+                        </Box>
+                    </Box>
+                </Paper>
 
                 {/* Agents Grid */}
                 {isLoading ? (
-                    <div style={{ padding: '20px', textAlign: 'center' }}>Loading agents...</div>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}>
+                        <CircularProgress size={36} />
+                    </Box>
                 ) : filteredAgents.length === 0 ? (
-                    <div className="agents-empty-state">
-                        <div className="agents-empty-icon" aria-hidden="true">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" strokeWidth="1.5"
-                                strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                            </svg>
-                        </div>
-                        <p className="agents-empty-title">No Agents Yet</p>
-                        <p className="agents-empty-sub">Add your first agent to start assigning and managing support tickets.</p>
-                    </div>
+                    <Paper
+                        variant="outlined"
+                        sx={{
+                            p: 6,
+                            textAlign: 'center',
+                            borderRadius: 2,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 1.5,
+                        }}
+                    >
+                        <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            No Agents Found
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 400 }}>
+                            Add your first agent to start assigning and managing support tickets.
+                        </Typography>
+                    </Paper>
                 ) : (
-                    <div className="agents-grid">
+                    <Grid container spacing={2.5}>
                         {filteredAgents.map((agent) => (
-                            <Card key={agent._id} className="agent-card" hover>
-                                <div className="agent-card-header">
-                                    <Avatar name={`${agent.first_name} ${agent.last_name}`} src={agent.profile_pic} size="lg" status={agent.status} />
-                                    <div className="agent-actions" style={{ display: 'flex', gap: '8px' }}>
-                                        <Button variant="ghost" size="sm" icon={Edit2} onClick={() => handleEdit(agent)} />
-                                        <Button variant="ghost" size="sm" icon={Trash2} onClick={() => handleDelete(agent._id)} className="text-danger" />
-                                    </div>
-                                </div>
+                            <Grid key={agent._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                                <Card
+                                    hover
+                                    sx={{
+                                        p: 2.5,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 2,
+                                        height: '100%',
+                                    }}
+                                >
+                                    {/* Header */}
+                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <Avatar
+                                            name={`${agent.first_name} ${agent.last_name}`}
+                                            src={agent.profile_pic}
+                                            size="lg"
+                                            status={agent.status}
+                                        />
+                                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                            <Tooltip title="Edit Agent">
+                                                <IconButton size="small" onClick={() => handleEdit(agent)} sx={{ color: 'text.secondary' }}>
+                                                    <Edit2 size={16} />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Delete Agent">
+                                                <IconButton size="small" onClick={() => handleDelete(agent._id)} sx={{ color: 'error.main' }}>
+                                                    <Trash2 size={16} />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Box>
+                                    </Box>
 
-                                <div className="agent-info">
-                                    <h3>{agent.first_name} {agent.last_name}</h3>
-                                    <span className="agent-role">{agent.role?.role || 'Agent'}</span>
-                                    <Badge variant={statusColors[agent.status] || 'default'} size="sm">
-                                        {(agent.status || 'offline').charAt(0).toUpperCase() + (agent.status || 'offline').slice(1)}
-                                    </Badge>
-                                </div>
+                                    {/* Info */}
+                                    <Box>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', lineHeight: 1.2 }}>
+                                            {agent.first_name} {agent.last_name}
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
+                                            {agent.role?.role || 'Agent'}
+                                        </Typography>
+                                        <Badge variant={statusColors[agent.status] || 'default'} size="sm">
+                                            {(agent.status || 'offline').charAt(0).toUpperCase() + (agent.status || 'offline').slice(1)}
+                                        </Badge>
+                                    </Box>
 
-                                <div className="agent-meta">
-                                    <span className="agent-department">{agent.department || 'General'}</span>
-                                    <a href={`mailto:${agent.email}`} className="agent-email">
-                                        <Mail size={14} />
-                                        {agent.email}
-                                    </a>
-                                </div>
+                                    {/* Meta */}
+                                    <Box sx={{ pt: 1, borderTop: 1, borderColor: 'divider', display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                        <Typography variant="caption" sx={{ color: 'text.tertiary' }}>
+                                            {agent.department || 'General'}
+                                        </Typography>
+                                        <Box
+                                            component="a"
+                                            href={`mailto:${agent.email}`}
+                                            sx={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: 0.75,
+                                                fontSize: '0.8125rem',
+                                                color: 'text.secondary',
+                                                textDecoration: 'none',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                '&:hover': { color: 'primary.main', textDecoration: 'underline' },
+                                            }}
+                                        >
+                                            <Mail size={14} style={{ flexShrink: 0 }} />
+                                            <span>{agent.email}</span>
+                                        </Box>
+                                    </Box>
 
-                                <div className="agent-stats">
-                                    <div className="agent-stat">
-                                        <span className="stat-value">{agent.tickets?.open || 0}</span>
-                                        <span className="stat-label">Open</span>
-                                    </div>
-                                    <div className="agent-stat">
-                                        <span className="stat-value">{agent.tickets?.resolved || 0}</span>
-                                        <span className="stat-label">Resolved</span>
-                                    </div>
-                                    <div className="agent-stat">
-                                        <span className="stat-value">
-                                            <Star size={12} className="star-icon" />
-                                            {agent.rating?.avg > 0 ? agent.rating.avg.toFixed(1) : 'N/A'}
-                                        </span>
-                                        <span className="stat-label">Rating{agent.rating?.total > 0 ? ` (${agent.rating.total})` : ''}</span>
-                                    </div>
-                                    <div className="agent-stat">
-                                        <span className="stat-value">100%</span>
-                                        <span className="stat-label">SLA</span>
-                                    </div>
-                                </div>
-                            </Card>
+                                    {/* Stats */}
+                                    <Box
+                                        sx={{
+                                            display: 'grid',
+                                            gridTemplateColumns: 'repeat(4, 1fr)',
+                                            gap: 1,
+                                            p: 1.5,
+                                            borderRadius: 1.5,
+                                            backgroundColor: 'background.subtle',
+                                            mt: 'auto',
+                                            textAlign: 'center',
+                                        }}
+                                    >
+                                        <Box>
+                                            <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
+                                                {agent.tickets?.open || 0}
+                                            </Typography>
+                                            <Typography variant="caption" sx={{ color: 'text.tertiary', fontSize: '0.6875rem' }}>
+                                                Open
+                                            </Typography>
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
+                                                {agent.tickets?.resolved || 0}
+                                            </Typography>
+                                            <Typography variant="caption" sx={{ color: 'text.tertiary', fontSize: '0.6875rem' }}>
+                                                Resolved
+                                            </Typography>
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
+                                                <Star size={11} color="#f59e0b" fill="#f59e0b" />
+                                                {agent.rating?.avg > 0 ? agent.rating.avg.toFixed(1) : '—'}
+                                            </Typography>
+                                            <Typography variant="caption" sx={{ color: 'text.tertiary', fontSize: '0.6875rem' }}>
+                                                Rating
+                                            </Typography>
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
+                                                100%
+                                            </Typography>
+                                            <Typography variant="caption" sx={{ color: 'text.tertiary', fontSize: '0.6875rem' }}>
+                                                SLA
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </Card>
+                            </Grid>
                         ))}
-                    </div>
+                    </Grid>
                 )}
-            </div>
+            </Box>
         </PageContainer>
     );
 }
+
+export default Agents;

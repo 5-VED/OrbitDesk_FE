@@ -1,10 +1,25 @@
 import { useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormHelperText from '@mui/material/FormHelperText';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
+import { Input, Select } from '../components/ui/Input';
 import { organizationService } from '@/features/organizations/api/organizations';
 import { toast } from 'react-hot-toast';
-import { X } from 'lucide-react';
-import './OrganizationModal.css';
+
+const LOCALE_OPTIONS = [
+    { value: 'en-US', label: 'English (US)' },
+    { value: 'en-GB', label: 'English (UK)' },
+    { value: 'es-ES', label: 'Spanish' },
+    { value: 'fr-FR', label: 'French' },
+    { value: 'de-DE', label: 'German' },
+    { value: 'pt-BR', label: 'Portuguese (Brazil)' },
+    { value: 'ja-JP', label: 'Japanese' },
+    { value: 'zh-CN', label: 'Chinese (Simplified)' },
+];
 
 export function OrganizationModal({ isOpen, onClose, onSuccess, organization = null }) {
     const [formData, setFormData] = useState({
@@ -135,105 +150,104 @@ export function OrganizationModal({ isOpen, onClose, onSuccess, organization = n
             onClose={onClose}
             title={isEditing ? 'Edit Organization' : 'Create New Organization'}
             size="medium"
-        >
-            <form onSubmit={handleSubmit} className="org-modal-form">
-                <div className="form-group">
-                    <label htmlFor="name">Organization Name *</label>
-                    <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Enter organization name"
-                        className={errors.name ? 'error' : ''}
-                    />
-                    {errors.name && <span className="error-text">{errors.name}</span>}
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="domains">Domains</label>
-                    <div className="domain-input-wrapper">
-                        <input
-                            type="text"
-                            id="domains"
-                            value={domainInput}
-                            onChange={(e) => setDomainInput(e.target.value)}
-                            onKeyDown={handleDomainKeyDown}
-                            placeholder="Enter domain (e.g., example.com)"
-                        />
-                        <Button type="button" variant="outline" size="sm" onClick={handleAddDomain}>
-                            Add
-                        </Button>
-                    </div>
-                    {formData.domains.length > 0 && (
-                        <div className="domains-tags">
-                            {formData.domains.map(domain => (
-                                <span key={domain} className="domain-tag">
-                                    {domain}
-                                    <button type="button" onClick={() => handleRemoveDomain(domain)}>
-                                        <X size={12} />
-                                    </button>
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="default_locale">Default Locale</label>
-                    <select
-                        id="default_locale"
-                        name="settings.default_locale"
-                        value={formData.settings.default_locale}
-                        onChange={handleChange}
-                    >
-                        <option value="en-US">English (US)</option>
-                        <option value="en-GB">English (UK)</option>
-                        <option value="es-ES">Spanish</option>
-                        <option value="fr-FR">French</option>
-                        <option value="de-DE">German</option>
-                        <option value="pt-BR">Portuguese (Brazil)</option>
-                        <option value="ja-JP">Japanese</option>
-                        <option value="zh-CN">Chinese (Simplified)</option>
-                    </select>
-                </div>
-
-                <div className="form-group checkbox-group">
-                    <label className="checkbox-label">
-                        <input
-                            type="checkbox"
-                            name="settings.allow_external_sharing"
-                            checked={formData.settings.allow_external_sharing}
-                            onChange={handleChange}
-                        />
-                        <span>Allow External Sharing</span>
-                    </label>
-                    <p className="help-text">Enable sharing tickets and knowledge base with external users</p>
-                </div>
-
-                <div className="form-group checkbox-group">
-                    <label className="checkbox-label">
-                        <input
-                            type="checkbox"
-                            name="is_active"
-                            checked={formData.is_active}
-                            onChange={handleChange}
-                        />
-                        <span>Active Organization</span>
-                    </label>
-                    <p className="help-text">Inactive organizations cannot create new tickets</p>
-                </div>
-
-                <div className="form-actions">
-                    <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
+            footer={
+                <>
+                    <Button variant="ghost" onClick={onClose} disabled={loading}>
                         Cancel
                     </Button>
-                    <Button type="submit" disabled={loading}>
+                    <Button onClick={handleSubmit} disabled={loading}>
                         {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Organization' : 'Create Organization')}
                     </Button>
-                </div>
-            </form>
+                </>
+            }
+        >
+            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                <Input
+                    label="Organization Name"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Enter organization name"
+                    error={errors.name}
+                    required
+                />
+
+                <Box>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
+                        <Box sx={{ flex: 1 }}>
+                            <Input
+                                label="Domains"
+                                id="domains"
+                                value={domainInput}
+                                onChange={(e) => setDomainInput(e.target.value)}
+                                onKeyDown={handleDomainKeyDown}
+                                placeholder="Enter domain (e.g., example.com)"
+                            />
+                        </Box>
+                        <Button type="button" variant="outline" size="md" onClick={handleAddDomain} sx={{ mb: 0.25 }}>
+                            Add
+                        </Button>
+                    </Box>
+                    {formData.domains.length > 0 && (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
+                            {formData.domains.map(domain => (
+                                <Chip
+                                    key={domain}
+                                    label={domain}
+                                    size="small"
+                                    onDelete={() => handleRemoveDomain(domain)}
+                                    color="default"
+                                    variant="outlined"
+                                />
+                            ))}
+                        </Box>
+                    )}
+                </Box>
+
+                <Select
+                    label="Default Locale"
+                    id="default_locale"
+                    name="settings.default_locale"
+                    value={formData.settings.default_locale}
+                    onChange={handleChange}
+                    options={LOCALE_OPTIONS}
+                />
+
+                <Box>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                name="settings.allow_external_sharing"
+                                checked={formData.settings.allow_external_sharing}
+                                onChange={handleChange}
+                                color="primary"
+                            />
+                        }
+                        label="Allow External Sharing"
+                    />
+                    <FormHelperText sx={{ ml: 4, mt: -0.5 }}>
+                        Enable sharing tickets and knowledge base with external users
+                    </FormHelperText>
+                </Box>
+
+                <Box>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                name="is_active"
+                                checked={formData.is_active}
+                                onChange={handleChange}
+                                color="primary"
+                            />
+                        }
+                        label="Active Organization"
+                    />
+                    <FormHelperText sx={{ ml: 4, mt: -0.5 }}>
+                        Inactive organizations cannot create new tickets
+                    </FormHelperText>
+                </Box>
+            </Box>
         </Modal>
     );
 }

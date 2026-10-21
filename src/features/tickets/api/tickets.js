@@ -92,3 +92,14 @@ export const ticketService = {
 };
 
 export default ticketService;
+
+// Named helpers required by Task 3 (via @/lib/axios)
+export const createTicket = async (payload) => {
+    const response = await api.post('/tickets', payload);
+    return response.data;
+};
+
+export const listTickets = async (params = {}) => {
+    const response = await api.get('/tickets', { params });
+    return response.data;
+};

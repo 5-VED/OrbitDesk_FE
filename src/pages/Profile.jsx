@@ -1,15 +1,27 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, Mail, Shield, Calendar, Camera, Save, X, Phone, Loader2 } from 'lucide-react';
+import {
+    Box,
+    Card,
+    CardContent,
+    Typography,
+    Avatar as MuiAvatar,
+    IconButton,
+    Button as MuiButton,
+    TextField,
+    Chip,
+    CircularProgress,
+    Stack,
+    Paper,
+    Divider
+} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { User, Mail, Shield, Calendar, Camera, Save, X, Phone } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { Avatar } from '../components/ui/Avatar';
-import { Button } from '../components/ui/Button';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { updateUserProfile, selectCurrentUser, selectAuthLoading } from '../store/slices/authSlice';
+import { updateUserProfile, selectCurrentUser } from '../store/slices/authSlice';
 import { ratingService } from '../services/rating.service';
 import { ticketService } from '../features/tickets/api/tickets';
 import toast from 'react-hot-toast';
-import './Profile.css';
 
 export function Profile() {
     const dispatch = useAppDispatch();
@@ -110,7 +122,7 @@ export function Profile() {
         }
     };
 
-const getImageUrl = (url) => {
+    const getImageUrl = (url) => {
         if (!url) return null;
         if (url.startsWith('http') || url.startsWith('blob:')) return url;
         return url;
@@ -144,33 +156,77 @@ const getImageUrl = (url) => {
     if (!user) {
         return (
             <PageContainer title="Profile">
-                <div className="profile-loading">Loading profile...</div>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
+                    <CircularProgress size={36} color="primary" />
+                </Box>
             </PageContainer>
         );
     }
 
+    const initials = `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase() || 'U';
+
     return (
         <PageContainer title="My Profile">
-            <div className="profile-container">
-                <div className="profile-header-card">
-                    <div className="profile-cover"></div>
-                    <div className="profile-info-wrapper">
-                        <div className="profile-avatar-wrapper">
-                            <Avatar
+            <Stack spacing={3}>
+                {/* Header card with cover and avatar */}
+                <Card sx={{ overflow: 'hidden', position: 'relative' }}>
+                    <Box
+                        sx={{
+                            height: 160,
+                            background: (theme) =>
+                                theme.palette.mode === 'dark'
+                                    ? 'linear-gradient(135deg, rgba(244,67,54,0.3) 0%, rgba(20,24,33,0.9) 100%)'
+                                    : 'linear-gradient(135deg, #fee2e2 0%, #ffedd5 100%)',
+                            width: '100%'
+                        }}
+                    />
+                    <Box
+                        sx={{
+                            px: { xs: 2, sm: 3, md: 4 },
+                            pb: 3,
+                            display: 'flex',
+                            alignItems: { xs: 'center', sm: 'flex-end' },
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            gap: 3,
+                            mt: '-60px',
+                            textAlign: { xs: 'center', sm: 'left' }
+                        }}
+                    >
+                        <Box sx={{ position: 'relative' }}>
+                            <MuiAvatar
                                 src={getImageUrl(previewUrl)}
-                                name={`${user.first_name} ${user.last_name}`}
-                                size="xl"
-                                className="profile-avatar-lg"
-                            />
+                                sx={{
+                                    width: 120,
+                                    height: 120,
+                                    fontSize: '2.5rem',
+                                    fontWeight: 700,
+                                    bgcolor: 'primary.main',
+                                    color: '#ffffff',
+                                    border: (theme) => `4px solid ${theme.palette.background.paper}`,
+                                    boxShadow: 3
+                                }}
+                            >
+                                {initials}
+                            </MuiAvatar>
                             {isEditing && (
                                 <>
-                                    <button
-                                        className="profile-avatar-edit"
+                                    <IconButton
                                         onClick={() => fileInputRef.current?.click()}
-                                        type="button"
+                                        size="small"
+                                        aria-label="Upload photo"
+                                        sx={{
+                                            position: 'absolute',
+                                            bottom: 4,
+                                            right: 4,
+                                            bgcolor: 'background.paper',
+                                            border: '1px solid',
+                                            borderColor: 'divider',
+                                            boxShadow: 2,
+                                            '&:hover': { bgcolor: 'action.hover' }
+                                        }}
                                     >
                                         <Camera size={16} />
-                                    </button>
+                                    </IconButton>
                                     <input
                                         type="file"
                                         ref={fileInputRef}
@@ -180,164 +236,346 @@ const getImageUrl = (url) => {
                                     />
                                 </>
                             )}
-                        </div>
-                        <div className="profile-names">
-                            <h2 className="profile-fullname">{user.first_name} {user.last_name}</h2>
-                            <p className="profile-role-badge">{user.role}</p>
-                        </div>
-                        <div className="profile-actions">
-                            {isEditing ? (
-                                <div className="flex gap-2">
-                                    <Button variant="ghost" onClick={handleEditToggle} disabled={loading}>
-                                        <X size={16} className="mr-2" /> Cancel
-                                    </Button>
-                                    <Button onClick={handleSave} disabled={loading}>
-                                        <Save size={16} className="mr-2" /> Save
-                                    </Button>
-                                </div>
-                            ) : (
-                                <Button variant="outline" onClick={handleEditToggle}>Edit Profile</Button>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                        </Box>
 
-                <div className="profile-grid">
-                    <Card className="profile-details-card">
-                        <CardHeader>
-                            <CardTitle>Personal Information</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="profile-details-list">
-                                <div className="profile-detail-item">
-                                    <div className="detail-icon">
-                                        <User size={20} />
-                                    </div>
-                                    <div className="detail-content w-full">
-                                        <span className="detail-label">Full Name</span>
-                                        {isEditing ? (
-                                            <div className="flex gap-2 mt-1">
-                                                <input
-                                                    type="text"
-                                                    name="first_name"
-                                                    value={formData.first_name}
-                                                    onChange={handleInputChange}
-                                                    placeholder="First Name"
-                                                    className="profile-input"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    name="last_name"
-                                                    value={formData.last_name}
-                                                    onChange={handleInputChange}
-                                                    placeholder="Last Name"
-                                                    className="profile-input"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <span className="detail-value">{user.first_name} {user.last_name}</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="profile-detail-item">
-                                    <div className="detail-icon">
-                                        <Mail size={20} />
-                                    </div>
-                                    <div className="detail-content w-full">
-                                        <span className="detail-label">Email Address</span>
-                                        {isEditing ? (
-                                            <div className="mt-1">
-                                                <input
+                        <Box sx={{ flex: 1, mt: { xs: 1, sm: 8 } }}>
+                            <Typography variant="h4" fontWeight={700} sx={{ mb: 0.5 }}>
+                                {user.first_name} {user.last_name}
+                            </Typography>
+                            <Chip
+                                label={user.role || 'User'}
+                                size="small"
+                                variant="outlined"
+                                color="primary"
+                                sx={{ textTransform: 'capitalize', fontWeight: 600 }}
+                            />
+                        </Box>
+
+                        <Box sx={{ mt: { xs: 2, sm: 8 } }}>
+                            {isEditing ? (
+                                <Stack direction="row" spacing={1}>
+                                    <MuiButton
+                                        variant="outlined"
+                                        color="inherit"
+                                        onClick={handleEditToggle}
+                                        disabled={loading}
+                                        startIcon={<X size={16} />}
+                                    >
+                                        Cancel
+                                    </MuiButton>
+                                    <MuiButton
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={handleSave}
+                                        disabled={loading}
+                                        startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <Save size={16} />}
+                                    >
+                                        Save
+                                    </MuiButton>
+                                </Stack>
+                            ) : (
+                                <MuiButton variant="outlined" color="primary" onClick={handleEditToggle}>
+                                    Edit Profile
+                                </MuiButton>
+                            )}
+                        </Box>
+                    </Box>
+                </Card>
+
+                {/* Main Content Grid */}
+                <Grid container spacing={3}>
+                    {/* Personal Information */}
+                    <Grid size={{ xs: 12, md: 8 }}>
+                        <Card sx={{ height: '100%' }}>
+                            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                                <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                                    Personal Information
+                                </Typography>
+                                <Divider sx={{ mb: 2 }} />
+
+                                <Stack spacing={2}>
+                                    {/* Full Name */}
+                                    <Paper
+                                        variant="outlined"
+                                        sx={{
+                                            p: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                            borderRadius: 2,
+                                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'grey.50'
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: 42,
+                                                height: 42,
+                                                borderRadius: 2,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                bgcolor: 'primary.light',
+                                                color: 'primary.main'
+                                            }}
+                                        >
+                                            <User size={20} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="caption" color="text.secondary" display="block">
+                                                Full Name
+                                            </Typography>
+                                            {isEditing ? (
+                                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 0.5 }}>
+                                                    <TextField
+                                                        size="small"
+                                                        fullWidth
+                                                        name="first_name"
+                                                        value={formData.first_name}
+                                                        onChange={handleInputChange}
+                                                        placeholder="First Name"
+                                                    />
+                                                    <TextField
+                                                        size="small"
+                                                        fullWidth
+                                                        name="last_name"
+                                                        value={formData.last_name}
+                                                        onChange={handleInputChange}
+                                                        placeholder="Last Name"
+                                                    />
+                                                </Stack>
+                                            ) : (
+                                                <Typography variant="body1" fontWeight={500}>
+                                                    {user.first_name} {user.last_name}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </Paper>
+
+                                    {/* Email */}
+                                    <Paper
+                                        variant="outlined"
+                                        sx={{
+                                            p: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                            borderRadius: 2,
+                                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'grey.50'
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: 42,
+                                                height: 42,
+                                                borderRadius: 2,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                bgcolor: 'primary.light',
+                                                color: 'primary.main'
+                                            }}
+                                        >
+                                            <Mail size={20} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="caption" color="text.secondary" display="block">
+                                                Email Address
+                                            </Typography>
+                                            {isEditing ? (
+                                                <TextField
+                                                    size="small"
+                                                    fullWidth
                                                     type="email"
                                                     name="email"
                                                     value={formData.email}
                                                     onChange={handleInputChange}
                                                     placeholder="Email Address"
-                                                    className="profile-input"
+                                                    sx={{ mt: 0.5 }}
                                                 />
-                                            </div>
-                                        ) : (
-                                            <span className="detail-value">{user.email}</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="profile-detail-item">
-                                    <div className="detail-icon">
-                                        <Phone size={20} />
-                                    </div>
-                                    <div className="detail-content w-full">
-                                        <span className="detail-label">Phone Number</span>
-                                        {isEditing ? (
-                                            <div className="mt-1">
-                                                <input
-                                                    type="text"
+                                            ) : (
+                                                <Typography variant="body1" fontWeight={500}>
+                                                    {user.email}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </Paper>
+
+                                    {/* Phone */}
+                                    <Paper
+                                        variant="outlined"
+                                        sx={{
+                                            p: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                            borderRadius: 2,
+                                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'grey.50'
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: 42,
+                                                height: 42,
+                                                borderRadius: 2,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                bgcolor: 'primary.light',
+                                                color: 'primary.main'
+                                            }}
+                                        >
+                                            <Phone size={20} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="caption" color="text.secondary" display="block">
+                                                Phone Number
+                                            </Typography>
+                                            {isEditing ? (
+                                                <TextField
+                                                    size="small"
+                                                    fullWidth
                                                     name="phone"
                                                     value={formData.phone}
                                                     onChange={handleInputChange}
                                                     placeholder="Phone Number"
-                                                    className="profile-input"
+                                                    sx={{ mt: 0.5 }}
                                                 />
-                                            </div>
-                                        ) : (
-                                            <span className="detail-value">{user.phone || 'Not set'}</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="profile-detail-item">
-                                    <div className="detail-icon">
-                                        <Shield size={20} />
-                                    </div>
-                                    <div className="detail-content">
-                                        <span className="detail-label">Role</span>
-                                        <span className="detail-value capitalize">{user.role}</span>
-                                    </div>
-                                </div>
-                                <div className="profile-detail-item">
-                                    <div className="detail-icon">
-                                        <Calendar size={20} />
-                                    </div>
-                                    <div className="detail-content">
-                                        <span className="detail-label">Organization ID</span>
-                                        <span className="detail-value">{user.organization_id}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                            ) : (
+                                                <Typography variant="body1" fontWeight={500}>
+                                                    {user.phone || 'Not set'}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    </Paper>
 
-                    <Card className="profile-stats-card">
-                        <CardHeader>
-                            <CardTitle>Activity Overview</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {statsLoading ? (
-                                <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--spacing-xl)' }}>
-                                    <Loader2 size={24} className="spin" />
-                                </div>
-                            ) : (
-                                <div className="profile-stats-grid">
-                                    <div className="profile-stat-box">
-                                        <span className="stat-number">{stats.assigned}</span>
-                                        <span className="stat-label">Tickets Assigned</span>
-                                    </div>
-                                    <div className="profile-stat-box">
-                                        <span className="stat-number">{stats.resolved}</span>
-                                        <span className="stat-label">Tickets Resolved</span>
-                                    </div>
-                                    <div className="profile-stat-box">
-                                        <span className="stat-number">{stats.rating}</span>
-                                        <span className="stat-label">Avg Rating</span>
-                                    </div>
-                                    <div className="profile-stat-box">
-                                        <span className="stat-number">{stats.slaCompliance}</span>
-                                        <span className="stat-label">SLA Compliance</span>
-                                    </div>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+                                    {/* Role */}
+                                    <Paper
+                                        variant="outlined"
+                                        sx={{
+                                            p: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                            borderRadius: 2,
+                                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'grey.50'
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: 42,
+                                                height: 42,
+                                                borderRadius: 2,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                bgcolor: 'primary.light',
+                                                color: 'primary.main'
+                                            }}
+                                        >
+                                            <Shield size={20} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="caption" color="text.secondary" display="block">
+                                                Role
+                                            </Typography>
+                                            <Typography variant="body1" fontWeight={500} sx={{ textTransform: 'capitalize' }}>
+                                                {user.role}
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+
+                                    {/* Organization ID */}
+                                    <Paper
+                                        variant="outlined"
+                                        sx={{
+                                            p: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                            borderRadius: 2,
+                                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'grey.50'
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: 42,
+                                                height: 42,
+                                                borderRadius: 2,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                bgcolor: 'primary.light',
+                                                color: 'primary.main'
+                                            }}
+                                        >
+                                            <Calendar size={20} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="caption" color="text.secondary" display="block">
+                                                Organization ID
+                                            </Typography>
+                                            <Typography variant="body1" fontWeight={500}>
+                                                {user.organization_id || '—'}
+                                            </Typography>
+                                        </Box>
+                                    </Paper>
+                                </Stack>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Activity Overview */}
+                    <Grid size={{ xs: 12, md: 4 }}>
+                        <Card sx={{ height: '100%' }}>
+                            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                                <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                                    Activity Overview
+                                </Typography>
+                                <Divider sx={{ mb: 2 }} />
+
+                                {statsLoading ? (
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                                        <CircularProgress size={28} />
+                                    </Box>
+                                ) : (
+                                    <Grid container spacing={2}>
+                                        {[
+                                            { label: 'Tickets Assigned', value: stats.assigned },
+                                            { label: 'Tickets Resolved', value: stats.resolved },
+                                            { label: 'Avg Rating', value: stats.rating },
+                                            { label: 'SLA Compliance', value: stats.slaCompliance }
+                                        ].map((statItem, idx) => (
+                                            <Grid key={idx} size={{ xs: 6 }}>
+                                                <Paper
+                                                    variant="outlined"
+                                                    sx={{
+                                                        p: 2.5,
+                                                        textAlign: 'center',
+                                                        borderRadius: 2,
+                                                        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'grey.50',
+                                                        transition: 'transform 0.2s, box-shadow 0.2s',
+                                                        '&:hover': {
+                                                            transform: 'translateY(-2px)',
+                                                            boxShadow: 2
+                                                        }
+                                                    }}
+                                                >
+                                                    <Typography variant="h4" color="primary.main" fontWeight={700}>
+                                                        {statItem.value}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                                                        {statItem.label}
+                                                    </Typography>
+                                                </Paper>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+            </Stack>
         </PageContainer>
     );
 }

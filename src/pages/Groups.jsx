@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
     Plus,
     Search,
-    Users,
     Lock,
     Globe,
     Edit,
@@ -11,6 +10,14 @@ import {
     Calendar,
     Info
 } from 'lucide-react';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Avatar from '@mui/material/Avatar';
 import { Modal } from '../components/ui/Modal';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
@@ -34,7 +41,6 @@ import {
 } from '../store/slices/groupsSlice';
 import { GroupModal } from './GroupModal';
 import { toast } from 'react-hot-toast';
-import './Groups.css';
 
 export function Groups() {
     const dispatch = useAppDispatch();
@@ -92,7 +98,6 @@ export function Groups() {
                     dispatch(clearDetailGroup());
                 }
             } else {
-                // Delete groups one by one (backend doesn't have bulk delete)
                 for (const id of selectedRows) {
                     await dispatch(deleteGroup(id)).unwrap();
                 }
@@ -129,15 +134,29 @@ export function Groups() {
             key: 'name',
             header: 'Group',
             render: (_, row) => (
-                <div className="group-name-cell">
-                    <div className="group-icon">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Avatar
+                        variant="rounded"
+                        sx={{
+                            width: 36,
+                            height: 36,
+                            bgcolor: 'primary.light',
+                            color: 'primary.contrastText',
+                            fontWeight: 700,
+                            fontSize: '0.875rem'
+                        }}
+                    >
                         {getGroupInitials(row.name)}
-                    </div>
-                    <div>
-                        <span className="group-name">{row.name}</span>
-                        <span className="group-description">{row.description || 'No description'}</span>
-                    </div>
-                </div>
+                    </Avatar>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            {row.name}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                            {row.description || 'No description'}
+                        </Typography>
+                    </Box>
+                </Box>
             ),
         },
         {
@@ -145,7 +164,7 @@ export function Groups() {
             header: 'Visibility',
             render: (value) => (
                 <Badge variant={value ? 'warning' : 'success'}>
-                    {value ? <><Lock size={12} /> Private</> : <><Globe size={12} /> Public</>}
+                    {value ? <><Lock size={12} style={{ marginRight: 4 }} /> Private</> : <><Globe size={12} style={{ marginRight: 4 }} /> Public</>}
                 </Badge>
             ),
         },
@@ -158,21 +177,28 @@ export function Groups() {
             key: 'actions',
             header: '',
             render: (_, row) => (
-                <div style={{ display: 'flex', gap: '4px' }}>
-                    <Button variant="ghost" size="sm" onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingGroup(row);
-                        setIsModalOpen(true);
-                    }}>
+                <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                    <IconButton
+                        size="small"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingGroup(row);
+                            setIsModalOpen(true);
+                        }}
+                    >
                         <Edit size={16} />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-danger" onClick={(e) => {
-                        e.stopPropagation();
-                        handleSingleDelete(row);
-                    }}>
+                    </IconButton>
+                    <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleSingleDelete(row);
+                        }}
+                    >
                         <Trash2 size={16} />
-                    </Button>
-                </div>
+                    </IconButton>
+                </Stack>
             ),
         },
     ];
@@ -186,29 +212,65 @@ export function Groups() {
                 </Button>
             }
         >
-            <div className={`groups-page ${detailGroup ? 'show-detail' : ''}`}>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                        xs: '1fr',
+                        lg: detailGroup ? '1fr 360px' : '1fr',
+                    },
+                    gap: 3,
+                    alignItems: 'start',
+                }}
+            >
                 {/* Groups List */}
-                <div className="groups-list-section">
-                    <div className="groups-toolbar">
-                        <div className="groups-search">
-                            <Search size={18} />
-                            <input
-                                type="text"
-                                placeholder="Search groups..."
-                                value={searchQuery}
-                                onChange={(e) => dispatch(setGroupSearchQuery(e.target.value))}
-                            />
-                        </div>
-                    </div>
+                <Box
+                    sx={{
+                        display: {
+                            xs: detailGroup ? 'none' : 'flex',
+                            lg: 'flex',
+                        },
+                        flexDirection: 'column',
+                        gap: 2.5,
+                    }}
+                >
+                    <Box sx={{ maxWidth: 360 }}>
+                        <OutlinedInput
+                            size="small"
+                            fullWidth
+                            placeholder="Search groups..."
+                            value={searchQuery}
+                            onChange={(e) => dispatch(setGroupSearchQuery(e.target.value))}
+                            startAdornment={
+                                <InputAdornment position="start">
+                                    <Search size={18} />
+                                </InputAdornment>
+                            }
+                        />
+                    </Box>
 
                     {/* Bulk Actions */}
                     {selectedRows.length > 0 && (
-                        <div className="groups-bulk-actions">
-                            <span>{selectedRows.length} selected</span>
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                p: 1.5,
+                                bgcolor: 'action.hover',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 1.5,
+                            }}
+                        >
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                {selectedRows.length} selected
+                            </Typography>
                             <Button variant="ghost" size="sm" className="danger" onClick={handleBulkDelete}>
                                 <Trash2 size={16} /> Delete
                             </Button>
-                        </div>
+                        </Paper>
                     )}
 
                     <DataTable
@@ -227,58 +289,107 @@ export function Groups() {
                     />
 
                     {/* Stats */}
-                    <div className="groups-pagination">
-                        <span className="pagination-info">
+                    <Box sx={{ pt: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
                             {filteredGroups.length} {filteredGroups.length === 1 ? 'group' : 'groups'}
-                        </span>
-                    </div>
-                </div>
+                        </Typography>
+                    </Box>
+                </Box>
 
                 {/* Group Detail */}
                 {detailGroup && (
-                    <aside className="group-detail">
+                    <Box
+                        sx={{
+                            display: {
+                                xs: 'block',
+                                lg: 'block',
+                            },
+                            position: { lg: 'sticky' },
+                            top: { lg: 80 },
+                        }}
+                    >
                         <Card>
-                            <div className="group-detail-header">
-                                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start' }}>
-                                    <Button variant="ghost" size="sm" className="mobile-only" onClick={() => dispatch(clearDetailGroup())}>
-                                        <ArrowLeft size={16} />
-                                    </Button>
-                                    <div className="group-icon" style={{ width: '64px', height: '64px', fontSize: 'var(--font-size-xl)' }}>
-                                        {getGroupInitials(detailGroup.name)}
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                        <Button variant="ghost" size="sm" onClick={() => { setEditingGroup(detailGroup); setIsModalOpen(true); }}>
-                                            <Edit size={16} />
-                                        </Button>
-                                    </div>
-                                </div>
-                                <h2>{detailGroup.name}</h2>
-                                <span className="group-type">
+                            <Box sx={{ p: 3, textAlign: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start', mb: 2 }}>
+                                    <IconButton
+                                        size="small"
+                                        sx={{ display: { xs: 'inline-flex', lg: 'none' } }}
+                                        onClick={() => dispatch(clearDetailGroup())}
+                                    >
+                                        <ArrowLeft size={18} />
+                                    </IconButton>
+                                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                                        <Avatar
+                                            variant="rounded"
+                                            sx={{
+                                                width: 64,
+                                                height: 64,
+                                                bgcolor: 'primary.main',
+                                                color: 'primary.contrastText',
+                                                fontWeight: 700,
+                                                fontSize: '1.5rem',
+                                            }}
+                                        >
+                                            {getGroupInitials(detailGroup.name)}
+                                        </Avatar>
+                                    </Box>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => {
+                                            setEditingGroup(detailGroup);
+                                            setIsModalOpen(true);
+                                        }}
+                                    >
+                                        <Edit size={16} />
+                                    </IconButton>
+                                </Box>
+                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                    {detailGroup.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
                                     {detailGroup.is_private ? 'Private Group' : 'Public Group'}
-                                </span>
-                            </div>
+                                </Typography>
+                            </Box>
 
-                            <div className="group-info-section">
-                                <h4>Group Information</h4>
-                                <div className="group-info-list">
-                                    <div className="group-info-item">
-                                        <Info size={16} />
-                                        <span>{detailGroup.description || 'No description'}</span>
-                                    </div>
-                                    <div className="group-info-item">
-                                        {detailGroup.is_private ? <Lock size={16} /> : <Globe size={16} />}
-                                        <span>{detailGroup.is_private ? 'Private' : 'Public'}</span>
-                                    </div>
-                                    <div className="group-info-item">
-                                        <Calendar size={16} />
-                                        <span>Created {formatDate(detailGroup.createdAt)}</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <Box sx={{ p: 3 }}>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: 'text.secondary',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 0.5,
+                                        display: 'block',
+                                        mb: 2,
+                                    }}
+                                >
+                                    Group Information
+                                </Typography>
+                                <Stack spacing={1.5}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <Info size={16} style={{ opacity: 0.6 }} />
+                                        <Typography variant="body2">
+                                            {detailGroup.description || 'No description'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        {detailGroup.is_private ? <Lock size={16} style={{ opacity: 0.6 }} /> : <Globe size={16} style={{ opacity: 0.6 }} />}
+                                        <Typography variant="body2">
+                                            {detailGroup.is_private ? 'Private' : 'Public'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <Calendar size={16} style={{ opacity: 0.6 }} />
+                                        <Typography variant="body2">
+                                            Created {formatDate(detailGroup.createdAt)}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Box>
                         </Card>
-                    </aside>
+                    </Box>
                 )}
-            </div>
+            </Box>
 
             <GroupModal
                 isOpen={isModalOpen}
@@ -304,9 +415,13 @@ export function Groups() {
                 }
             >
                 {singleDeleteGroup ? (
-                    <p>Are you sure you want to delete "{singleDeleteGroup.name}"? This action cannot be undone.</p>
+                    <Typography variant="body2">
+                        Are you sure you want to delete "{singleDeleteGroup.name}"? This action cannot be undone.
+                    </Typography>
                 ) : (
-                    <p>Are you sure you want to delete {selectedRows.length} {selectedRows.length === 1 ? 'group' : 'groups'}? This action cannot be undone.</p>
+                    <Typography variant="body2">
+                        Are you sure you want to delete {selectedRows.length} {selectedRows.length === 1 ? 'group' : 'groups'}? This action cannot be undone.
+                    </Typography>
                 )}
             </Modal>
         </PageContainer>

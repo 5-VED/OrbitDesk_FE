@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
     Plus,
     Search,
-    Building2,
     Globe,
     CheckCircle,
     XCircle,
@@ -13,6 +12,15 @@ import {
     Settings,
     Share2
 } from 'lucide-react';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Avatar from '@mui/material/Avatar';
+import Chip from '@mui/material/Chip';
 import { Modal } from '../components/ui/Modal';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
@@ -36,7 +44,6 @@ import {
 } from '../store/slices/organizationsSlice';
 import { OrganizationModal } from './OrganizationModal';
 import { toast } from 'react-hot-toast';
-import './Organizations.css';
 
 export function Organizations() {
     const dispatch = useAppDispatch();
@@ -130,24 +137,38 @@ export function Organizations() {
             key: 'name',
             header: 'Organization',
             render: (_, row) => (
-                <div className="org-name-cell">
-                    <div className="org-icon">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Avatar
+                        variant="rounded"
+                        sx={{
+                            width: 36,
+                            height: 36,
+                            bgcolor: 'secondary.light',
+                            color: 'secondary.contrastText',
+                            fontWeight: 700,
+                            fontSize: '0.875rem'
+                        }}
+                    >
                         {getOrgInitials(row.name)}
-                    </div>
-                    <div>
-                        <span className="org-name">{row.name}</span>
-                        <span className="org-domains">
+                    </Avatar>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            {row.name}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                             {row.domains?.length > 0 ? row.domains.join(', ') : 'No domains'}
-                        </span>
-                    </div>
-                </div>
+                        </Typography>
+                    </Box>
+                </Box>
             ),
         },
         {
             key: 'domains',
             header: 'Domains',
             render: (value) => (
-                <span>{value?.length || 0} domain{value?.length !== 1 ? 's' : ''}</span>
+                <Typography variant="body2" color="text.secondary">
+                    {value?.length || 0} domain{value?.length !== 1 ? 's' : ''}
+                </Typography>
             ),
         },
         {
@@ -155,7 +176,7 @@ export function Organizations() {
             header: 'Status',
             render: (value) => (
                 <Badge variant={value !== false ? 'success' : 'default'}>
-                    {value !== false ? <><CheckCircle size={12} /> Active</> : <><XCircle size={12} /> Inactive</>}
+                    {value !== false ? <><CheckCircle size={12} style={{ marginRight: 4 }} /> Active</> : <><XCircle size={12} style={{ marginRight: 4 }} /> Inactive</>}
                 </Badge>
             ),
         },
@@ -168,21 +189,28 @@ export function Organizations() {
             key: 'actions',
             header: '',
             render: (_, row) => (
-                <div style={{ display: 'flex', gap: '4px' }}>
-                    <Button variant="ghost" size="sm" onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingOrg(row);
-                        setIsModalOpen(true);
-                    }}>
+                <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                    <IconButton
+                        size="small"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingOrg(row);
+                            setIsModalOpen(true);
+                        }}
+                    >
                         <Edit size={16} />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-danger" onClick={(e) => {
-                        e.stopPropagation();
-                        handleSingleDelete(row);
-                    }}>
+                    </IconButton>
+                    <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleSingleDelete(row);
+                        }}
+                    >
                         <Trash2 size={16} />
-                    </Button>
-                </div>
+                    </IconButton>
+                </Stack>
             ),
         },
     ];
@@ -196,29 +224,65 @@ export function Organizations() {
                 </Button>
             }
         >
-            <div className={`organizations-page ${detailOrg ? 'show-detail' : ''}`}>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                        xs: '1fr',
+                        lg: detailOrg ? '1fr 360px' : '1fr',
+                    },
+                    gap: 3,
+                    alignItems: 'start',
+                }}
+            >
                 {/* Organizations List */}
-                <div className="organizations-list-section">
-                    <div className="organizations-toolbar">
-                        <div className="organizations-search">
-                            <Search size={18} />
-                            <input
-                                type="text"
-                                placeholder="Search organizations..."
-                                value={searchQuery}
-                                onChange={(e) => dispatch(setOrgSearchQuery(e.target.value))}
-                            />
-                        </div>
-                    </div>
+                <Box
+                    sx={{
+                        display: {
+                            xs: detailOrg ? 'none' : 'flex',
+                            lg: 'flex',
+                        },
+                        flexDirection: 'column',
+                        gap: 2.5,
+                    }}
+                >
+                    <Box sx={{ maxWidth: 360 }}>
+                        <OutlinedInput
+                            size="small"
+                            fullWidth
+                            placeholder="Search organizations..."
+                            value={searchQuery}
+                            onChange={(e) => dispatch(setOrgSearchQuery(e.target.value))}
+                            startAdornment={
+                                <InputAdornment position="start">
+                                    <Search size={18} />
+                                </InputAdornment>
+                            }
+                        />
+                    </Box>
 
                     {/* Bulk Actions */}
                     {selectedRows.length > 0 && (
-                        <div className="organizations-bulk-actions">
-                            <span>{selectedRows.length} selected</span>
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                p: 1.5,
+                                bgcolor: 'action.hover',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 1.5,
+                            }}
+                        >
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                {selectedRows.length} selected
+                            </Typography>
                             <Button variant="ghost" size="sm" className="danger" onClick={handleBulkDelete}>
                                 <Trash2 size={16} /> Delete
                             </Button>
-                        </div>
+                        </Paper>
                     )}
 
                     <DataTable
@@ -237,84 +301,152 @@ export function Organizations() {
                     />
 
                     {/* Stats */}
-                    <div className="organizations-pagination">
-                        <span className="pagination-info">
+                    <Box sx={{ pt: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
                             {filteredOrgs.length} {filteredOrgs.length === 1 ? 'organization' : 'organizations'}
-                        </span>
-                    </div>
-                </div>
+                        </Typography>
+                    </Box>
+                </Box>
 
                 {/* Organization Detail */}
                 {detailOrg && (
-                    <aside className="org-detail">
+                    <Box
+                        sx={{
+                            display: {
+                                xs: 'block',
+                                lg: 'block',
+                            },
+                            position: { lg: 'sticky' },
+                            top: { lg: 80 },
+                        }}
+                    >
                         <Card>
-                            <div className="org-detail-header">
-                                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start' }}>
-                                    <Button variant="ghost" size="sm" className="mobile-only" onClick={() => dispatch(clearDetailOrg())}>
-                                        <ArrowLeft size={16} />
-                                    </Button>
-                                    <div className="org-icon" style={{ width: '64px', height: '64px', fontSize: 'var(--font-size-xl)' }}>
-                                        {getOrgInitials(detailOrg.name)}
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                        <Button variant="ghost" size="sm" onClick={() => { setEditingOrg(detailOrg); setIsModalOpen(true); }}>
-                                            <Edit size={16} />
-                                        </Button>
-                                    </div>
-                                </div>
-                                <h2>{detailOrg.name}</h2>
-                                <span className="org-status">
+                            <Box sx={{ p: 3, textAlign: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start', mb: 2 }}>
+                                    <IconButton
+                                        size="small"
+                                        sx={{ display: { xs: 'inline-flex', lg: 'none' } }}
+                                        onClick={() => dispatch(clearDetailOrg())}
+                                    >
+                                        <ArrowLeft size={18} />
+                                    </IconButton>
+                                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                                        <Avatar
+                                            variant="rounded"
+                                            sx={{
+                                                width: 64,
+                                                height: 64,
+                                                bgcolor: 'primary.main',
+                                                color: 'primary.contrastText',
+                                                fontWeight: 700,
+                                                fontSize: '1.5rem',
+                                            }}
+                                        >
+                                            {getOrgInitials(detailOrg.name)}
+                                        </Avatar>
+                                    </Box>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => {
+                                            setEditingOrg(detailOrg);
+                                            setIsModalOpen(true);
+                                        }}
+                                    >
+                                        <Edit size={16} />
+                                    </IconButton>
+                                </Box>
+                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                    {detailOrg.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
                                     {detailOrg.is_active !== false ? 'Active Organization' : 'Inactive Organization'}
-                                </span>
-                            </div>
+                                </Typography>
+                            </Box>
 
-                            <div className="org-info-section">
-                                <h4>Domains</h4>
-                                <div className="org-info-list">
-                                    {detailOrg.domains?.length > 0 ? (
-                                        <div className="domains-list">
-                                            {detailOrg.domains.map(domain => (
-                                                <span key={domain} className="domain-tag">
-                                                    <Globe size={12} /> {domain}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <span className="org-info-item">
-                                            <Globe size={16} />
-                                            <span>No domains configured</span>
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+                            <Box sx={{ p: 3 }}>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: 'text.secondary',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 0.5,
+                                        display: 'block',
+                                        mb: 1.5,
+                                    }}
+                                >
+                                    Domains
+                                </Typography>
+                                {detailOrg.domains?.length > 0 ? (
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                                        {detailOrg.domains.map(domain => (
+                                            <Chip
+                                                key={domain}
+                                                icon={<Globe size={13} />}
+                                                label={domain}
+                                                size="small"
+                                                variant="outlined"
+                                            />
+                                        ))}
+                                    </Box>
+                                ) : (
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                                        No domains configured
+                                    </Typography>
+                                )}
 
-                            <div className="org-info-section">
-                                <h4>Settings</h4>
-                                <div className="settings-list">
-                                    <div className={`setting-item ${detailOrg.settings?.allow_external_sharing ? '' : 'disabled'}`}>
-                                        <Share2 size={14} />
-                                        <span>External Sharing {detailOrg.settings?.allow_external_sharing ? 'Enabled' : 'Disabled'}</span>
-                                    </div>
-                                    <div className="setting-item">
-                                        <Settings size={14} />
-                                        <span>Locale: {detailOrg.settings?.default_locale || 'en-US'}</span>
-                                    </div>
-                                </div>
-                            </div>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: 'text.secondary',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 0.5,
+                                        display: 'block',
+                                        mb: 1.5,
+                                    }}
+                                >
+                                    Settings
+                                </Typography>
+                                <Stack spacing={1.5} sx={{ mb: 3 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <Share2 size={16} style={{ opacity: 0.6 }} />
+                                        <Typography variant="body2">
+                                            External Sharing {detailOrg.settings?.allow_external_sharing ? 'Enabled' : 'Disabled'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <Settings size={16} style={{ opacity: 0.6 }} />
+                                        <Typography variant="body2">
+                                            Locale: {detailOrg.settings?.default_locale || 'en-US'}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
 
-                            <div className="org-info-section">
-                                <h4>Info</h4>
-                                <div className="org-info-list">
-                                    <div className="org-info-item">
-                                        <Calendar size={16} />
-                                        <span>Created {formatDate(detailOrg.createdAt)}</span>
-                                    </div>
-                                </div>
-                            </div>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: 'text.secondary',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 0.5,
+                                        display: 'block',
+                                        mb: 1.5,
+                                    }}
+                                >
+                                    Info
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                    <Calendar size={16} style={{ opacity: 0.6 }} />
+                                    <Typography variant="body2">
+                                        Created {formatDate(detailOrg.createdAt)}
+                                    </Typography>
+                                </Box>
+                            </Box>
                         </Card>
-                    </aside>
+                    </Box>
                 )}
-            </div>
+            </Box>
 
             <OrganizationModal
                 isOpen={isModalOpen}
@@ -340,9 +472,13 @@ export function Organizations() {
                 }
             >
                 {singleDeleteOrg ? (
-                    <p>Are you sure you want to delete "{singleDeleteOrg.name}"? This action cannot be undone.</p>
+                    <Typography variant="body2">
+                        Are you sure you want to delete "{singleDeleteOrg.name}"? This action cannot be undone.
+                    </Typography>
                 ) : (
-                    <p>Are you sure you want to delete {selectedRows.length} {selectedRows.length === 1 ? 'organization' : 'organizations'}? This action cannot be undone.</p>
+                    <Typography variant="body2">
+                        Are you sure you want to delete {selectedRows.length} {selectedRows.length === 1 ? 'organization' : 'organizations'}? This action cannot be undone.
+                    </Typography>
                 )}
             </Modal>
         </PageContainer>

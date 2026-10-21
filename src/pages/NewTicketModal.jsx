@@ -1,37 +1,23 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
 import { Modal } from '../components/ui/Modal';
 import { Input, Textarea, Select } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { Dropdown } from '../components/ui/Dropdown';
 import { userService } from '../features/contacts/api/users';
 import { groupService } from '../features/groups/api/groups';
-import { getPriorityOptions, getTypeOptions, getStatusColor, getPriorityColor } from '../utils/ticketConstants';
+import { getPriorityOptions, getTypeOptions } from '../utils/ticketConstants';
 import { aiService } from '../services/ai.service';
 import { Sparkles, Bug, HelpCircle, ListChecks, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import './NewTicketModal.css';
 
 const typeIconChip = {
     question: { icon: HelpCircle, variant: 'info' },
     incident: { icon: AlertTriangle, variant: 'warning' },
     problem: { icon: Bug, variant: 'danger' },
     task: { icon: ListChecks, variant: 'success' },
-};
-
-const statusDotColors = {
-    new: 'var(--color-info)',
-    open: 'var(--color-primary)',
-    pending: 'var(--color-warning)',
-    hold: 'var(--color-text-tertiary)',
-    solved: 'var(--color-success)',
-    closed: 'var(--color-text-secondary)',
-};
-
-const priorityDotColors = {
-    low: 'var(--color-text-secondary)',
-    normal: 'var(--color-info)',
-    high: 'var(--color-warning)',
-    urgent: 'var(--color-error)',
 };
 
 export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
@@ -52,7 +38,6 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
     const [loadingOptions, setLoadingOptions] = useState(false);
     const [loadingTags, setLoadingTags] = useState(false);
 
-    // Reset or populate form when modal opens or ticket changes
     useEffect(() => {
         if (isOpen) {
             fetchOptions();
@@ -82,11 +67,10 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
     }, [isOpen, ticket]);
 
     const fetchOptions = async () => {
-        if (agents.length > 0 && groups.length > 0) return; // Don't refetch if already loaded
+        if (agents.length > 0 && groups.length > 0) return;
 
         setLoadingOptions(true);
         try {
-            // Fetch agents
             const agentsResponse = await userService.getAgents();
             if (agentsResponse.success && agentsResponse.data) {
                 const agentOptions = agentsResponse.data.map(agent => ({
@@ -96,7 +80,6 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
                 setAgents(agentOptions);
             }
 
-            // Fetch groups
             const groupsResponse = await groupService.list();
             if (groupsResponse.success && groupsResponse.data) {
                 const groupOptions = groupsResponse.data.map(group => ({
@@ -168,7 +151,6 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
         setIsSubmitting(true);
 
         try {
-            // Process tags - split by comma and trim
             const processedData = {
                 subject: formData.subject,
                 description: formData.description,
@@ -179,20 +161,15 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
                     : [],
             };
 
-            // Only include optional fields if they have values
             if (formData.assignee_id) {
                 processedData.assignee_id = formData.assignee_id;
             }
-            // For update, we might want to allow clearing assignee if needed, but existing logic was "only include if value"
-            // If editing, user might want to UNASSIGN. API might need null or empty string. 
-            // The current create logic only sends it if truthy. Let's keep it consistent for now.
 
             if (formData.group_id) {
                 processedData.group_id = formData.group_id;
             }
 
             await onSubmit(processedData);
-
             onClose();
         } catch (error) {
             console.error('Error saving ticket:', error);
@@ -223,22 +200,25 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
                     </Button>
                     <Button
                         onClick={handleSubmit}
-                        disabled={isSubmitting}
+                        loading={isSubmitting}
                     >
-                        {isSubmitting ? 'Saving...' : (ticket ? 'Save Changes' : 'Create Ticket')}
+                        {ticket ? 'Save Changes' : 'Create Ticket'}
                     </Button>
                 </>
             }
         >
-            <form onSubmit={handleSubmit} className="new-ticket-form">
+            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {errors.submit && (
-                    <div className="form-error-banner">
+                    <Alert severity="error">
                         {errors.submit}
-                    </div>
+                    </Alert>
                 )}
 
-                <div className="form-section">
-                    <h3 className="form-section-title">Basic Information</h3>
+                {/* Basic Information */}
+                <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', mb: 1.5 }}>
+                        Basic Information
+                    </Typography>
 
                     <Input
                         label="Subject"
@@ -255,60 +235,75 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
                         value={formData.description}
                         onChange={(e) => handleChange('description', e.target.value)}
                         error={errors.description}
-                        rows={6}
+                        rows={5}
                         required
                     />
-                </div>
+                </Box>
 
-                <div className="form-section">
-                    <h3 className="form-section-title">Classification</h3>
+                {/* Classification */}
+                <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', mb: 1.5 }}>
+                        Classification
+                    </Typography>
 
-                    <div className="form-row">
-                        <Select
-                            label="Priority"
-                            options={getPriorityOptions()}
-                            value={formData.priority}
-                            onChange={(e) => handleChange('priority', e.target.value)}
-                            placeholder="Select priority"
-                        />
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Select
+                                label="Priority"
+                                options={getPriorityOptions()}
+                                value={formData.priority}
+                                onChange={(e) => handleChange('priority', e.target.value)}
+                                placeholder="Select priority"
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Select
+                                label="Type"
+                                options={getTypeOptions()}
+                                value={formData.type}
+                                onChange={(e) => handleChange('type', e.target.value)}
+                                placeholder="Select type"
+                            />
+                        </Grid>
+                    </Grid>
+                </Box>
 
-                        <Select
-                            label="Type"
-                            options={getTypeOptions()}
-                            value={formData.type}
-                            onChange={(e) => handleChange('type', e.target.value)}
-                            placeholder="Select type"
-                        />
-                    </div>
-                </div>
+                {/* Assignment */}
+                <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', mb: 1.5 }}>
+                        Assignment (Optional)
+                    </Typography>
 
-                <div className="form-section">
-                    <h3 className="form-section-title">Assignment (Optional)</h3>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Select
+                                label="Assign To"
+                                options={[{ value: '', label: 'Select assignee' }, ...agents]}
+                                value={formData.assignee_id}
+                                onChange={(e) => handleChange('assignee_id', e.target.value)}
+                                placeholder="Select assignee"
+                                disabled={loadingOptions}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Select
+                                label="Group"
+                                options={[{ value: '', label: 'Select group' }, ...groups]}
+                                value={formData.group_id}
+                                onChange={(e) => handleChange('group_id', e.target.value)}
+                                placeholder="Select group"
+                                disabled={loadingOptions}
+                            />
+                        </Grid>
+                    </Grid>
+                </Box>
 
-                    <div className="form-row">
-                        <Select
-                            label="Assign To"
-                            options={[{ value: '', label: 'Select assignee' }, ...agents]}
-                            value={formData.assignee_id}
-                            onChange={(e) => handleChange('assignee_id', e.target.value)}
-                            placeholder="Select assignee"
-                            disabled={loadingOptions}
-                        />
-
-                        <Select
-                            label="Group"
-                            options={[{ value: '', label: 'Select group' }, ...groups]}
-                            value={formData.group_id}
-                            onChange={(e) => handleChange('group_id', e.target.value)}
-                            placeholder="Select group"
-                            disabled={loadingOptions}
-                        />
-                    </div>
-                </div>
-
-                <div className="form-section">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="form-section-title mb-0">Additional Information (Optional)</h3>
+                {/* Additional Information */}
+                <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            Additional Information (Optional)
+                        </Typography>
                         <Button
                             type="button"
                             variant="ghost"
@@ -316,11 +311,11 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
                             icon={Sparkles}
                             onClick={handleSuggestTags}
                             disabled={loadingTags || !formData.description}
-                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 h-8 px-2 text-xs"
+                            sx={{ color: 'secondary.main', fontSize: '0.75rem' }}
                         >
                             {loadingTags ? 'Suggesting...' : 'Auto-Suggest Tags'}
                         </Button>
-                    </div>
+                    </Box>
 
                     <Input
                         label="Tags"
@@ -329,8 +324,10 @@ export function TicketModal({ isOpen, onClose, onSubmit, ticket = null }) {
                         onChange={(e) => handleChange('tags', e.target.value)}
                         hint="Separate multiple tags with commas"
                     />
-                </div>
-            </form>
+                </Box>
+            </Box>
         </Modal>
     );
 }
+
+export default TicketModal;

@@ -1,4 +1,8 @@
-import './Avatar.css';
+import React from 'react';
+import MuiAvatar from '@mui/material/Avatar';
+import MuiAvatarGroup from '@mui/material/AvatarGroup';
+import MuiBadge from '@mui/material/Badge';
+import { avatarColors } from '@/theme/tokens';
 
 const sizeMap = {
     xs: 24,
@@ -18,16 +22,19 @@ function getInitials(name) {
 }
 
 function stringToColor(str) {
-    const colors = [
-        '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
-        '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
-    ];
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
-    return colors[Math.abs(hash) % colors.length];
+    return avatarColors[Math.abs(hash) % avatarColors.length];
 }
+
+const statusColorMap = {
+    online: '#22C55E',
+    busy: '#EF4444',
+    away: '#F59E0B',
+    offline: '#6B7280',
+};
 
 export function Avatar({
     src,
@@ -35,43 +42,76 @@ export function Avatar({
     size = 'md',
     status,
     className = '',
+    sx = {},
     ...props
 }) {
-    const dimension = sizeMap[size];
+    const dimension = sizeMap[size] || 40;
     const initials = getInitials(name);
     const bgColor = stringToColor(name || 'default');
 
-    return (
-        <div
+    const avatarNode = (
+        <MuiAvatar
+            src={src}
+            alt={name || 'Avatar'}
             className={`avatar avatar-${size} ${className}`}
-            style={{ width: dimension, height: dimension }}
+            sx={{
+                width: dimension,
+                height: dimension,
+                fontSize: dimension * 0.4,
+                fontWeight: 600,
+                backgroundColor: src ? 'transparent' : bgColor,
+                color: '#FFFFFF',
+                ...sx,
+            }}
             {...props}
         >
-            {src ? (
-                <img src={src} alt={name || 'Avatar'} className="avatar-image" />
-            ) : (
-                <div className="avatar-fallback" style={{ backgroundColor: bgColor }}>
-                    {initials}
-                </div>
-            )}
-            {status && <span className={`avatar-status avatar-status-${status}`} />}
-        </div>
+            {!src && initials}
+        </MuiAvatar>
     );
+
+    if (status) {
+        return (
+            <MuiBadge
+                overlap="circular"
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                variant="dot"
+                sx={{
+                    '& .MuiBadge-badge': {
+                        backgroundColor: statusColorMap[status] || statusColorMap.offline,
+                        color: statusColorMap[status] || statusColorMap.offline,
+                        boxShadow: (theme) => `0 0 0 2px ${theme.palette.background.paper}`,
+                        width: Math.max(8, dimension * 0.25),
+                        height: Math.max(8, dimension * 0.25),
+                        borderRadius: '50%',
+                    },
+                }}
+            >
+                {avatarNode}
+            </MuiBadge>
+        );
+    }
+
+    return avatarNode;
 }
 
-export function AvatarGroup({ children, max = 4, size = 'md' }) {
-    const avatars = Array.isArray(children) ? children : [children];
-    const visible = avatars.slice(0, max);
-    const remaining = avatars.length - max;
+export function AvatarGroup({ children, max = 4, size = 'md', sx = {} }) {
+    const dimension = sizeMap[size] || 40;
 
     return (
-        <div className="avatar-group">
-            {visible}
-            {remaining > 0 && (
-                <div className={`avatar avatar-${size} avatar-overflow`}>
-                    <div className="avatar-fallback">+{remaining}</div>
-                </div>
-            )}
-        </div>
+        <MuiAvatarGroup
+            max={max}
+            sx={{
+                '& .MuiAvatar-root': {
+                    width: dimension,
+                    height: dimension,
+                    fontSize: dimension * 0.4,
+                },
+                ...sx,
+            }}
+        >
+            {children}
+        </MuiAvatarGroup>
     );
 }
+
+export default Avatar;

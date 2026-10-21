@@ -1,5 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import './Dropdown.css';
+import React, { useState, useRef } from 'react';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Divider from '@mui/material/Divider';
+import ListSubheader from '@mui/material/ListSubheader';
+import Box from '@mui/material/Box';
+import CheckIcon from '@mui/icons-material/Check';
 
 export function Dropdown({
     trigger,
@@ -8,14 +13,11 @@ export function Dropdown({
     onChange,
     align = 'start',
     className = '',
+    sx = {},
 }) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [activeIndex, setActiveIndex] = useState(-1);
-    const containerRef = useRef(null);
-    const panelRef = useRef(null);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const isOpen = Boolean(anchorEl);
     const triggerRef = useRef(null);
-    const itemRefs = useRef([]);
-    const selectedRef = useRef(null);
 
     const flatItems = items.reduce((acc, group) => {
         if (group.items) {
@@ -24,185 +26,154 @@ export function Dropdown({
         return [...acc, group];
     }, []);
 
-    const selectedItem = flatItems.find(item => item.value === value);
+    const selectedItem = flatItems.find((item) => item.value === value);
 
-    const handleTriggerClick = useCallback(() => {
-        setIsOpen(prev => !prev);
-    }, []);
+    const handleOpen = (e) => {
+        setAnchorEl(e.currentTarget);
+    };
 
-    const handleItemClick = useCallback((item) => {
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleItemClick = (item) => {
         if (item.disabled) return;
         onChange?.(item.value);
-        setIsOpen(false);
-    }, [onChange]);
-
-    const handleKeyDown = useCallback((e) => {
-        if (!isOpen) return;
-
-        const enabledItems = flatItems.filter(item => !item.disabled);
-        const maxIndex = enabledItems.length - 1;
-
-        switch (e.key) {
-            case 'ArrowDown': {
-                e.preventDefault();
-                setActiveIndex(prev => (prev < maxIndex ? prev + 1 : 0));
-                break;
-            }
-            case 'ArrowUp': {
-                e.preventDefault();
-                setActiveIndex(prev => (prev > 0 ? prev - 1 : maxIndex));
-                break;
-            }
-            case 'Enter':
-            case ' ': {
-                e.preventDefault();
-                const item = enabledItems[activeIndex];
-                if (item) handleItemClick(item);
-                break;
-            }
-            case 'Escape': {
-                e.preventDefault();
-                setIsOpen(false);
-                triggerRef.current?.focus();
-                break;
-            }
-        }
-    }, [isOpen, flatItems, activeIndex, handleItemClick]);
-
-    useEffect(() => {
-        if (!isOpen) {
-            setActiveIndex(-1);
-            return;
-        }
-
-        const idx = flatItems.findIndex(item => item.value === value && !item.disabled);
-        setActiveIndex(idx >= 0 ? idx : 0);
-
-        const raf = requestAnimationFrame(() => {
-            if (selectedRef.current) {
-                selectedRef.current.scrollIntoView({ block: 'nearest' });
-            }
-        });
-
-        return () => cancelAnimationFrame(raf);
-    }, [isOpen, flatItems, value]);
-
-    useEffect(() => {
-        if (!isOpen) return;
-
-        document.addEventListener('keydown', handleKeyDown);
-
-        const handleClickOutside = (e) => {
-            if (containerRef.current && !containerRef.current.contains(e.target)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isOpen, handleKeyDown]);
-
-    useEffect(() => {
-        if (activeIndex >= 0 && itemRefs.current[activeIndex]) {
-            itemRefs.current[activeIndex].scrollIntoView({ block: 'nearest' });
-        }
-    }, [activeIndex]);
-
-    const renderItem = (item, idx) => {
-        const isSelected = item.value === value;
-        const isActive = activeIndex === idx;
-        const classes = [
-            'dropdown-item',
-            isSelected && 'dropdown-item-selected',
-            isActive && 'dropdown-item-active',
-            item.destructive && 'dropdown-item-destructive',
-            item.disabled && 'dropdown-item-disabled',
-        ].filter(Boolean).join(' ');
-
-        return (
-            <button
-                key={item.value || idx}
-                type="button"
-                className={classes}
-                onClick={() => handleItemClick(item)}
-                disabled={item.disabled}
-                ref={el => { itemRefs.current[idx] = el; }}
-                role="option"
-                aria-selected={isSelected}
-                id={`dropdown-option-${item.value}`}
-            >
-                {item.dotColor && (
-                    <span
-                        className="dropdown-item-dot"
-                        style={{ backgroundColor: item.dotColor }}
-                        aria-hidden="true"
-                    />
-                )}
-                <span className="dropdown-item-label">{item.label}</span>
-                {isSelected && (
-                    <span className="dropdown-item-check" aria-hidden="true">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                    </span>
-                )}
-            </button>
-        );
+        handleClose();
     };
 
     return (
-        <div
-            className={`dropdown-container ${className}`}
-            ref={containerRef}
-            onKeyDown={handleKeyDown}
-        >
-            <div
+        <Box className={`dropdown-container ${className}`} sx={{ display: 'inline-block', ...sx }}>
+            <Box
                 ref={triggerRef}
-                className={`dropdown-trigger ${isOpen ? 'dropdown-trigger-open' : ''}`}
-                onClick={handleTriggerClick}
-                role="combobox"
-                aria-expanded={isOpen}
-                aria-haspopup="listbox"
-                aria-controls="dropdown-panel"
-                tabIndex={0}
+                onClick={handleOpen}
+                sx={{ cursor: 'pointer', display: 'inline-flex' }}
             >
                 {trigger(selectedItem)}
-            </div>
+            </Box>
 
-            {isOpen && (
-                <div
-                    id="dropdown-panel"
-                    className={`dropdown-panel dropdown-align-${align}`}
-                    ref={panelRef}
-                    role="listbox"
-                >
-                    {items.map((group, gi) => {
-                        if (group.items) {
-                            return (
-                                <div key={group.label || gi}>
-                                    {group.label && (
-                                        <div className="dropdown-group-label">{group.label}</div>
-                                    )}
-                                    {group.items.map((item, ii) => {
-                                        const globalIdx = flatItems.indexOf(item);
-                                        return renderItem(item, globalIdx);
-                                    })}
-                                </div>
-                            );
-                        }
-                        const globalIdx = flatItems.indexOf(group);
+            <Menu
+                anchorEl={anchorEl}
+                open={isOpen}
+                onClose={handleClose}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: align === 'end' ? 'right' : 'left',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: align === 'end' ? 'right' : 'left',
+                }}
+                PaperProps={{
+                    sx: {
+                        minWidth: 180,
+                        maxHeight: 320,
+                        borderRadius: 2,
+                        boxShadow: 4,
+                    },
+                }}
+            >
+                {items.map((group, gi) => {
+                    if (group.items) {
                         return (
-                            <div key={group.value || gi}>
-                                {group.divider && <div className="dropdown-divider" />}
-                                {renderItem(group, globalIdx)}
-                            </div>
+                            <Box key={group.label || gi}>
+                                {group.label && (
+                                    <ListSubheader
+                                        sx={{
+                                            lineHeight: '32px',
+                                            fontSize: '0.6875rem',
+                                            fontWeight: 700,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.08em',
+                                            backgroundColor: 'transparent',
+                                            color: 'text.tertiary',
+                                        }}
+                                    >
+                                        {group.label}
+                                    </ListSubheader>
+                                )}
+                                {group.items.map((item) => {
+                                    const isSelected = item.value === value;
+                                    return (
+                                        <MenuItem
+                                            key={item.value}
+                                            selected={isSelected}
+                                            disabled={item.disabled}
+                                            onClick={() => handleItemClick(item)}
+                                            sx={{
+                                                fontSize: '0.875rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                gap: 1.5,
+                                                color: item.destructive ? 'error.main' : 'text.primary',
+                                            }}
+                                        >
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                {item.dotColor && (
+                                                    <Box
+                                                        component="span"
+                                                        sx={{
+                                                            width: 8,
+                                                            height: 8,
+                                                            borderRadius: '50%',
+                                                            backgroundColor: item.dotColor,
+                                                        }}
+                                                    />
+                                                )}
+                                                <span>{item.label}</span>
+                                            </Box>
+                                            {isSelected && (
+                                                <CheckIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+                                            )}
+                                        </MenuItem>
+                                    );
+                                })}
+                            </Box>
                         );
-                    })}
-                </div>
-            )}
-        </div>
+                    }
+
+                    const isSelected = group.value === value;
+                    return (
+                        <Box key={group.value || gi}>
+                            {group.divider && <Divider sx={{ my: 0.5 }} />}
+                            <MenuItem
+                                selected={isSelected}
+                                disabled={group.disabled}
+                                onClick={() => handleItemClick(group)}
+                                sx={{
+                                    fontSize: '0.875rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: 1.5,
+                                    color: group.destructive ? 'error.main' : 'text.primary',
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    {group.dotColor && (
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                width: 8,
+                                                height: 8,
+                                                borderRadius: '50%',
+                                                backgroundColor: group.dotColor,
+                                            }}
+                                        />
+                                    )}
+                                    <span>{group.label}</span>
+                                </Box>
+                                {isSelected && (
+                                    <CheckIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+                                )}
+                            </MenuItem>
+                        </Box>
+                    );
+                })}
+            </Menu>
+        </Box>
     );
 }
+
+export default Dropdown;

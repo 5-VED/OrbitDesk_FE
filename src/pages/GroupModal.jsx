@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormHelperText from '@mui/material/FormHelperText';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
+import { Input, Textarea } from '../components/ui/Input';
 import { groupService } from '@/features/groups/api/groups';
 import { toast } from 'react-hot-toast';
-import './GroupModal.css';
 
 export function GroupModal({ isOpen, onClose, onSuccess, group = null }) {
     const [formData, setFormData] = useState({
@@ -82,56 +86,56 @@ export function GroupModal({ isOpen, onClose, onSuccess, group = null }) {
             onClose={onClose}
             title={isEditing ? 'Edit Group' : 'Create New Group'}
             size="medium"
-        >
-            <form onSubmit={handleSubmit} className="group-modal-form">
-                <div className="form-group">
-                    <label htmlFor="name">Group Name *</label>
-                    <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Enter group name"
-                        className={errors.name ? 'error' : ''}
-                    />
-                    {errors.name && <span className="error-text">{errors.name}</span>}
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="description">Description</label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        value={formData.description}
-                        onChange={handleChange}
-                        placeholder="Enter group description"
-                        rows={3}
-                    />
-                </div>
-
-                <div className="form-group checkbox-group">
-                    <label className="checkbox-label">
-                        <input
-                            type="checkbox"
-                            name="is_private"
-                            checked={formData.is_private}
-                            onChange={handleChange}
-                        />
-                        <span>Private Group</span>
-                    </label>
-                    <p className="help-text">Private groups are only visible to their members</p>
-                </div>
-
-                <div className="form-actions">
-                    <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
+            footer={
+                <>
+                    <Button variant="ghost" onClick={onClose} disabled={loading}>
                         Cancel
                     </Button>
-                    <Button type="submit" disabled={loading}>
+                    <Button onClick={handleSubmit} disabled={loading}>
                         {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Group' : 'Create Group')}
                     </Button>
-                </div>
-            </form>
+                </>
+            }
+        >
+            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                <Input
+                    label="Group Name"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Enter group name"
+                    error={errors.name}
+                    required
+                />
+
+                <Textarea
+                    label="Description"
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    placeholder="Enter group description"
+                    rows={3}
+                />
+
+                <Box>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                name="is_private"
+                                checked={formData.is_private}
+                                onChange={handleChange}
+                                color="primary"
+                            />
+                        }
+                        label="Private Group"
+                    />
+                    <FormHelperText sx={{ ml: 4, mt: -0.5 }}>
+                        Private groups are only visible to their members
+                    </FormHelperText>
+                </Box>
+            </Box>
         </Modal>
     );
 }

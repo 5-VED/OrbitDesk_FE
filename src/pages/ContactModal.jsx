@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Camera } from 'lucide-react';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
 import { Modal } from '../components/ui/Modal';
-import { Input, Select } from '../components/ui/Input';
+import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Avatar } from '../components/ui/Avatar';
 import { userService } from '@/features/contacts/api/users';
 import { toast } from 'react-hot-toast';
-import './ContactModal.css';
 
 export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
     const fileInputRef = useRef(null);
@@ -88,7 +91,6 @@ export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
 
         setIsSubmitting(true);
         try {
-            let response;
             const data = new FormData();
 
             // Append form data
@@ -104,23 +106,14 @@ export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
             }
 
             if (contact) {
-                // Update mode
-                response = await userService.update(contact._id, data);
+                await userService.update(contact._id, data);
             } else {
-                // Create mode: Auto-generate password
                 const password = 'User@' + Math.floor(1000 + Math.random() * 9000);
                 data.append('password', password);
-
-                response = await userService.create(data);
+                await userService.create(data);
             }
 
-            // userService methods return response.data directly (or handled in interceptor)
-            // But let's check consistency. userService.create returns 'response.data'.
-            // If success, it might be an object with success: true or the user object.
-            // Let's assume standard response format.
-
             toast.success(`Contact ${contact ? 'updated' : 'created'} successfully`);
-            // onSuccess might expect the created/updated user object or just a signal
             if (onSuccess) onSuccess();
             onClose();
 
@@ -135,7 +128,7 @@ export function ContactModal({ isOpen, onClose, onSuccess, contact }) {
     };
 
     const getImageUrl = (url) => {
-if (!url) return null;
+        if (!url) return null;
         if (url.startsWith('http') || url.startsWith('blob:')) return url;
         return url;
     };
@@ -157,38 +150,40 @@ if (!url) return null;
                 </>
             }
         >
-            <form onSubmit={handleSubmit} className="contact-form">
+            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                 {errors.submit && (
-                    <div className="form-error-banner">
-                        {errors.submit}
-                    </div>
+                    <Alert severity="error">{errors.submit}</Alert>
                 )}
 
-                <div className="form-section profile-upload-section" style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                    <div className="profile-upload-container" style={{ position: 'relative', cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    <Box
+                        sx={{ position: 'relative', cursor: 'pointer', display: 'inline-block' }}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
                         <Avatar
                             src={getImageUrl(previewUrl)}
                             name={`${formData.first_name} ${formData.last_name}`}
                             size="xl"
-                            style={{ width: '80px', height: '80px', fontSize: '2rem' }}
+                            sx={{ width: 80, height: 80, fontSize: '2rem' }}
                         />
-                        <div className="profile-upload-overlay" style={{
+                        <Box sx={{
                             position: 'absolute',
                             bottom: 0,
                             right: 0,
-                            background: '#7c3aed', // primary color
+                            bgcolor: 'primary.main',
                             borderRadius: '50%',
-                            width: '28px',
-                            height: '28px',
-                            color: 'white',
+                            width: 28,
+                            height: 28,
+                            color: 'primary.contrastText',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                            border: '2px solid white'
+                            boxShadow: 2,
+                            border: '2px solid',
+                            borderColor: 'background.paper'
                         }}>
                             <Camera size={14} />
-                        </div>
+                        </Box>
                         <input
                             type="file"
                             ref={fileInputRef}
@@ -196,60 +191,80 @@ if (!url) return null;
                             accept="image/*"
                             style={{ display: 'none' }}
                         />
-                    </div>
-                </div>
+                    </Box>
+                </Box>
 
-                <div className="form-section">
-                    <h3 className="form-section-title">Personal Information</h3>
+                <Box>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            fontWeight: 600,
+                            color: 'text.secondary',
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                            display: 'block',
+                            mb: 1.5,
+                            pb: 0.5,
+                            borderBottom: '1px solid',
+                            borderColor: 'divider',
+                        }}
+                    >
+                        Personal Information
+                    </Typography>
 
-                    <div className="form-row">
-                        <Input
-                            label="First Name"
-                            value={formData.first_name}
-                            onChange={(e) => handleChange('first_name', e.target.value)}
-                            error={errors.first_name}
-                            required
-                        />
-                        <Input
-                            label="Last Name"
-                            value={formData.last_name}
-                            onChange={(e) => handleChange('last_name', e.target.value)}
-                            error={errors.last_name}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-row">
-                        <Input
-                            label="Email"
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => handleChange('email', e.target.value)}
-                            error={errors.email}
-                            required
-                        />
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.5rem' }}>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <Input
-                                label="Country Code"
-                                value={formData.country_code}
-                                onChange={(e) => handleChange('country_code', e.target.value)}
-                                placeholder="+91"
-                            />
-                            <Input
-                                label="Phone"
-                                value={formData.phone}
-                                onChange={(e) => {
-                                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                                    handleChange('phone', value);
-                                }}
-                                error={errors.phone}
+                                label="First Name"
+                                value={formData.first_name}
+                                onChange={(e) => handleChange('first_name', e.target.value)}
+                                error={errors.first_name}
                                 required
-                                placeholder="1234567890"
                             />
-                        </div>
-                    </div>
-                </div>
-            </form>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Input
+                                label="Last Name"
+                                value={formData.last_name}
+                                onChange={(e) => handleChange('last_name', e.target.value)}
+                                error={errors.last_name}
+                                required
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Input
+                                label="Email"
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => handleChange('email', e.target.value)}
+                                error={errors.email}
+                                required
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 1 }}>
+                                <Input
+                                    label="Country Code"
+                                    value={formData.country_code}
+                                    onChange={(e) => handleChange('country_code', e.target.value)}
+                                    placeholder="+91"
+                                />
+                                <Input
+                                    label="Phone"
+                                    value={formData.phone}
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                        handleChange('phone', value);
+                                    }}
+                                    error={errors.phone}
+                                    required
+                                    placeholder="1234567890"
+                                />
+                            </Box>
+                        </Grid>
+                    </Grid>
+                </Box>
+            </Box>
         </Modal>
     );
 }

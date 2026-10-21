@@ -5,13 +5,23 @@ import {
     Mail,
     Phone,
     User as UserIcon,
-    RefreshCw,
     Edit,
     Upload,
     Download,
     ArrowLeft,
     Trash2
 } from 'lucide-react';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Pagination from '@mui/material/Pagination';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import { Modal } from '../components/ui/Modal';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
@@ -29,7 +39,6 @@ import {
     setContactPage,
     setContactPageSize,
     setContactSelectedRows,
-    clearContactSelectedRows,
     setDetailContact,
     clearDetailContact,
     selectContacts,
@@ -42,7 +51,6 @@ import {
 import { ContactModal } from './ContactModal';
 import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
-import './Contacts.css';
 
 export function Contacts() {
     const dispatch = useAppDispatch();
@@ -123,50 +131,8 @@ export function Contacts() {
         setIsModalOpen(false);
     };
 
-    const handleRefresh = () => dispatch(fetchContacts());
-
-    // Pagination handlers
-    const handlePrevPage = () => {
-        if (pagination.page > 1) dispatch(setContactPage(pagination.page - 1));
-    };
-
-    const handleNextPage = () => {
-        if (pagination.page < pagination.totalPages) dispatch(setContactPage(pagination.page + 1));
-    };
-
     const handlePageSizeChange = (e) => {
-        dispatch(setContactPageSize(parseInt(e.target.value)));
-    };
-
-    const handleGoToPage = (pageNum) => {
-        if (pageNum >= 1 && pageNum <= pagination.totalPages) dispatch(setContactPage(pageNum));
-    };
-
-    // Generate page numbers to display
-    const getPageNumbers = () => {
-        const pages = [];
-        const { page, totalPages } = pagination;
-
-        if (totalPages <= 7) {
-            for (let i = 1; i <= totalPages; i++) pages.push(i);
-        } else {
-            if (page <= 4) {
-                for (let i = 1; i <= 5; i++) pages.push(i);
-                pages.push('...');
-                pages.push(totalPages);
-            } else if (page >= totalPages - 3) {
-                pages.push(1);
-                pages.push('...');
-                for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
-            } else {
-                pages.push(1);
-                pages.push('...');
-                for (let i = page - 1; i <= page + 1; i++) pages.push(i);
-                pages.push('...');
-                pages.push(totalPages);
-            }
-        }
-        return pages;
+        dispatch(setContactPageSize(parseInt(e.target.value, 10)));
     };
 
     // Multi-select handlers
@@ -222,13 +188,17 @@ export function Contacts() {
             key: 'name',
             header: 'Name',
             render: (_, row) => (
-                <div className="contact-name-cell">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Avatar name={`${row.first_name} ${row.last_name}`} size="sm" />
-                    <div>
-                        <span className="contact-name">{row.first_name} {row.last_name}</span>
-                        <span className="contact-email">{row.email}</span>
-                    </div>
-                </div>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                            {row.first_name} {row.last_name}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                            {row.email}
+                        </Typography>
+                    </Box>
+                </Box>
             ),
         },
         {
@@ -254,21 +224,28 @@ export function Contacts() {
             key: 'actions',
             header: '',
             render: (_, row) => (
-                <div style={{ display: 'flex', gap: '4px' }}>
-                    <Button variant="ghost" size="sm" onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingContact(row);
-                        setIsModalOpen(true);
-                    }}>
+                <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                    <IconButton
+                        size="small"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingContact(row);
+                            setIsModalOpen(true);
+                        }}
+                    >
                         <Edit size={16} />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-danger" onClick={(e) => {
-                        e.stopPropagation();
-                        handleSingleDelete(row);
-                    }}>
+                    </IconButton>
+                    <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleSingleDelete(row);
+                        }}
+                    >
                         <Trash2 size={16} />
-                    </Button>
-                </div>
+                    </IconButton>
+                </Stack>
             ),
         },
     ];
@@ -277,7 +254,7 @@ export function Contacts() {
         <PageContainer
             title="Contacts"
             actions={
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -294,30 +271,68 @@ export function Contacts() {
                     <Button icon={Plus} onClick={() => { setEditingContact(null); setIsModalOpen(true); }}>
                         Add Contact
                     </Button>
-                </div>
+                </Stack>
             }
         >
-            <div className={`contacts-page ${detailContact ? 'show-detail' : ''}`}>
-                {/* Contacts List */}
-                <div className="contacts-list-section">
-                    <div className="contacts-search">
-                        <Search size={18} />
-                        <input
-                            type="text"
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                        xs: '1fr',
+                        lg: detailContact ? '1fr 360px' : '1fr',
+                    },
+                    gap: 3,
+                    alignItems: 'start',
+                }}
+            >
+                {/* Contacts List Section */}
+                <Box
+                    sx={{
+                        display: {
+                            xs: detailContact ? 'none' : 'flex',
+                            lg: 'flex',
+                        },
+                        flexDirection: 'column',
+                        gap: 2.5,
+                    }}
+                >
+                    <Box sx={{ maxWidth: 360 }}>
+                        <OutlinedInput
+                            size="small"
+                            fullWidth
                             placeholder="Search contacts..."
                             value={filters.search}
                             onChange={(e) => dispatch(setContactSearchQuery(e.target.value))}
+                            startAdornment={
+                                <InputAdornment position="start">
+                                    <Search size={18} />
+                                </InputAdornment>
+                            }
                         />
-                    </div>
+                    </Box>
 
                     {/* Bulk Actions */}
                     {selectedRows.length > 0 && (
-                        <div className="contacts-bulk-actions">
-                            <span>{selectedRows.length} selected</span>
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                p: 1.5,
+                                bgcolor: 'action.hover',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 1.5,
+                            }}
+                        >
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                {selectedRows.length} selected
+                            </Typography>
                             <Button variant="ghost" size="sm" className="danger" onClick={handleBulkDelete}>
                                 <Trash2 size={16} /> Delete
                             </Button>
-                        </div>
+                        </Paper>
                     )}
 
                     <DataTable
@@ -336,99 +351,142 @@ export function Contacts() {
                     />
 
                     {/* Pagination */}
-                    <div className="contacts-pagination">
-                        <div className="pagination-left">
-                            <span className="pagination-info">
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: 2,
+                            pt: 2,
+                            borderTop: '1px solid',
+                            borderColor: 'divider',
+                        }}
+                    >
+                        <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+                            <Typography variant="body2" color="text.secondary">
                                 Showing {pagination.total === 0 ? 0 : ((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} entries
-                            </span>
-                            <div className="page-size-selector">
-                                <label>Show</label>
-                                <select value={pagination.limit} onChange={handlePageSizeChange}>
-                                    <option value={10}>10</option>
-                                    <option value={20}>20</option>
-                                    <option value={50}>50</option>
-                                    <option value={100}>100</option>
-                                </select>
-                                <label>entries</label>
-                            </div>
-                        </div>
-                        <div className="pagination-controls">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                disabled={pagination.page <= 1}
-                                onClick={handlePrevPage}
-                            >
-                                Previous
-                            </Button>
-                            <div className="page-numbers">
-                                {getPageNumbers().map((pageNum, idx) => (
-                                    pageNum === '...' ? (
-                                        <span key={`ellipsis-${idx}`} className="page-ellipsis">...</span>
-                                    ) : (
-                                        <button
-                                            key={pageNum}
-                                            className={`page-number ${pagination.page === pageNum ? 'active' : ''}`}
-                                            onClick={() => handleGoToPage(pageNum)}
-                                        >
-                                            {pageNum}
-                                        </button>
-                                    )
-                                ))}
-                            </div>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                disabled={pagination.page >= pagination.totalPages}
-                                onClick={handleNextPage}
-                            >
-                                Next
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                            </Typography>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <Typography variant="caption" color="text.secondary">Show</Typography>
+                                <FormControl size="small">
+                                    <Select
+                                        value={pagination.limit}
+                                        onChange={handlePageSizeChange}
+                                        sx={{ height: 32, fontSize: '0.8125rem' }}
+                                    >
+                                        <MenuItem value={10}>10</MenuItem>
+                                        <MenuItem value={20}>20</MenuItem>
+                                        <MenuItem value={50}>50</MenuItem>
+                                        <MenuItem value={100}>100</MenuItem>
+                                    </Select>
+                                </FormControl>
+                                <Typography variant="caption" color="text.secondary">entries</Typography>
+                            </Stack>
+                        </Stack>
 
-                {/* Contact Detail */}
+                        <Pagination
+                            count={pagination.totalPages || 1}
+                            page={pagination.page}
+                            onChange={(_, page) => dispatch(setContactPage(page))}
+                            color="primary"
+                            shape="rounded"
+                            size="small"
+                        />
+                    </Box>
+                </Box>
+
+                {/* Contact Detail Sidebar */}
                 {detailContact && (
-                    <aside className="contact-detail">
+                    <Box
+                        sx={{
+                            display: {
+                                xs: 'block',
+                                lg: 'block',
+                            },
+                            position: { lg: 'sticky' },
+                            top: { lg: 80 },
+                        }}
+                    >
                         <Card>
-                            <div className="contact-detail-header">
-                                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start' }}>
-                                    <Button variant="ghost" size="sm" className="mobile-only" onClick={() => dispatch(clearDetailContact())}>
-                                        <ArrowLeft size={16} />
-                                    </Button>
-                                    <Avatar name={`${detailContact.first_name} ${detailContact.last_name}`} size="xl" />
-                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                        <Button variant="ghost" size="sm" onClick={() => { setEditingContact(detailContact); setIsModalOpen(true); }}>
-                                            <Edit size={16} />
-                                        </Button>
-                                    </div>
-                                </div>
-                                <h2>{detailContact.first_name} {detailContact.last_name}</h2>
-                                <span className="contact-role">{detailContact.role?.role || 'User'}</span>
-                            </div>
+                            <Box sx={{ p: 3, textAlign: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start', mb: 2 }}>
+                                    <IconButton
+                                        size="small"
+                                        sx={{ display: { xs: 'inline-flex', lg: 'none' } }}
+                                        onClick={() => dispatch(clearDetailContact())}
+                                    >
+                                        <ArrowLeft size={18} />
+                                    </IconButton>
+                                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                                        <Avatar
+                                            name={`${detailContact.first_name} ${detailContact.last_name}`}
+                                            size="xl"
+                                        />
+                                    </Box>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => {
+                                            setEditingContact(detailContact);
+                                            setIsModalOpen(true);
+                                        }}
+                                    >
+                                        <Edit size={16} />
+                                    </IconButton>
+                                </Box>
+                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                    {detailContact.first_name} {detailContact.last_name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {detailContact.role?.role || 'User'}
+                                </Typography>
+                            </Box>
 
-                            <div className="contact-info-section">
-                                <h4>Contact Information</h4>
-                                <div className="contact-info-list">
-                                    <div className="contact-info-item">
-                                        <Mail size={16} />
-                                        <a href={`mailto:${detailContact.email}`}>{detailContact.email}</a>
-                                    </div>
-                                    <div className="contact-info-item">
-                                        <Phone size={16} />
-                                        <span>{detailContact.phone}</span>
-                                    </div>
-                                    <div className="contact-info-item">
-                                        <UserIcon size={16} />
-                                        <span>{detailContact.gender || 'N/A'}</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <Box sx={{ p: 3 }}>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: 'text.secondary',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 0.5,
+                                        display: 'block',
+                                        mb: 2,
+                                    }}
+                                >
+                                    Contact Information
+                                </Typography>
+                                <Stack spacing={1.5}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <Mail size={16} style={{ opacity: 0.6 }} />
+                                        <Typography
+                                            component="a"
+                                            href={`mailto:${detailContact.email}`}
+                                            variant="body2"
+                                            color="primary.main"
+                                            sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                                        >
+                                            {detailContact.email}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <Phone size={16} style={{ opacity: 0.6 }} />
+                                        <Typography variant="body2">
+                                            {detailContact.phone || 'N/A'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <UserIcon size={16} style={{ opacity: 0.6 }} />
+                                        <Typography variant="body2">
+                                            {detailContact.gender || 'N/A'}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Box>
                         </Card>
-                    </aside>
+                    </Box>
                 )}
-            </div>
+            </Box>
 
             <ContactModal
                 isOpen={isModalOpen}
@@ -454,9 +512,13 @@ export function Contacts() {
                 }
             >
                 {singleDeleteContact ? (
-                    <p>Are you sure you want to delete {singleDeleteContact.first_name} {singleDeleteContact.last_name}? This action cannot be undone.</p>
+                    <Typography variant="body2">
+                        Are you sure you want to delete {singleDeleteContact.first_name} {singleDeleteContact.last_name}? This action cannot be undone.
+                    </Typography>
                 ) : (
-                    <p>Are you sure you want to delete {selectedRows.length} {selectedRows.length === 1 ? 'contact' : 'contacts'}? This action cannot be undone.</p>
+                    <Typography variant="body2">
+                        Are you sure you want to delete {selectedRows.length} {selectedRows.length === 1 ? 'contact' : 'contacts'}? This action cannot be undone.
+                    </Typography>
                 )}
             </Modal>
         </PageContainer>

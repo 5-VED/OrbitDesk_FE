@@ -1,5 +1,23 @@
 import { useState, useEffect } from 'react';
 import {
+    Box,
+    Card,
+    CardContent,
+    Typography,
+    Button as MuiButton,
+    LinearProgress,
+    CircularProgress,
+    Stack,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow
+} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import {
     Users,
     Ticket,
     Building2,
@@ -12,15 +30,11 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     BarChart3,
-    Eye,
-    Loader2
+    Eye
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
-import { Button } from '@/components/ui/Button';
 import { dashboardService } from '@/services/dashboard.service';
-import './AdminDashboard.css';
+import { useNavigate } from 'react-router-dom';
 
 const iconMap = {
     Users,
@@ -57,6 +71,7 @@ export function AdminDashboard() {
     const [agents, setAgents] = useState([]);
     const [auditEvents, setAuditEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -78,8 +93,8 @@ export function AdminDashboard() {
 
                 setSlaData(slaRes?.data || []);
                 setAgents(agentsRes?.data || []);
-                setAuditEvents(auditRes?.data || []);
-            } catch {
+            } catch (err) {
+                console.error('Failed to load dashboard data:', err);
             } finally {
                 setLoading(false);
             }
@@ -89,145 +104,259 @@ export function AdminDashboard() {
 
     if (loading) {
         return (
-            <div className="admin-dashboard-loading">
-                <Loader2 size={32} className="spin" />
-                <p>Loading dashboard...</p>
-            </div>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 2 }}>
+                <CircularProgress size={36} color="primary" />
+                <Typography color="text.secondary">Loading dashboard...</Typography>
+            </Box>
         );
     }
 
     return (
-        <div className="admin-dashboard">
-            <div className="admin-page-header">
-                <div>
-                    <h1 className="admin-page-title">Admin Dashboard</h1>
-                    <p className="admin-page-subtitle">System overview and health monitoring</p>
-                </div>
-                <div className="admin-page-actions">
-                    <Button variant="secondary" icon={BarChart3}>View Reports</Button>
-                    <Button variant="secondary" icon={Eye}>Audit Log</Button>
-                </div>
-            </div>
+        <Stack spacing={3}>
+            {/* Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                <Box>
+                    <Typography variant="h5" fontWeight={800}>Admin Dashboard</Typography>
+                    <Typography variant="body2" color="text.secondary">System overview and health monitoring</Typography>
+                </Box>
+                <Stack direction="row" spacing={1.5}>
+                    <MuiButton
+                        variant="outlined"
+                        color="inherit"
+                        startIcon={<BarChart3 size={16} />}
+                        onClick={() => navigate('/reports')}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        View Reports
+                    </MuiButton>
+                    <MuiButton
+                        variant="outlined"
+                        color="inherit"
+                        startIcon={<Eye size={16} />}
+                        onClick={() => navigate('/admin/audit-log')}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Audit Log
+                    </MuiButton>
+                </Stack>
+            </Box>
 
-            <div className="admin-stats-grid">
+            {/* Quick Stats Grid */}
+            <Grid container spacing={2}>
                 {stats.map((stat) => (
-                    <Card key={stat.label} className="admin-stat-card" hover>
-                        <div className="admin-stat-top">
-                            <div className="admin-stat-icon-wrapper" data-color={stat.color}>
-                                <stat.icon size={22} />
-                            </div>
-                            {stat.trend !== 'neutral' && (
-                                <span className={`admin-stat-change ${stat.trend}`}>
-                                    {stat.trend === 'up' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                                    {stat.change}
-                                </span>
+                    <Grid key={stat.label} size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Card
+                            variant="outlined"
+                            sx={{
+                                p: 2.5,
+                                borderRadius: 2,
+                                transition: 'all 0.2s',
+                                '&:hover': { transform: 'translateY(-2px)', boxShadow: 2 }
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Box
+                                    sx={{
+                                        width: 44,
+                                        height: 44,
+                                        borderRadius: 2,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        bgcolor: 'primary.light',
+                                        color: 'primary.main'
+                                    }}
+                                >
+                                    <stat.icon size={22} />
+                                </Box>
+                                {stat.trend !== 'neutral' && (
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                            fontSize: '0.8rem',
+                                            fontWeight: 600,
+                                            color: stat.trend === 'up' ? 'success.main' : 'error.main',
+                                            bgcolor: stat.trend === 'up' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                            px: 1,
+                                            py: 0.25,
+                                            borderRadius: 1
+                                        }}
+                                    >
+                                        {stat.trend === 'up' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                                        {stat.change}
+                                    </Box>
+                                )}
+                            </Box>
+                            <Typography variant="h4" fontWeight={800}>
+                                {stat.value}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                                {stat.label}
+                            </Typography>
+                            {stat.subtitle && (
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, opacity: 0.8 }}>
+                                    {stat.subtitle}
+                                </Typography>
                             )}
-                        </div>
-                        <div className="admin-stat-body">
-                            <span className="admin-stat-value">{stat.value}</span>
-                            <span className="admin-stat-label">{stat.label}</span>
-                        </div>
-                        <span className="admin-stat-subtitle">{stat.subtitle}</span>
-                    </Card>
+                        </Card>
+                    </Grid>
                 ))}
-            </div>
+            </Grid>
 
-            <div className="admin-dashboard-grid">
-                <Card className="admin-sla-card">
-                    <CardHeader>
-                        <CardTitle>SLA Compliance Overview</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="admin-sla-metrics">
-                            {slaData.map((item) => {
-                                const isGood = item.inverted
-                                    ? item.value <= item.target
-                                    : item.value >= item.target;
-                                return (
-                                    <div key={item.label} className="admin-sla-metric">
-                                        <div className="admin-sla-metric-header">
-                                            <span className="admin-sla-metric-label">{item.label}</span>
-                                            <span className={`admin-sla-metric-value ${isGood ? 'good' : 'warning'}`}>
-                                                {item.value}%
-                                            </span>
-                                        </div>
-                                        <div className="admin-sla-bar">
-                                            <div
-                                                className="admin-sla-progress"
-                                                data-status={isGood ? 'good' : 'warning'}
-                                                style={{ width: `${Math.min(item.value, 100)}%` }}
+            {/* Main Cards Grid */}
+            <Grid container spacing={3}>
+                {/* SLA Compliance Overview */}
+                <Grid size={{ xs: 12, lg: 6 }}>
+                    <Card variant="outlined" sx={{ height: '100%', borderRadius: 2 }}>
+                        <CardContent sx={{ p: 3 }}>
+                            <Typography variant="h6" fontWeight={700} sx={{ mb: 2.5 }}>
+                                SLA Compliance Overview
+                            </Typography>
+                            <Stack spacing={2.5}>
+                                {slaData.map((item) => {
+                                    const isGood = item.inverted
+                                        ? item.value <= item.target
+                                        : item.value >= item.target;
+                                    return (
+                                        <Box key={item.label}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
+                                                <Typography variant="body2" fontWeight={600}>
+                                                    {item.label}
+                                                </Typography>
+                                                <Typography
+                                                    variant="body2"
+                                                    fontWeight={700}
+                                                    color={isGood ? 'success.main' : 'warning.main'}
+                                                >
+                                                    {item.value}%
+                                                </Typography>
+                                            </Box>
+                                            <LinearProgress
+                                                variant="determinate"
+                                                value={Math.min(item.value, 100)}
+                                                color={isGood ? 'success' : 'warning'}
+                                                sx={{ height: 8, borderRadius: 4, mb: 0.75 }}
                                             />
-                                        </div>
-                                        <div className="admin-sla-target">
-                                            <span>Target: {item.inverted ? '≤' : '≥'}{item.target}%</span>
-                                            {isGood ? (
-                                                <span className="admin-sla-status good"><CheckCircle2 size={12} /> Meeting target</span>
-                                            ) : (
-                                                <span className="admin-sla-status warning"><AlertTriangle size={12} /> Below target</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </CardContent>
-                </Card>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Target: {item.inverted ? '≤' : '≥'}{item.target}%
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: isGood ? 'success.main' : 'warning.main', fontSize: '0.75rem', fontWeight: 600 }}>
+                                                    {isGood ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
+                                                    {isGood ? 'Meeting target' : 'Below target'}
+                                                </Box>
+                                            </Box>
+                                        </Box>
+                                    );
+                                })}
+                            </Stack>
+                        </CardContent>
+                    </Card>
+                </Grid>
 
-                <Card className="admin-audit-card">
-                    <CardHeader>
-                        <CardTitle>Recent Activity</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="admin-audit-list">
-                            {auditEvents.map((event) => {
-                                const IconComponent = getAuditEventIcon(event.type);
-                                return (
-                                    <div key={event.id} className="admin-audit-item">
-                                        <div className="admin-audit-icon" data-type={event.type}>
-                                            <IconComponent size={14} />
-                                        </div>
-                                        <div className="admin-audit-content">
-                                            <p>
-                                                <strong>{event.user}</strong>{' '}
-                                                {event.action}{' '}
-                                                <span className="admin-audit-target">{event.target}</span>
-                                            </p>
-                                            <span className="admin-audit-time">{formatTimeAgo(event.time)}</span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Recent Activity */}
+                <Grid size={{ xs: 12, lg: 6 }}>
+                    <Card variant="outlined" sx={{ height: '100%', borderRadius: 2 }}>
+                        <CardContent sx={{ p: 3 }}>
+                            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                                Recent Activity
+                            </Typography>
+                            <Stack spacing={2}>
+                                {auditEvents.map((event) => {
+                                    const IconComponent = getAuditEventIcon(event.type);
+                                    return (
+                                        <Paper
+                                            key={event.id}
+                                            variant="outlined"
+                                            sx={{
+                                                p: 1.5,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 1.5,
+                                                borderRadius: 1.5,
+                                                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'grey.50'
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    borderRadius: 1,
+                                                    bgcolor: 'action.hover',
+                                                    color: 'primary.main',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    flexShrink: 0
+                                                }}
+                                            >
+                                                <IconComponent size={16} />
+                                            </Box>
+                                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+                                                    <strong>{event.user}</strong> {event.action}{' '}
+                                                    <Box component="span" sx={{ color: 'primary.main', fontWeight: 600 }}>
+                                                        {event.target}
+                                                    </Box>
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {formatTimeAgo(event.time)}
+                                                </Typography>
+                                            </Box>
+                                        </Paper>
+                                    );
+                                })}
+                            </Stack>
+                        </CardContent>
+                    </Card>
+                </Grid>
 
-                <Card className="admin-agents-card">
-                    <CardHeader>
-                        <CardTitle>Top Performing Agents</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="admin-agents-table">
-                            <div className="admin-agents-table-header">
-                                <span>Agent</span>
-                                <span>Tickets</span>
-                                <span>Resolved</span>
-                                <span>Rating</span>
-                            </div>
-                            {agents.map((agent) => (
-                                <div key={agent.name} className="admin-agents-table-row">
-                                    <div className="admin-agent-info">
-                                        <Avatar name={agent.name} size="sm" status={agent.status} />
-                                        <span>{agent.name}</span>
-                                    </div>
-                                    <span className="admin-agent-stat">{agent.tickets}</span>
-                                    <span className="admin-agent-stat">{agent.resolved}</span>
-                                    <span className="admin-agent-stat admin-agent-rating">⭐ {agent.satisfaction}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
+                {/* Top Performing Agents */}
+                <Grid size={{ xs: 12 }}>
+                    <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                        <CardContent sx={{ p: 3 }}>
+                            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                                Top Performing Agents
+                            </Typography>
+                            <TableContainer>
+                                <Table size="small">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell sx={{ fontWeight: 700 }}>Agent</TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 700 }}>Tickets</TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 700 }}>Resolved</TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 700 }}>Rating</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {agents.map((agent) => (
+                                            <TableRow key={agent.name} hover>
+                                                <TableCell>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                        <Avatar name={agent.name} size="sm" status={agent.status} />
+                                                        <Typography variant="body2" fontWeight={600}>
+                                                            {agent.name}
+                                                        </Typography>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell align="right">{agent.tickets}</TableCell>
+                                                <TableCell align="right">{agent.resolved}</TableCell>
+                                                <TableCell align="right">
+                                                    <Typography variant="body2" fontWeight={600} color="warning.main">
+                                                        ⭐ {agent.satisfaction}
+                                                    </Typography>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
+        </Stack>
     );
 }

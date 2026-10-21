@@ -1,6 +1,28 @@
 import { useState, useEffect } from 'react';
 import {
-    Users,
+    Box,
+    Card,
+    CardContent,
+    Typography,
+    Button as MuiButton,
+    IconButton,
+    TextField,
+    MenuItem,
+    InputAdornment,
+    Checkbox,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Stack,
+    Paper,
+    CircularProgress,
+    Tooltip
+} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import {
     Search,
     Plus,
     UserCheck,
@@ -9,17 +31,13 @@ import {
     Edit,
     Download,
     X,
-    Eye,
-    Loader2
+    Eye
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
-import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input, Select } from '@/components/ui/Input';
 import { userService } from '@/features/contacts/api/users';
-import './AdminUsers.css';
 
 const roleOptions = [
     { value: '', label: 'All Roles' },
@@ -61,7 +79,8 @@ export function AdminUsers() {
             try {
                 const res = await userService.list();
                 setUsers(res?.data || []);
-            } catch {
+            } catch (err) {
+                console.error('Failed to load users:', err);
             } finally {
                 setLoading(false);
             }
@@ -101,184 +120,262 @@ export function AdminUsers() {
 
     if (loading) {
         return (
-            <div className="admin-dashboard-loading">
-                <Loader2 size={32} className="spin" />
-                <p>Loading users...</p>
-            </div>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 2 }}>
+                <CircularProgress size={36} color="primary" />
+                <Typography color="text.secondary">Loading users...</Typography>
+            </Box>
         );
     }
 
     return (
-        <div className="admin-users">
-            {/* Page Header */}
-            <div className="admin-page-header">
-                <div>
-                    <h1 className="admin-page-title">Users & Agents</h1>
-                    <p className="admin-page-subtitle">Manage all system users, agents, and their permissions</p>
-                </div>
-                <div className="admin-page-actions">
-                    <Button variant="secondary" icon={Download}>Export</Button>
-                    <Button icon={Plus} onClick={() => setIsCreateModalOpen(true)}>Add User</Button>
-                </div>
-            </div>
+        <Stack spacing={3}>
+            {/* Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                <Box>
+                    <Typography variant="h5" fontWeight={800}>Users & Agents</Typography>
+                    <Typography variant="body2" color="text.secondary">Manage all system users, agents, and their permissions</Typography>
+                </Box>
+                <Stack direction="row" spacing={1.5}>
+                    <MuiButton
+                        variant="outlined"
+                        color="inherit"
+                        startIcon={<Download size={16} />}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Export
+                    </MuiButton>
+                    <MuiButton
+                        variant="contained"
+                        color="primary"
+                        startIcon={<Plus size={16} />}
+                        onClick={() => setIsCreateModalOpen(true)}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Add User
+                    </MuiButton>
+                </Stack>
+            </Box>
 
-            {/* Quick Stats */}
-            <div className="admin-users-quick-stats">
-                <div className="admin-users-stat">
-                    <span className="admin-users-stat-value">{userCounts.total}</span>
-                    <span className="admin-users-stat-label">Total Users</span>
-                </div>
-                <div className="admin-users-stat-divider" />
-                <div className="admin-users-stat">
-                    <span className="admin-users-stat-value admin-users-stat-admin">{userCounts.admins}</span>
-                    <span className="admin-users-stat-label">Admins</span>
-                </div>
-                <div className="admin-users-stat-divider" />
-                <div className="admin-users-stat">
-                    <span className="admin-users-stat-value admin-users-stat-agent">{userCounts.agents}</span>
-                    <span className="admin-users-stat-label">Agents</span>
-                </div>
-                <div className="admin-users-stat-divider" />
-                <div className="admin-users-stat">
-                    <span className="admin-users-stat-value admin-users-stat-customer">{userCounts.customers}</span>
-                    <span className="admin-users-stat-label">Customers</span>
-                </div>
-            </div>
+            {/* Quick Stats Banner */}
+            <Grid container spacing={2}>
+                {[
+                    { label: 'Total Users', value: userCounts.total, color: 'text.primary' },
+                    { label: 'Admins', value: userCounts.admins, color: 'error.main' },
+                    { label: 'Agents', value: userCounts.agents, color: 'primary.main' },
+                    { label: 'Customers', value: userCounts.customers, color: 'success.main' }
+                ].map((stat) => (
+                    <Grid key={stat.label} size={{ xs: 6, sm: 3 }}>
+                        <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 2 }}>
+                            <Typography variant="h4" fontWeight={800} sx={{ color: stat.color }}>
+                                {stat.value}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                                {stat.label}
+                            </Typography>
+                        </Paper>
+                    </Grid>
+                ))}
+            </Grid>
 
-            {/* Filters & Search */}
-            <Card className="admin-users-toolbar-card">
-                <div className="admin-users-toolbar">
-                    <div className="admin-users-search">
-                        <Search size={18} className="admin-users-search-icon" />
-                        <input
-                            type="text"
+            {/* Filters & Bulk Actions Toolbar */}
+            <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Grid container spacing={2} alignItems="center">
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
+                            size="small"
+                            fullWidth
                             placeholder="Search by name or email..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="admin-users-search-input"
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Search size={18} color="var(--color-text-secondary, #94a3b8)" />
+                                        </InputAdornment>
+                                    ),
+                                    endAdornment: searchQuery ? (
+                                        <InputAdornment position="end">
+                                            <IconButton size="small" onClick={() => setSearchQuery('')}>
+                                                <X size={14} />
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ) : null
+                                }
+                            }}
                         />
-                        {searchQuery && (
-                            <button className="admin-users-search-clear" onClick={() => setSearchQuery('')}>
-                                <X size={14} />
-                            </button>
-                        )}
-                    </div>
-                    <div className="admin-users-filters">
-                        <select
+                    </Grid>
+                    <Grid size={{ xs: 6, md: 3 }}>
+                        <TextField
+                            select
+                            size="small"
+                            fullWidth
                             value={roleFilter}
                             onChange={(e) => setRoleFilter(e.target.value)}
-                            className="admin-users-filter-select"
                         >
                             {roleOptions.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                             ))}
-                        </select>
-                        <select
+                        </TextField>
+                    </Grid>
+                    <Grid size={{ xs: 6, md: 3 }}>
+                        <TextField
+                            select
+                            size="small"
+                            fullWidth
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="admin-users-filter-select"
                         >
                             {statusOptions.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                             ))}
-                        </select>
-                    </div>
-                </div>
+                        </TextField>
+                    </Grid>
+                </Grid>
 
                 {/* Bulk Actions Bar */}
                 {selectedUsers.length > 0 && (
-                    <div className="admin-users-bulk-bar">
-                        <span className="admin-users-bulk-count">{selectedUsers.length} selected</span>
-                        <div className="admin-users-bulk-actions">
-                            <Button variant="secondary" size="sm" icon={UserCheck}>Activate</Button>
-                            <Button variant="secondary" size="sm" icon={UserX}>Deactivate</Button>
-                            <Button variant="danger" size="sm" icon={Trash2}>Delete</Button>
-                        </div>
-                        <button className="admin-users-bulk-clear" onClick={() => setSelectedUsers([])}>
-                            <X size={14} /> Clear
-                        </button>
-                    </div>
+                    <Box
+                        sx={{
+                            mt: 2,
+                            p: 1.5,
+                            borderRadius: 1.5,
+                            bgcolor: 'action.hover',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: 1.5
+                        }}
+                    >
+                        <Typography variant="body2" fontWeight={600} color="primary.main">
+                            {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''} selected
+                        </Typography>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                            <MuiButton size="small" variant="outlined" color="inherit" startIcon={<UserCheck size={14} />}>
+                                Activate
+                            </MuiButton>
+                            <MuiButton size="small" variant="outlined" color="inherit" startIcon={<UserX size={14} />}>
+                                Deactivate
+                            </MuiButton>
+                            <MuiButton size="small" variant="outlined" color="error" startIcon={<Trash2 size={14} />}>
+                                Delete
+                            </MuiButton>
+                            <MuiButton size="small" variant="text" color="inherit" onClick={() => setSelectedUsers([])}>
+                                Clear
+                            </MuiButton>
+                        </Stack>
+                    </Box>
                 )}
             </Card>
 
             {/* Users Table */}
-            <Card className="admin-users-table-card">
-                <div className="admin-users-table">
-                    <div className="admin-users-table-header">
-                        <div className="admin-users-col-check">
-                            <input
-                                type="checkbox"
-                                onChange={handleSelectAll}
-                                checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
-                            />
-                        </div>
-                        <span className="admin-users-col-user">User</span>
-                        <span className="admin-users-col-role">Role</span>
-                        <span className="admin-users-col-status">Status</span>
-                        <span className="admin-users-col-org">Organization</span>
-                        <span className="admin-users-col-group">Group</span>
-                        <span className="admin-users-col-login">Last Login</span>
-                        <span className="admin-users-col-actions">Actions</span>
-                    </div>
-                    <div className="admin-users-table-body">
-                        {filteredUsers.map((user) => (
-                            <div
-                                key={user._id}
-                                className={`admin-users-table-row ${selectedUsers.includes(user._id) ? 'selected' : ''}`}
-                            >
-                                <div className="admin-users-col-check">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedUsers.includes(user._id)}
-                                        onChange={() => handleSelectUser(user._id)}
+            <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                <TableContainer>
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell padding="checkbox">
+                                    <Checkbox
+                                        size="small"
+                                        checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
+                                        onChange={handleSelectAll}
                                     />
-                                </div>
-                                <div className="admin-users-col-user">
-                                    <Avatar name={`${user.first_name} ${user.last_name}`} size="sm" />
-                                    <div className="admin-users-user-info">
-                                        <span className="admin-users-user-name">{user.first_name} {user.last_name}</span>
-                                        <span className="admin-users-user-email">{user.email}</span>
-                                    </div>
-                                </div>
-                                <div className="admin-users-col-role">
-                                    <Badge variant={getRoleBadgeVariant(user.role_type)}>{user.role_type}</Badge>
-                                </div>
-                                <div className="admin-users-col-status">
-                                    <Badge variant={getStatusBadgeVariant(user.is_active ? 'active' : 'inactive')}>
-                                        {user.is_active ? 'active' : 'inactive'}
-                                    </Badge>
-                                </div>
-                                <div className="admin-users-col-org">
-                                    <span className="admin-users-org-text">{user.organization_id?.name || user.organization || '—'}</span>
-                                </div>
-                                <div className="admin-users-col-group">
-                                    <span className="admin-users-group-text">{user.group || '—'}</span>
-                                </div>
-                                <div className="admin-users-col-login">
-                                    <span className="admin-users-login-text">{user.lastLogin || '—'}</span>
-                                </div>
-                                <div className="admin-users-col-actions">
-                                    <div className="admin-users-action-btns">
-                                        <button className="admin-users-action-btn" title="View">
-                                            <Eye size={15} />
-                                        </button>
-                                        <button className="admin-users-action-btn" title="Edit">
-                                            <Edit size={15} />
-                                        </button>
-                                        <button className="admin-users-action-btn danger" title="Delete">
-                                            <Trash2 size={15} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Footer with count */}
-                <div className="admin-users-table-footer">
-                    <span>Showing {filteredUsers.length} of {users.length} users</span>
-                </div>
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>Role</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>Organization</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>Group</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>Last Login</TableCell>
+                                <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {filteredUsers.map((user) => {
+                                const isSelected = selectedUsers.includes(user._id);
+                                return (
+                                    <TableRow key={user._id} hover selected={isSelected}>
+                                        <TableCell padding="checkbox">
+                                            <Checkbox
+                                                size="small"
+                                                checked={isSelected}
+                                                onChange={() => handleSelectUser(user._id)}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                <Avatar name={`${user.first_name} ${user.last_name}`} size="sm" />
+                                                <Box>
+                                                    <Typography variant="body2" fontWeight={600}>
+                                                        {user.first_name} {user.last_name}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {user.email}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={getRoleBadgeVariant(user.role_type)}>{user.role_type}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={getStatusBadgeVariant(user.is_active ? 'active' : 'inactive')}>
+                                                {user.is_active ? 'active' : 'inactive'}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {user.organization_id?.name || user.organization || '—'}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {user.group || '—'}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {user.lastLogin || '—'}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                                                <Tooltip title="View">
+                                                    <IconButton size="small">
+                                                        <Eye size={15} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Edit">
+                                                    <IconButton size="small">
+                                                        <Edit size={15} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Delete">
+                                                    <IconButton size="small" color="error">
+                                                        <Trash2 size={15} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Stack>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                            {filteredUsers.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                                        <Typography color="text.secondary">No users found.</Typography>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider', textAlign: 'right' }}>
+                    <Typography variant="caption" color="text.secondary">
+                        Showing {filteredUsers.length} of {users.length} users
+                    </Typography>
+                </Box>
             </Card>
 
             {/* Create User Modal */}
@@ -287,11 +384,11 @@ export function AdminUsers() {
                 onClose={() => setIsCreateModalOpen(false)}
                 title="Add New User"
             >
-                <form className="admin-users-form" onSubmit={(e) => { e.preventDefault(); setIsCreateModalOpen(false); }}>
-                    <div className="admin-users-form-row">
+                <Box component="form" onSubmit={(e) => { e.preventDefault(); setIsCreateModalOpen(false); }} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
                         <Input label="First Name" placeholder="Enter first name" required />
                         <Input label="Last Name" placeholder="Enter last name" required />
-                    </div>
+                    </Box>
                     <Input label="Email" type="email" placeholder="user@example.com" required />
                     <Input label="Phone" type="tel" placeholder="+1 (555) 000-0000" />
                     <Select
@@ -310,12 +407,16 @@ export function AdminUsers() {
                         ]}
                     />
                     <Input label="Password" type="password" placeholder="Set initial password" required />
-                    <div className="admin-users-form-actions">
-                        <Button variant="secondary" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
-                        <Button type="submit" icon={Plus}>Create User</Button>
-                    </div>
-                </form>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, mt: 1 }}>
+                        <MuiButton variant="outlined" color="inherit" onClick={() => setIsCreateModalOpen(false)}>
+                            Cancel
+                        </MuiButton>
+                        <MuiButton type="submit" variant="contained" color="primary" startIcon={<Plus size={16} />}>
+                            Create User
+                        </MuiButton>
+                    </Box>
+                </Box>
             </Modal>
-        </div>
+        </Stack>
     );
 }

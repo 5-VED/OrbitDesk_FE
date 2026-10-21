@@ -1,10 +1,23 @@
-import { Link } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
+import {
+    Box,
+    Container,
+    Typography,
+    Button as MuiButton,
+    Card,
+    CardContent,
+    Stack,
+    Chip,
+    Paper,
+    Link as MuiLink,
+    Divider
+} from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
     Ticket, Shield, Zap, BarChart3, ArrowRight, CheckCircle2,
-    Users, Globe, Clock, Star, ChevronRight, Mail, Phone,
-    MessageSquare, Bot, Layers, TrendingUp
+    Users, Globe, Star, ChevronRight, Mail,
+    MessageSquare, Bot, Layers
 } from 'lucide-react';
-import './LandingPage.css';
 
 const features = [
     {
@@ -107,305 +120,510 @@ const logos = ['Acme Corp', 'TechFlow', 'CloudBase', 'DataSync', 'NetVault', 'Pi
 
 export function LandingPage() {
     return (
-        <div className="landing-page">
+        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', color: 'text.primary' }}>
             {/* ── Navbar ── */}
-            <nav className="landing-nav">
-                <div className="landing-nav-inner">
-                    <Link to="/" className="landing-logo">
-                        <div className="landing-logo-icon">O</div>
-                        <span className="landing-logo-text">OrbitDesk</span>
-                    </Link>
-                    <div className="landing-nav-links">
-                        <a href="#features">Features</a>
-                        <a href="#how-it-works">How it Works</a>
-                        <a href="#testimonials">Testimonials</a>
-                        <a href="#pricing">Pricing</a>
-                    </div>
-                    <div className="landing-nav-actions">
-                        <Link to="/login" className="landing-btn-ghost">Sign In</Link>
-                        <Link to="/signup" className="landing-btn-primary">
-                            Start Free Trial <ArrowRight size={16} />
-                        </Link>
-                    </div>
-                    <button className="landing-mobile-toggle" aria-label="Menu">
-                        <Layers size={22} />
-                    </button>
-                </div>
-            </nav>
+            <Box
+                component="nav"
+                sx={{
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1100,
+                    backdropFilter: 'blur(12px)',
+                    bgcolor: (theme) =>
+                        theme.palette.mode === 'dark' ? 'rgba(20,24,33,0.85)' : 'rgba(255,255,255,0.85)',
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    py: 1.5
+                }}
+            >
+                <Container maxWidth="lg">
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box
+                            component={RouterLink}
+                            to="/"
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5,
+                                textDecoration: 'none',
+                                color: 'inherit'
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: 2,
+                                    bgcolor: 'primary.main',
+                                    color: '#fff',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontWeight: 800,
+                                    fontSize: '1.25rem',
+                                    boxShadow: 2
+                                }}
+                            >
+                                O
+                            </Box>
+                            <Typography variant="h6" fontWeight={800} letterSpacing="-0.5px">
+                                OrbitDesk
+                            </Typography>
+                        </Box>
+
+                        <Stack
+                            direction="row"
+                            spacing={3}
+                            sx={{ display: { xs: 'none', md: 'flex' } }}
+                        >
+                            {['Features', 'How it Works', 'Testimonials', 'Pricing'].map((item) => (
+                                <MuiLink
+                                    key={item}
+                                    href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                                    underline="none"
+                                    color="text.secondary"
+                                    sx={{
+                                        fontSize: '0.9rem',
+                                        fontWeight: 500,
+                                        transition: 'color 0.2s',
+                                        '&:hover': { color: 'primary.main' }
+                                    }}
+                                >
+                                    {item}
+                                </MuiLink>
+                            ))}
+                        </Stack>
+
+                        <Stack direction="row" spacing={1.5} alignItems="center">
+                            <MuiButton
+                                component={RouterLink}
+                                to="/login"
+                                variant="text"
+                                color="inherit"
+                                sx={{ fontWeight: 600, textTransform: 'none' }}
+                            >
+                                Sign In
+                            </MuiButton>
+                            <MuiButton
+                                component={RouterLink}
+                                to="/signup"
+                                variant="contained"
+                                color="primary"
+                                endIcon={<ArrowRight size={16} />}
+                                sx={{ fontWeight: 600, textTransform: 'none', borderRadius: 2 }}
+                            >
+                                Start Free Trial
+                            </MuiButton>
+                        </Stack>
+                    </Box>
+                </Container>
+            </Box>
 
             {/* ── Hero ── */}
-            <section className="landing-hero">
-                <div className="landing-hero-bg">
-                    <div className="landing-hero-glow landing-hero-glow-1"></div>
-                    <div className="landing-hero-glow landing-hero-glow-2"></div>
-                    <div className="landing-hero-grid"></div>
-                </div>
-                <div className="landing-hero-content">
-                    <div className="landing-hero-badge">
-                        <Star size={14} />
-                        <span>Trusted by 500+ support teams worldwide</span>
-                    </div>
-                    <h1 className="landing-hero-title">
+            <Box
+                component="section"
+                sx={{
+                    pt: { xs: 8, md: 12 },
+                    pb: { xs: 8, md: 10 },
+                    textAlign: 'center',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}
+            >
+                <Container maxWidth="md">
+                    <Chip
+                        icon={<Star size={14} color="#F59E0B" fill="#F59E0B" />}
+                        label="Trusted by 500+ support teams worldwide"
+                        variant="outlined"
+                        size="small"
+                        sx={{ mb: 3, fontWeight: 500, px: 1 }}
+                    />
+                    <Typography
+                        variant="h1"
+                        sx={{
+                            fontWeight: 900,
+                            fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.25rem' },
+                            lineHeight: 1.15,
+                            letterSpacing: '-1px',
+                            mb: 2.5
+                        }}
+                    >
                         Streamline Your<br />
-                        <span className="landing-hero-title-accent">Customer Support</span>
-                    </h1>
-                    <p className="landing-hero-subtitle">
+                        <Box
+                            component="span"
+                            sx={{
+                                background: 'linear-gradient(135deg, #F44336 0%, #ff8a80 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent'
+                            }}
+                        >
+                            Customer Support
+                        </Box>
+                    </Typography>
+                    <Typography
+                        variant="h6"
+                        color="text.secondary"
+                        sx={{
+                            fontWeight: 400,
+                            maxWidth: 700,
+                            mx: 'auto',
+                            mb: 4,
+                            lineHeight: 1.6,
+                            fontSize: { xs: '1rem', sm: '1.2rem' }
+                        }}
+                    >
                         The modern helpdesk that brings SLA tracking, automated triggers,
                         AI-powered assistance, and seamless team collaboration into one
                         beautifully designed platform.
-                    </p>
-                    <div className="landing-hero-actions">
-                        <Link to="/signup" className="landing-btn-primary landing-btn-lg">
-                            Start Free Trial <ArrowRight size={18} />
-                        </Link>
-                        <a href="#how-it-works" className="landing-btn-outline landing-btn-lg">
+                    </Typography>
+
+                    <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={2}
+                        justifyContent="center"
+                        sx={{ mb: 2 }}
+                    >
+                        <MuiButton
+                            component={RouterLink}
+                            to="/signup"
+                            variant="contained"
+                            color="primary"
+                            size="large"
+                            endIcon={<ArrowRight size={18} />}
+                            sx={{ px: 4, py: 1.5, fontSize: '1rem', fontWeight: 600, borderRadius: 2 }}
+                        >
+                            Start Free Trial
+                        </MuiButton>
+                        <MuiButton
+                            href="#how-it-works"
+                            variant="outlined"
+                            color="inherit"
+                            size="large"
+                            sx={{ px: 4, py: 1.5, fontSize: '1rem', fontWeight: 600, borderRadius: 2 }}
+                        >
                             Book a Demo
-                        </a>
-                    </div>
-                    <div className="landing-hero-note">No credit card required · 14-day free trial · Cancel anytime</div>
-                </div>
+                        </MuiButton>
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary">
+                        No credit card required · 14-day free trial · Cancel anytime
+                    </Typography>
+                </Container>
 
                 {/* Dashboard Mockup */}
-                <div className="landing-hero-mockup">
-                    <div className="landing-mockup-window">
-                        <div className="landing-mockup-titlebar">
-                            <div className="landing-mockup-dots">
-                                <span></span><span></span><span></span>
-                            </div>
-                            <div className="landing-mockup-url">app.orbitdesk.io/dashboard</div>
-                        </div>
-                        <div className="landing-mockup-body">
-                            <div className="landing-mockup-sidebar">
-                                <div className="landing-mockup-sidebar-item active"></div>
-                                <div className="landing-mockup-sidebar-item"></div>
-                                <div className="landing-mockup-sidebar-item"></div>
-                                <div className="landing-mockup-sidebar-item"></div>
-                                <div className="landing-mockup-sidebar-item"></div>
-                            </div>
-                            <div className="landing-mockup-main">
-                                <div className="landing-mockup-stats">
-                                    <div className="landing-mockup-stat-card">
-                                        <div className="landing-mockup-stat-label">Open Tickets</div>
-                                        <div className="landing-mockup-stat-value" style={{ color: '#3B82F6' }}>142</div>
-                                        <div className="landing-mockup-stat-bar">
-                                            <div style={{ width: '65%', background: '#3B82F6' }}></div>
-                                        </div>
-                                    </div>
-                                    <div className="landing-mockup-stat-card">
-                                        <div className="landing-mockup-stat-label">SLA Compliance</div>
-                                        <div className="landing-mockup-stat-value" style={{ color: '#22C55E' }}>98.2%</div>
-                                        <div className="landing-mockup-stat-bar">
-                                            <div style={{ width: '98%', background: '#22C55E' }}></div>
-                                        </div>
-                                    </div>
-                                    <div className="landing-mockup-stat-card">
-                                        <div className="landing-mockup-stat-label">Avg. Response</div>
-                                        <div className="landing-mockup-stat-value" style={{ color: '#F59E0B' }}>1.8m</div>
-                                        <div className="landing-mockup-stat-bar">
-                                            <div style={{ width: '85%', background: '#F59E0B' }}></div>
-                                        </div>
-                                    </div>
-                                    <div className="landing-mockup-stat-card">
-                                        <div className="landing-mockup-stat-label">CSAT Score</div>
-                                        <div className="landing-mockup-stat-value" style={{ color: '#8B5CF6' }}>4.9</div>
-                                        <div className="landing-mockup-stat-bar">
-                                            <div style={{ width: '95%', background: '#8B5CF6' }}></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="landing-mockup-chart">
-                                    <div className="landing-mockup-chart-title">Ticket Trends — Last 7 Days</div>
-                                    <div className="landing-mockup-chart-bars">
-                                        <div className="landing-mockup-bar" style={{ height: '60%' }}></div>
-                                        <div className="landing-mockup-bar" style={{ height: '80%' }}></div>
-                                        <div className="landing-mockup-bar" style={{ height: '45%' }}></div>
-                                        <div className="landing-mockup-bar" style={{ height: '90%' }}></div>
-                                        <div className="landing-mockup-bar" style={{ height: '70%' }}></div>
-                                        <div className="landing-mockup-bar" style={{ height: '55%' }}></div>
-                                        <div className="landing-mockup-bar" style={{ height: '75%' }}></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                <Container maxWidth="lg" sx={{ mt: 6 }}>
+                    <Paper
+                        elevation={4}
+                        sx={{
+                            borderRadius: 3,
+                            overflow: 'hidden',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: 'background.paper'
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                px: 2,
+                                py: 1,
+                                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'grey.100',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                borderBottom: '1px solid',
+                                borderColor: 'divider'
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', gap: 0.75 }}>
+                                <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#ef4444' }} />
+                                <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#f59e0b' }} />
+                                <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#10b981' }} />
+                            </Box>
+                            <Typography variant="caption" color="text.secondary" sx={{ mx: 'auto', fontFamily: 'monospace' }}>
+                                app.orbitdesk.io/dashboard
+                            </Typography>
+                        </Box>
+                        <Box sx={{ p: { xs: 2, md: 4 } }}>
+                            <Grid container spacing={2}>
+                                {[
+                                    { label: 'Open Tickets', value: '142', color: '#3B82F6', bar: 65 },
+                                    { label: 'SLA Compliance', value: '98.2%', color: '#22C55E', bar: 98 },
+                                    { label: 'Avg. Response', value: '1.8m', color: '#F59E0B', bar: 85 },
+                                    { label: 'CSAT Score', value: '4.9', color: '#8B5CF6', bar: 95 }
+                                ].map((item) => (
+                                    <Grid key={item.label} size={{ xs: 6, md: 3 }}>
+                                        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {item.label}
+                                            </Typography>
+                                            <Typography variant="h5" fontWeight={700} sx={{ color: item.color, my: 0.5 }}>
+                                                {item.value}
+                                            </Typography>
+                                            <Box sx={{ width: '100%', height: 4, bgcolor: 'action.hover', borderRadius: 1 }}>
+                                                <Box sx={{ width: `${item.bar}%`, height: '100%', bgcolor: item.color, borderRadius: 1 }} />
+                                            </Box>
+                                        </Paper>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Box>
+                    </Paper>
+                </Container>
+            </Box>
 
             {/* ── Logos ── */}
-            <section className="landing-logos">
-                <p className="landing-logos-label">Trusted by industry-leading teams</p>
-                <div className="landing-logos-track">
-                    {[...logos, ...logos].map((name, i) => (
-                        <div key={i} className="landing-logo-item">
-                            <Globe size={20} />
-                            <span>{name}</span>
-                        </div>
-                    ))}
-                </div>
-            </section>
+            <Box component="section" sx={{ py: 6, borderY: '1px solid', borderColor: 'divider', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.01)' : 'grey.50' }}>
+                <Container maxWidth="lg" sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600} letterSpacing="0.05em" textTransform="uppercase" sx={{ mb: 3, display: 'block' }}>
+                        Trusted by industry-leading teams
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 4, alignItems: 'center' }}>
+                        {logos.map((name) => (
+                            <Box key={name} sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', opacity: 0.75 }}>
+                                <Globe size={18} />
+                                <Typography variant="body2" fontWeight={600}>{name}</Typography>
+                            </Box>
+                        ))}
+                    </Box>
+                </Container>
+            </Box>
 
             {/* ── Stats ── */}
-            <section className="landing-stats">
-                <div className="landing-stats-grid">
-                    {stats.map((stat, i) => (
-                        <div key={i} className="landing-stat-card">
-                            <div className="landing-stat-value">{stat.value}</div>
-                            <div className="landing-stat-label">{stat.label}</div>
-                        </div>
-                    ))}
-                </div>
-            </section>
+            <Box component="section" sx={{ py: 8 }}>
+                <Container maxWidth="lg">
+                    <Grid container spacing={3}>
+                        {stats.map((stat, i) => (
+                            <Grid key={i} size={{ xs: 6, md: 3 }}>
+                                <Paper variant="outlined" sx={{ p: 3, textAlign: 'center', borderRadius: 2 }}>
+                                    <Typography variant="h3" fontWeight={800} color="primary.main" gutterBottom>
+                                        {stat.value}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {stat.label}
+                                    </Typography>
+                                </Paper>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Container>
+            </Box>
 
             {/* ── Features ── */}
-            <section className="landing-features" id="features">
-                <div className="landing-section-header">
-                    <span className="landing-section-tag">Features</span>
-                    <h2 className="landing-section-title">Everything you need to deliver<br />exceptional support</h2>
-                    <p className="landing-section-subtitle">A complete helpdesk toolkit designed for modern support teams — from day one.</p>
-                </div>
-                <div className="landing-features-grid">
-                    {features.map((feature, i) => (
-                        <div key={i} className="landing-feature-card">
-                            <div className="landing-feature-icon" style={{ background: `${feature.color}15`, color: feature.color }}>
-                                <feature.icon size={24} />
-                            </div>
-                            <h3 className="landing-feature-title">{feature.title}</h3>
-                            <p className="landing-feature-desc">{feature.description}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
+            <Box component="section" id="features" sx={{ py: 10, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.01)' : 'grey.50' }}>
+                <Container maxWidth="lg">
+                    <Box sx={{ textAlign: 'center', mb: 8 }}>
+                        <Chip label="Features" size="small" color="primary" sx={{ mb: 2, fontWeight: 600 }} />
+                        <Typography variant="h3" fontWeight={800} gutterBottom>
+                            Everything you need to deliver<br />exceptional support
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
+                            A complete helpdesk toolkit designed for modern support teams — from day one.
+                        </Typography>
+                    </Box>
+
+                    <Grid container spacing={3}>
+                        {features.map((feature, i) => (
+                            <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
+                                <Card variant="outlined" sx={{ height: '100%', borderRadius: 3, p: 1 }}>
+                                    <CardContent>
+                                        <Box
+                                            sx={{
+                                                width: 48,
+                                                height: 48,
+                                                borderRadius: 2,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                bgcolor: `${feature.color}15`,
+                                                color: feature.color,
+                                                mb: 2
+                                            }}
+                                        >
+                                            <feature.icon size={24} />
+                                        </Box>
+                                        <Typography variant="h6" fontWeight={700} gutterBottom>
+                                            {feature.title}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                                            {feature.description}
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Container>
+            </Box>
 
             {/* ── How It Works ── */}
-            <section className="landing-how" id="how-it-works">
-                <div className="landing-section-header">
-                    <span className="landing-section-tag">How It Works</span>
-                    <h2 className="landing-section-title">From ticket to resolution<br />in four simple steps</h2>
-                </div>
-                <div className="landing-how-steps">
-                    {steps.map((step, i) => (
-                        <div key={i} className="landing-step-card">
-                            <div className="landing-step-number">{step.number}</div>
-                            <div className="landing-step-icon">
-                                <step.icon size={28} />
-                            </div>
-                            <h3 className="landing-step-title">{step.title}</h3>
-                            <p className="landing-step-desc">{step.description}</p>
-                            {i < steps.length - 1 && (
-                                <div className="landing-step-connector">
-                                    <ChevronRight size={20} />
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </section>
+            <Box component="section" id="how-it-works" sx={{ py: 10 }}>
+                <Container maxWidth="lg">
+                    <Box sx={{ textAlign: 'center', mb: 8 }}>
+                        <Chip label="How It Works" size="small" color="primary" sx={{ mb: 2, fontWeight: 600 }} />
+                        <Typography variant="h3" fontWeight={800} gutterBottom>
+                            From ticket to resolution<br />in four simple steps
+                        </Typography>
+                    </Box>
+
+                    <Grid container spacing={3}>
+                        {steps.map((step, i) => (
+                            <Grid key={i} size={{ xs: 12, sm: 6, md: 3 }}>
+                                <Paper variant="outlined" sx={{ p: 3, height: '100%', borderRadius: 3, position: 'relative' }}>
+                                    <Typography variant="h4" fontWeight={900} color="text.secondary" sx={{ opacity: 0.3, mb: 2 }}>
+                                        {step.number}
+                                    </Typography>
+                                    <Box sx={{ color: 'primary.main', mb: 1.5 }}>
+                                        <step.icon size={28} />
+                                    </Box>
+                                    <Typography variant="h6" fontWeight={700} gutterBottom>
+                                        {step.title}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                                        {step.description}
+                                    </Typography>
+                                </Paper>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Container>
+            </Box>
 
             {/* ── Testimonials ── */}
-            <section className="landing-testimonials" id="testimonials">
-                <div className="landing-section-header">
-                    <span className="landing-section-tag">Testimonials</span>
-                    <h2 className="landing-section-title">Loved by support teams<br />around the world</h2>
-                </div>
-                <div className="landing-testimonials-grid">
-                    {testimonials.map((t, i) => (
-                        <div key={i} className="landing-testimonial-card">
-                            <div className="landing-testimonial-stars">
-                                {[...Array(t.rating)].map((_, j) => (
-                                    <Star key={j} size={16} fill="#F59E0B" color="#F59E0B" />
-                                ))}
-                            </div>
-                            <p className="landing-testimonial-text">"{t.text}"</p>
-                            <div className="landing-testimonial-author">
-                                <div className="landing-testimonial-avatar">{t.avatar}</div>
-                                <div>
-                                    <div className="landing-testimonial-name">{t.name}</div>
-                                    <div className="landing-testimonial-role">{t.role}</div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
+            <Box component="section" id="testimonials" sx={{ py: 10, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.01)' : 'grey.50' }}>
+                <Container maxWidth="lg">
+                    <Box sx={{ textAlign: 'center', mb: 8 }}>
+                        <Chip label="Testimonials" size="small" color="primary" sx={{ mb: 2, fontWeight: 600 }} />
+                        <Typography variant="h3" fontWeight={800} gutterBottom>
+                            Loved by support teams<br />around the world
+                        </Typography>
+                    </Box>
+
+                    <Grid container spacing={3}>
+                        {testimonials.map((t, i) => (
+                            <Grid key={i} size={{ xs: 12, md: 4 }}>
+                                <Card variant="outlined" sx={{ height: '100%', borderRadius: 3, p: 1 }}>
+                                    <CardContent>
+                                        <Box sx={{ display: 'flex', gap: 0.5, mb: 2 }}>
+                                            {[...Array(t.rating)].map((_, j) => (
+                                                <Star key={j} size={16} fill="#F59E0B" color="#F59E0B" />
+                                            ))}
+                                        </Box>
+                                        <Typography variant="body1" sx={{ fontStyle: 'italic', mb: 3, lineHeight: 1.6 }}>
+                                            "{t.text}"
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                            <Box
+                                                sx={{
+                                                    width: 40,
+                                                    height: 40,
+                                                    borderRadius: '50%',
+                                                    bgcolor: 'primary.light',
+                                                    color: 'primary.main',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontWeight: 700
+                                                }}
+                                            >
+                                                {t.avatar}
+                                            </Box>
+                                            <Box>
+                                                <Typography variant="subtitle2" fontWeight={700}>
+                                                    {t.name}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {t.role}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Container>
+            </Box>
 
             {/* ── CTA ── */}
-            <section className="landing-cta" id="pricing">
-                <div className="landing-cta-bg">
-                    <div className="landing-cta-glow"></div>
-                </div>
-                <div className="landing-cta-content">
-                    <h2 className="landing-cta-title">Ready to transform your support?</h2>
-                    <p className="landing-cta-subtitle">
+            <Box
+                component="section"
+                id="pricing"
+                sx={{
+                    py: 10,
+                    textAlign: 'center',
+                    background: (theme) =>
+                        theme.palette.mode === 'dark'
+                            ? 'linear-gradient(135deg, rgba(244,67,54,0.2) 0%, rgba(20,24,33,0.95) 100%)'
+                            : 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)',
+                    borderY: '1px solid',
+                    borderColor: 'divider'
+                }}
+            >
+                <Container maxWidth="md">
+                    <Typography variant="h3" fontWeight={800} gutterBottom>
+                        Ready to transform your support?
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto', mb: 4 }}>
                         Join 500+ teams that use OrbitDesk to deliver faster, smarter, and more delightful customer support.
-                    </p>
-                    <div className="landing-cta-actions">
-                        <Link to="/signup" className="landing-btn-primary landing-btn-lg">
-                            Get Started Free <ArrowRight size={18} />
-                        </Link>
-                        <a href="mailto:sales@orbitdesk.io" className="landing-btn-outline landing-btn-lg">
+                    </Typography>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" sx={{ mb: 3 }}>
+                        <MuiButton
+                            component={RouterLink}
+                            to="/signup"
+                            variant="contained"
+                            color="primary"
+                            size="large"
+                            endIcon={<ArrowRight size={18} />}
+                            sx={{ px: 4, py: 1.5, fontSize: '1rem', fontWeight: 600, borderRadius: 2 }}
+                        >
+                            Get Started Free
+                        </MuiButton>
+                        <MuiButton
+                            href="mailto:sales@orbitdesk.io"
+                            variant="outlined"
+                            color="inherit"
+                            size="large"
+                            sx={{ px: 4, py: 1.5, fontSize: '1rem', fontWeight: 600, borderRadius: 2 }}
+                        >
                             Contact Sales
-                        </a>
-                    </div>
-                    <div className="landing-cta-checks">
-                        <span><CheckCircle2 size={16} /> Free 14-day trial</span>
-                        <span><CheckCircle2 size={16} /> No credit card</span>
-                        <span><CheckCircle2 size={16} /> Cancel anytime</span>
-                    </div>
-                </div>
-            </section>
+                        </MuiButton>
+                    </Stack>
+                    <Stack direction="row" spacing={3} justifyContent="center" sx={{ flexWrap: 'wrap', gap: 2 }}>
+                        {['Free 14-day trial', 'No credit card', 'Cancel anytime'].map((text) => (
+                            <Box key={text} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                                <CheckCircle2 size={16} color="#10b981" />
+                                <Typography variant="caption" fontWeight={600} color="text.secondary">{text}</Typography>
+                            </Box>
+                        ))}
+                    </Stack>
+                </Container>
+            </Box>
 
             {/* ── Footer ── */}
-            <footer className="landing-footer">
-                <div className="landing-footer-inner">
-                    <div className="landing-footer-brand">
-                        <Link to="/" className="landing-logo">
-                            <div className="landing-logo-icon">O</div>
-                            <span className="landing-logo-text">OrbitDesk</span>
-                        </Link>
-                        <p className="landing-footer-tagline">
-                            The modern helpdesk for teams that care about customer experience.
-                        </p>
-                    </div>
-                    <div className="landing-footer-links">
-                        <div className="landing-footer-col">
-                            <h4>Product</h4>
-                            <a href="#features">Features</a>
-                            <a href="#pricing">Pricing</a>
-                            <a href="#how-it-works">Integrations</a>
-                            <a href="#features">Changelog</a>
-                        </div>
-                        <div className="landing-footer-col">
-                            <h4>Resources</h4>
-                            <a href="#features">Documentation</a>
-                            <a href="#features">API Reference</a>
-                            <a href="#features">Blog</a>
-                            <a href="#features">Community</a>
-                        </div>
-                        <div className="landing-footer-col">
-                            <h4>Company</h4>
-                            <a href="#features">About</a>
-                            <a href="#features">Careers</a>
-                            <a href="#features">Contact</a>
-                            <a href="#features">Press</a>
-                        </div>
-                        <div className="landing-footer-col">
-                            <h4>Legal</h4>
-                            <a href="#features">Privacy Policy</a>
-                            <a href="#features">Terms of Service</a>
-                            <a href="#features">Security</a>
-                            <a href="#features">GDPR</a>
-                        </div>
-                    </div>
-                </div>
-                <div className="landing-footer-bottom">
-                    <span>© 2026 OrbitDesk. All rights reserved.</span>
-                    <div className="landing-footer-socials">
-                        <a href="#" aria-label="Twitter"><Globe size={18} /></a>
-                        <a href="#" aria-label="GitHub"><Layers size={18} /></a>
-                        <a href="#" aria-label="Email"><Mail size={18} /></a>
-                    </div>
-                </div>
-            </footer>
-        </div>
+            <Box component="footer" sx={{ py: 6, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider' }}>
+                <Container maxWidth="lg">
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 4, mb: 4 }}>
+                        <Box sx={{ maxWidth: 300 }}>
+                            <Box component={RouterLink} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none', color: 'inherit', mb: 1.5 }}>
+                                <Box sx={{ width: 32, height: 32, borderRadius: 1.5, bgcolor: 'primary.main', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                                    O
+                                </Box>
+                                <Typography variant="h6" fontWeight={800}>OrbitDesk</Typography>
+                            </Box>
+                            <Typography variant="body2" color="text.secondary">
+                                The modern helpdesk for teams that care about customer experience.
+                            </Typography>
+                        </Box>
+                    </Box>
+                    <Divider sx={{ mb: 3 }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+                        <Typography variant="caption" color="text.secondary">
+                            © 2026 OrbitDesk. All rights reserved.
+                        </Typography>
+                    </Box>
+                </Container>
+            </Box>
+        </Box>
     );
 }
+
+export default LandingPage;

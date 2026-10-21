@@ -1,5 +1,22 @@
 import { useState } from 'react';
 import {
+    Box,
+    Card,
+    CardContent,
+    Typography,
+    Button as MuiButton,
+    IconButton,
+    TextField,
+    Checkbox,
+    FormControlLabel,
+    Alert,
+    Stack,
+    Paper,
+    Chip,
+    Tooltip
+} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import {
     KeyRound,
     Plus,
     Copy,
@@ -7,15 +24,10 @@ import {
     EyeOff,
     Trash2,
     CheckCheck,
-    Loader2,
     AlertTriangle
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input, Select } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import toast from 'react-hot-toast';
-import './AdminApiKeys.css';
 
 const DEMO_KEYS = [
     { id: '1', name: 'Production API', key: 'sk_orbit_live_a1b2c3d4e5f6g7h8i9j0', scopes: ['tickets:read', 'tickets:write', 'users:read'], status: 'active', lastUsed: '2026-07-27T10:30:00Z', created: '2026-01-15T00:00:00Z' },
@@ -96,119 +108,149 @@ export function AdminApiKeys() {
     };
 
     return (
-        <div className="admin-api-keys">
-            <div className="admin-page-header">
-                <div>
-                    <h1 className="admin-page-title">API Keys</h1>
-                    <p className="admin-page-subtitle">Manage API keys for external integrations</p>
-                </div>
-                <div className="admin-page-actions">
-                    <Button icon={Plus} onClick={() => setShowNewForm(true)}>Create New Key</Button>
-                </div>
-            </div>
+        <Stack spacing={3}>
+            {/* Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                <Box>
+                    <Typography variant="h5" fontWeight={800}>API Keys</Typography>
+                    <Typography variant="body2" color="text.secondary">Manage API keys for external integrations</Typography>
+                </Box>
+                <MuiButton
+                    variant="contained"
+                    color="primary"
+                    startIcon={<Plus size={16} />}
+                    onClick={() => setShowNewForm(true)}
+                    sx={{ textTransform: 'none' }}
+                >
+                    Create New Key
+                </MuiButton>
+            </Box>
 
+            {/* Create New Key Form */}
             {showNewForm && (
-                <Card className="admin-api-new-key">
-                    <CardHeader>
-                        <CardTitle>Create New API Key</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="admin-api-new-form">
-                            <Input
+                <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                    <CardContent sx={{ p: 3 }}>
+                        <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                            Create New API Key
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                            <TextField
                                 label="Key Name"
                                 placeholder="e.g., Production Integration"
                                 value={newKeyName}
                                 onChange={e => setNewKeyName(e.target.value)}
+                                fullWidth
+                                size="small"
                             />
-                            <div className="admin-api-scopes-group">
-                                <label className="admin-api-scopes-label">Permissions (Scopes)</label>
-                                <div className="admin-api-scopes-grid">
+                            <Box>
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                                    Permissions (Scopes)
+                                </Typography>
+                                <Grid container spacing={1}>
                                     {SCOPE_OPTIONS.map(opt => (
-                                        <label key={opt.value} className="admin-api-scope-check">
-                                            <input
-                                                type="checkbox"
-                                                checked={newKeyScopes.includes(opt.value)}
-                                                onChange={() => toggleScope(opt.value)}
+                                        <Grid key={opt.value} size={{ xs: 12, sm: 6, md: 4 }}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        size="small"
+                                                        checked={newKeyScopes.includes(opt.value)}
+                                                        onChange={() => toggleScope(opt.value)}
+                                                    />
+                                                }
+                                                label={<Typography variant="body2">{opt.label}</Typography>}
                                             />
-                                            <span>{opt.label}</span>
-                                        </label>
+                                        </Grid>
                                     ))}
-                                </div>
-                            </div>
-                            <div className="admin-api-form-actions">
-                                <Button variant="ghost" onClick={() => setShowNewForm(false)}>Cancel</Button>
-                                <Button onClick={handleCreate}>Generate Key</Button>
-                            </div>
-                        </div>
+                                </Grid>
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5 }}>
+                                <MuiButton variant="outlined" color="inherit" onClick={() => setShowNewForm(false)}>
+                                    Cancel
+                                </MuiButton>
+                                <MuiButton variant="contained" color="primary" onClick={handleCreate}>
+                                    Generate Key
+                                </MuiButton>
+                            </Box>
+                        </Box>
                     </CardContent>
                 </Card>
             )}
 
-            <div className="admin-api-keys-list">
+            {/* API Keys List */}
+            <Stack spacing={2}>
                 {keys.length === 0 ? (
-                    <div className="admin-api-empty">
-                        <KeyRound size={48} />
-                        <p>No API keys created yet</p>
-                    </div>
+                    <Paper variant="outlined" sx={{ p: 6, textAlign: 'center', borderRadius: 2 }}>
+                        <KeyRound size={48} color="var(--color-text-secondary, #94a3b8)" style={{ margin: '0 auto 12px' }} />
+                        <Typography color="text.secondary">No API keys created yet</Typography>
+                    </Paper>
                 ) : (
                     keys.map(key => (
-                        <Card key={key.id} className="admin-api-key-card">
-                            <CardContent>
-                                <div className="admin-api-key-header">
-                                    <div className="admin-api-key-info">
-                                        <h3 className="admin-api-key-name">{key.name}</h3>
-                                        <Badge variant={key.status === 'active' ? 'success' : 'secondary'}>
+                        <Card key={key.id} variant="outlined" sx={{ borderRadius: 2 }}>
+                            <CardContent sx={{ p: 2.5 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <Typography variant="subtitle1" fontWeight={700}>
+                                            {key.name}
+                                        </Typography>
+                                        <Badge variant={key.status === 'active' ? 'success' : 'default'}>
                                             {key.status}
                                         </Badge>
-                                    </div>
-                                    <div className="admin-api-key-actions">
-                                        <button
-                                            className="admin-api-key-action"
-                                            onClick={() => handleCopy(key.key, key.id)}
-                                            title="Copy key"
-                                        >
-                                            {copiedId === key.id ? <CheckCheck size={16} /> : <Copy size={16} />}
-                                        </button>
-                                        <button
-                                            className="admin-api-key-action"
-                                            onClick={() => toggleVisibility(key.id)}
-                                            title={visibleKeys[key.id] ? 'Hide key' : 'Show key'}
-                                        >
-                                            {visibleKeys[key.id] ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
-                                        <button
-                                            className="admin-api-key-action danger"
-                                            onClick={() => handleDelete(key.id)}
-                                            title="Delete key"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="admin-api-key-value">
-                                    <code className={visibleKeys[key.id] ? '' : 'admin-api-key-masked'}>
-                                        {visibleKeys[key.id] ? key.key : key.key.substring(0, 20) + '••••••••••'}
-                                    </code>
-                                </div>
-                                <div className="admin-api-key-meta">
-                                    <span>Created: {formatDate(key.created)}</span>
-                                    <span>Last used: {formatDate(key.lastUsed)}</span>
-                                </div>
-                                <div className="admin-api-key-scopes">
-                                    {key.scopes.map(s => (
-                                        <Badge key={s} variant="outline">{s}</Badge>
-                                    ))}
-                                </div>
+                                    </Box>
+                                    <Stack direction="row" spacing={0.5}>
+                                        <Tooltip title="Copy key">
+                                            <IconButton size="small" onClick={() => handleCopy(key.key, key.id)}>
+                                                {copiedId === key.id ? <CheckCheck size={16} color="#10b981" /> : <Copy size={16} />}
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title={visibleKeys[key.id] ? 'Hide key' : 'Show key'}>
+                                            <IconButton size="small" onClick={() => toggleVisibility(key.id)}>
+                                                {visibleKeys[key.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title="Delete key">
+                                            <IconButton size="small" color="error" onClick={() => handleDelete(key.id)}>
+                                                <Trash2 size={16} />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Stack>
+                                </Box>
+
+                                <Paper
+                                    variant="outlined"
+                                    sx={{
+                                        p: 1.25,
+                                        px: 2,
+                                        borderRadius: 1.5,
+                                        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.3)' : 'grey.100',
+                                        fontFamily: 'monospace',
+                                        fontSize: '0.85rem',
+                                        mb: 1.5,
+                                        wordBreak: 'break-all'
+                                    }}
+                                >
+                                    {visibleKeys[key.id] ? key.key : `${key.key.substring(0, 20)}••••••••••••••••••••`}
+                                </Paper>
+
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1.5 }}>
+                                    <Box sx={{ display: 'flex', gap: 2, color: 'text.secondary', fontSize: '0.8rem' }}>
+                                        <span>Created: {formatDate(key.created)}</span>
+                                        <span>Last used: {formatDate(key.lastUsed)}</span>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                                        {key.scopes.map(s => (
+                                            <Chip key={s} label={s} size="small" variant="outlined" sx={{ fontSize: '0.75rem', height: 22 }} />
+                                        ))}
+                                    </Box>
+                                </Box>
                             </CardContent>
                         </Card>
                     ))
                 )}
-            </div>
+            </Stack>
 
-            <div className="admin-api-keys-info">
-                <AlertTriangle size={16} />
-                <span>API keys grant full access to the permissions you assign. Keep them secure and rotate them regularly.</span>
-            </div>
-        </div>
+            <Alert severity="warning" icon={<AlertTriangle size={18} />}>
+                API keys grant full access to the permissions you assign. Keep them secure and rotate them regularly.
+            </Alert>
+        </Stack>
     );
 }

@@ -1,11 +1,14 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import { Mail, ArrowLeft, ShieldCheck, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { authService } from '../../features/auth/api/auth';
 import { toast } from 'react-hot-toast';
-import './Auth.css';
 
 const OTP_LENGTH = 6;
 const OTP_DURATION = 120;
@@ -189,140 +192,205 @@ export function ForgotPassword() {
         }
     };
 
-    // Step 4: Success
-    if (step === 4) {
-        return (
-            <div className="auth-page">
-                <div className="auth-container">
-                    <div className="auth-card">
-                        <div className="auth-header">
-                            <div className="auth-success-icon">
+    const logoBlock = (
+        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
+            <Box
+                sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 1.5,
+                    backgroundColor: 'primary.main',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '1.25rem',
+                }}
+            >
+                O
+            </Box>
+            <Typography
+                variant="h5"
+                sx={{
+                    fontWeight: 700,
+                    fontSize: '1.25rem',
+                    color: 'text.primary',
+                    letterSpacing: '-0.02em',
+                }}
+            >
+                OrbitDesk
+            </Typography>
+        </Box>
+    );
+
+    return (
+        <Box
+            sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'background.default',
+                p: { xs: 2, sm: 3 },
+            }}
+        >
+            <Box sx={{ width: '100%', maxWidth: 440 }}>
+                <Paper
+                    variant="outlined"
+                    sx={{
+                        p: { xs: 3, sm: 4 },
+                        borderRadius: 3,
+                        boxShadow: 3,
+                        backgroundColor: 'background.paper',
+                    }}
+                >
+                    {/* Step 4: Success */}
+                    {step === 4 && (
+                        <Box sx={{ textAlign: 'center' }}>
+                            <Box
+                                sx={{
+                                    width: 64,
+                                    height: 64,
+                                    borderRadius: '50%',
+                                    backgroundColor: (theme) => `${theme.palette.success.main}1A`,
+                                    color: 'success.main',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    mb: 2.5,
+                                }}
+                            >
                                 <CheckCircle size={32} />
-                            </div>
-                            <h1 className="auth-title">Password Reset</h1>
-                            <p className="auth-subtitle">
+                            </Box>
+                            <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
+                                Password Reset
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
                                 Your password has been reset successfully. You can now sign in with your new password.
-                            </p>
-                        </div>
-
-                        <Button fullWidth onClick={() => navigate('/login')}>
-                            Back to Sign In
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // Step 3: New Password
-    if (step === 3) {
-        return (
-            <div className="auth-page">
-                <div className="auth-container">
-                    <div className="auth-card">
-                        <div className="auth-header">
-                            <div className="auth-logo">
-                                <div className="auth-logo-icon">S</div>
-                                <span className="auth-logo-text">SupportDesk</span>
-                            </div>
-                            <h1 className="auth-title">Set new password</h1>
-                            <p className="auth-subtitle">
-                                Enter your new password below
-                            </p>
-                        </div>
-
-                        <form className="auth-form" onSubmit={handleResetPassword}>
-                            <Input
-                                label="New Password"
-                                type={showPassword ? 'text' : 'password'}
-                                placeholder="Enter new password"
-                                icon={Lock}
-                                value={password}
-                                onChange={(e) => {
-                                    setPassword(e.target.value);
-                                    setErrors(prev => ({ ...prev, password: null }));
-                                }}
-                                error={errors.password}
-                                required
-                                suffix={
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                                    >
-                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                    </button>
-                                }
-                            />
-
-                            <Input
-                                label="Confirm Password"
-                                type={showConfirmPassword ? 'text' : 'password'}
-                                placeholder="Confirm new password"
-                                icon={Lock}
-                                value={confirmPassword}
-                                onChange={(e) => {
-                                    setConfirmPassword(e.target.value);
-                                    setErrors(prev => ({ ...prev, confirmPassword: null }));
-                                }}
-                                error={errors.confirmPassword}
-                                required
-                                suffix={
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                                    >
-                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                    </button>
-                                }
-                            />
-
-                            <Button type="submit" fullWidth loading={loading}>
-                                Reset Password
+                            </Typography>
+                            <Button fullWidth size="lg" onClick={() => navigate('/login')}>
+                                Back to Sign In
                             </Button>
-                        </form>
+                        </Box>
+                    )}
 
-                        <div className="auth-footer">
-                            <Link to="/login" className="auth-back-link">
-                                <ArrowLeft size={16} />
-                                <span>Back to login</span>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+                    {/* Step 3: New Password */}
+                    {step === 3 && (
+                        <Box>
+                            <Box sx={{ textAlign: 'center', mb: 3 }}>
+                                {logoBlock}
+                                <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 0.75 }}>
+                                    Set new password
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    Enter your new password below
+                                </Typography>
+                            </Box>
 
-    // Step 2: OTP Verification
-    if (step === 2) {
-        return (
-            <div className="auth-page">
-                <div className="auth-container">
-                    <div className="auth-card">
-                        <div className="auth-header">
-                            <div className="auth-success-icon" style={{
-                                backgroundColor: 'var(--color-primary-light, #e0e7ff)',
-                                color: 'var(--color-primary)'
-                            }}>
-                                <ShieldCheck size={32} />
-                            </div>
-                            <h1 className="auth-title">Verify OTP</h1>
-                            <p className="auth-subtitle">
-                                Enter the 6-digit code sent to <strong>{email}</strong>
-                            </p>
-                        </div>
+                            <Box component="form" onSubmit={handleResetPassword}>
+                                <Input
+                                    label="New Password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="Enter new password"
+                                    icon={Lock}
+                                    value={password}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        setErrors(prev => ({ ...prev, password: null }));
+                                    }}
+                                    error={errors.password}
+                                    required
+                                    suffix={
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </IconButton>
+                                    }
+                                />
 
-                        <div className="auth-form">
-                            <div style={{
-                                display: 'flex',
-                                gap: '8px',
-                                justifyContent: 'center',
-                                marginBottom: 'var(--spacing-md)',
-                            }}>
+                                <Input
+                                    label="Confirm Password"
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    placeholder="Confirm new password"
+                                    icon={Lock}
+                                    value={confirmPassword}
+                                    onChange={(e) => {
+                                        setConfirmPassword(e.target.value);
+                                        setErrors(prev => ({ ...prev, confirmPassword: null }));
+                                    }}
+                                    error={errors.confirmPassword}
+                                    required
+                                    suffix={
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            edge="end"
+                                        >
+                                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </IconButton>
+                                    }
+                                />
+
+                                <Button type="submit" fullWidth size="lg" loading={loading} sx={{ mt: 1 }}>
+                                    Reset Password
+                                </Button>
+                            </Box>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                                <Typography
+                                    component={Link}
+                                    to="/login"
+                                    variant="body2"
+                                    sx={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 0.75,
+                                        color: 'text.secondary',
+                                        '&:hover': { color: 'text.primary' },
+                                    }}
+                                >
+                                    <ArrowLeft size={16} />
+                                    <span>Back to login</span>
+                                </Typography>
+                            </Box>
+                        </Box>
+                    )}
+
+                    {/* Step 2: OTP Verification */}
+                    {step === 2 && (
+                        <Box>
+                            <Box sx={{ textAlign: 'center', mb: 3 }}>
+                                <Box
+                                    sx={{
+                                        width: 56,
+                                        height: 56,
+                                        borderRadius: '50%',
+                                        backgroundColor: (theme) => `${theme.palette.primary.main}1A`,
+                                        color: 'primary.main',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        mb: 2,
+                                    }}
+                                >
+                                    <ShieldCheck size={28} />
+                                </Box>
+                                <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 0.75 }}>
+                                    Verify OTP
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    Enter the 6-digit code sent to <strong>{email}</strong>
+                                </Typography>
+                            </Box>
+
+                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mb: 2 }}>
                                 {otp.map((digit, i) => (
-                                    <input
+                                    <Box
+                                        component="input"
                                         key={i}
                                         ref={el => otpRefs.current[i] = el}
                                         type="text"
@@ -333,161 +401,162 @@ export function ForgotPassword() {
                                         onKeyDown={(e) => handleOtpKeyDown(i, e)}
                                         onPaste={i === 0 ? handleOtpPaste : undefined}
                                         disabled={loading}
-                                        style={{
-                                            width: '48px',
-                                            height: '56px',
+                                        sx={{
+                                            width: { xs: 40, sm: 48 },
+                                            height: { xs: 48, sm: 56 },
                                             textAlign: 'center',
-                                            fontSize: '24px',
-                                            fontWeight: '600',
+                                            fontSize: '1.25rem',
+                                            fontWeight: 600,
                                             fontFamily: 'monospace',
-                                            border: `2px solid ${errors.otp ? 'var(--color-danger, #ef4444)' : digit ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                                            borderRadius: 'var(--radius-md, 8px)',
+                                            borderRadius: 1.5,
                                             outline: 'none',
-                                            backgroundColor: 'var(--color-bg-primary)',
-                                            color: 'var(--color-text-primary)',
-                                            transition: 'border-color 0.2s',
-                                        }}
-                                        onFocus={(e) => {
-                                            e.target.style.borderColor = 'var(--color-primary)';
-                                            e.target.style.boxShadow = '0 0 0 3px var(--color-primary-light, rgba(99, 102, 241, 0.1))';
-                                        }}
-                                        onBlur={(e) => {
-                                            e.target.style.borderColor = digit ? 'var(--color-primary)' : 'var(--color-border)';
-                                            e.target.style.boxShadow = 'none';
+                                            backgroundColor: 'background.default',
+                                            color: 'text.primary',
+                                            border: 2,
+                                            borderColor: errors.otp ? 'error.main' : digit ? 'primary.main' : 'divider',
+                                            '&:focus': {
+                                                borderColor: 'primary.main',
+                                                boxShadow: (theme) => `0 0 0 3px ${theme.palette.primary.main}26`,
+                                            },
                                         }}
                                     />
                                 ))}
-                            </div>
+                            </Box>
 
                             {errors.otp && (
-                                <p style={{
-                                    color: 'var(--color-danger, #ef4444)',
-                                    fontSize: 'var(--font-size-sm)',
-                                    textAlign: 'center',
-                                    margin: '0 0 var(--spacing-sm)',
-                                }}>
+                                <Typography variant="body2" sx={{ color: 'error.main', textAlign: 'center', mb: 1.5 }}>
                                     {errors.otp}
-                                </p>
+                                </Typography>
                             )}
 
-                            <div style={{
-                                textAlign: 'center',
-                                fontSize: 'var(--font-size-sm)',
-                                color: 'var(--color-text-secondary)',
-                                marginBottom: 'var(--spacing-md)',
-                            }}>
+                            <Box sx={{ textAlign: 'center', mb: 2 }}>
                                 {countdown > 0 ? (
-                                    <p style={{ margin: 0 }}>
+                                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                         Code expires in{' '}
-                                        <span style={{
-                                            fontWeight: '600',
-                                            color: countdown <= 30 ? 'var(--color-danger, #ef4444)' : 'var(--color-primary)',
-                                            fontFamily: 'monospace',
-                                        }}>
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                fontWeight: 600,
+                                                color: countdown <= 30 ? 'error.main' : 'primary.main',
+                                                fontFamily: 'monospace',
+                                            }}
+                                        >
                                             {formatTime(countdown)}
-                                        </span>
-                                    </p>
+                                        </Box>
+                                    </Typography>
                                 ) : (
-                                    <p style={{ margin: 0, color: 'var(--color-danger, #ef4444)' }}>
+                                    <Typography variant="body2" sx={{ color: 'error.main', fontWeight: 500 }}>
                                         OTP has expired
-                                    </p>
+                                    </Typography>
                                 )}
-                            </div>
+                            </Box>
 
-                            {loading && (
-                                <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-md)' }}>
-                                    <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                                        Verifying...
-                                    </p>
-                                </div>
-                            )}
+                            <Box sx={{ textAlign: 'center', mb: 2 }}>
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    Didn't receive the code?{' '}
+                                    <Box
+                                        component="button"
+                                        type="button"
+                                        onClick={handleResendOtp}
+                                        disabled={!canResend || loading}
+                                        sx={{
+                                            background: 'none',
+                                            border: 'none',
+                                            color: canResend ? 'primary.main' : 'text.tertiary',
+                                            fontWeight: 600,
+                                            cursor: canResend ? 'pointer' : 'not-allowed',
+                                            p: 0,
+                                            fontSize: 'inherit',
+                                            '&:hover': {
+                                                textDecoration: canResend ? 'underline' : 'none',
+                                            },
+                                        }}
+                                    >
+                                        Resend OTP
+                                    </Box>
+                                </Typography>
+                            </Box>
 
-                            <div style={{
-                                textAlign: 'center',
-                                fontSize: 'var(--font-size-sm)',
-                                color: 'var(--color-text-secondary)',
-                            }}>
-                                Didn't receive the code?{' '}
-                                <button
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                                <Box
+                                    component="button"
                                     type="button"
-                                    onClick={handleResendOtp}
-                                    disabled={!canResend || loading}
-                                    style={{
+                                    onClick={() => { setStep(1); setErrors({}); }}
+                                    sx={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 0.75,
                                         background: 'none',
                                         border: 'none',
-                                        color: canResend ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
-                                        fontWeight: '600',
-                                        cursor: canResend ? 'pointer' : 'not-allowed',
-                                        padding: 0,
-                                        fontSize: 'inherit',
+                                        color: 'text.secondary',
+                                        cursor: 'pointer',
+                                        fontSize: '0.875rem',
+                                        '&:hover': { color: 'text.primary' },
                                     }}
                                 >
-                                    Resend OTP
-                                </button>
-                            </div>
-                        </div>
+                                    <ArrowLeft size={16} />
+                                    <span>Try another email</span>
+                                </Box>
+                            </Box>
+                        </Box>
+                    )}
 
-                        <div className="auth-footer">
-                            <button
-                                type="button"
-                                onClick={() => { setStep(1); setErrors({}); }}
-                                className="auth-back-link"
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'inherit' }}
-                            >
-                                <ArrowLeft size={16} />
-                                <span>Try another email</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+                    {/* Step 1: Email Input */}
+                    {step === 1 && (
+                        <Box>
+                            <Box sx={{ textAlign: 'center', mb: 3 }}>
+                                {logoBlock}
+                                <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 0.75 }}>
+                                    Forgot password?
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    No worries, we'll send you a verification code
+                                </Typography>
+                            </Box>
 
-    // Step 1: Email Input
-    return (
-        <div className="auth-page">
-            <div className="auth-container">
-                <div className="auth-card">
-                    <div className="auth-header">
-                        <div className="auth-logo">
-                            <div className="auth-logo-icon">O</div>
-                            <span className="auth-logo-text">OrbitDesk</span>
-                        </div>
-                        <h1 className="auth-title">Forgot password?</h1>
-                        <p className="auth-subtitle">
-                            No worries, we'll send you a verification code
-                        </p>
-                    </div>
+                            <Box component="form" onSubmit={handleSendOtp}>
+                                <Input
+                                    label="Email"
+                                    type="email"
+                                    placeholder="Enter your email"
+                                    icon={Mail}
+                                    value={email}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        setErrors(prev => ({ ...prev, email: null }));
+                                    }}
+                                    error={errors.email}
+                                    required
+                                />
 
-                    <form className="auth-form" onSubmit={handleSendOtp}>
-                        <Input
-                            label="Email"
-                            type="email"
-                            placeholder="Enter your email"
-                            icon={Mail}
-                            value={email}
-                            onChange={(e) => {
-                                setEmail(e.target.value);
-                                setErrors(prev => ({ ...prev, email: null }));
-                            }}
-                            error={errors.email}
-                            required
-                        />
+                                <Button type="submit" fullWidth size="lg" loading={loading} sx={{ mt: 1 }}>
+                                    Send OTP
+                                </Button>
+                            </Box>
 
-                        <Button type="submit" fullWidth loading={loading}>
-                            Send OTP
-                        </Button>
-                    </form>
-
-                    <div className="auth-footer">
-                        <Link to="/login" className="auth-back-link">
-                            <ArrowLeft size={16} />
-                            <span>Back to login</span>
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        </div>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                                <Typography
+                                    component={Link}
+                                    to="/login"
+                                    variant="body2"
+                                    sx={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 0.75,
+                                        color: 'text.secondary',
+                                        '&:hover': { color: 'text.primary' },
+                                    }}
+                                >
+                                    <ArrowLeft size={16} />
+                                    <span>Back to login</span>
+                                </Typography>
+                            </Box>
+                        </Box>
+                    )}
+                </Paper>
+            </Box>
+        </Box>
     );
 }
+
+export default ForgotPassword;

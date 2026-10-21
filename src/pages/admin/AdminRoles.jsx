@@ -1,5 +1,24 @@
 import { useState, useEffect } from 'react';
 import {
+    Box,
+    Card,
+    CardContent,
+    Typography,
+    Button as MuiButton,
+    IconButton,
+    LinearProgress,
+    CircularProgress,
+    Stack,
+    Paper,
+    Chip,
+    Checkbox,
+    FormControlLabel,
+    TextField,
+    Divider,
+    Tooltip
+} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import {
     Shield,
     Plus,
     Edit,
@@ -8,17 +27,11 @@ import {
     CheckSquare,
     Square,
     Lock,
-    X,
-    Copy,
-    Loader
+    Copy
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import { Input } from '@/components/ui/Input';
 import { roleService } from '@/services/role.service';
 import { toast } from 'react-hot-toast';
-import './AdminRoles.css';
 
 const permissionGroups = [
     {
@@ -70,16 +83,6 @@ const permissionGroups = [
 
 const allPermissionKeys = permissionGroups.flatMap(g => g.permissions.map(p => p.key));
 
-const roleColorMap = {
-    'Admin': 'danger',
-    'Agent': 'primary',
-    'User': 'success',
-};
-
-function getRoleColor(roleName) {
-    return roleColorMap[roleName] || 'info';
-}
-
 export function AdminRoles() {
     const [roles, setRoles] = useState([]);
     const [selectedRole, setSelectedRole] = useState(null);
@@ -108,7 +111,7 @@ export function AdminRoles() {
                     setSelectedRole(updated || response.data[0] || null);
                 }
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to load roles');
         } finally {
             setLoading(false);
@@ -225,221 +228,320 @@ export function AdminRoles() {
         try {
             await roleService.update(selectedRole._id, { permissions: updatedPermissions });
             await fetchRoles();
-        } catch (error) {
+        } catch {
             toast.error('Failed to update permission');
         }
     };
 
     if (loading) {
         return (
-            <div className="admin-roles">
-                <div className="admin-page-header">
-                    <div>
-                        <h1 className="admin-page-title">Roles & Permissions</h1>
-                        <p className="admin-page-subtitle">Configure access control for different user types</p>
-                    </div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
-                    <Loader size={24} className="spin" />
-                </div>
-            </div>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 2 }}>
+                <CircularProgress size={36} color="primary" />
+                <Typography color="text.secondary">Loading roles...</Typography>
+            </Box>
         );
     }
 
     return (
-        <div className="admin-roles">
+        <Stack spacing={3}>
             {/* Page Header */}
-            <div className="admin-page-header">
-                <div>
-                    <h1 className="admin-page-title">Roles & Permissions</h1>
-                    <p className="admin-page-subtitle">Configure access control for different user types</p>
-                </div>
-                <div className="admin-page-actions">
-                    <Button icon={Plus} onClick={openCreateModal}>Create Role</Button>
-                </div>
-            </div>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                <Box>
+                    <Typography variant="h5" fontWeight={800}>Roles & Permissions</Typography>
+                    <Typography variant="body2" color="text.secondary">Configure access control for different user types</Typography>
+                </Box>
+                <MuiButton
+                    variant="contained"
+                    color="primary"
+                    startIcon={<Plus size={16} />}
+                    onClick={openCreateModal}
+                    sx={{ textTransform: 'none' }}
+                >
+                    Create Role
+                </MuiButton>
+            </Box>
 
-            <div className="admin-roles-layout">
+            {/* Master-Detail Layout */}
+            <Grid container spacing={3}>
                 {/* Roles List */}
-                <div className="admin-roles-list">
-                    {roles.length === 0 ? (
-                        <Card>
-                            <CardContent>
-                                <p style={{ textAlign: 'center', color: 'var(--color-text-tertiary)', padding: '20px 0' }}>
-                                    No roles found. Create your first role.
-                                </p>
+                <Grid size={{ xs: 12, md: 5, lg: 4 }}>
+                    <Stack spacing={2}>
+                        {roles.length === 0 ? (
+                            <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
+                                <Typography color="text.secondary">No roles found. Create your first role.</Typography>
+                            </Paper>
+                        ) : (
+                            roles.map((role) => {
+                                const isSelected = selectedRole?._id === role._id;
+                                const permCount = (role.permissions || []).length;
+                                const permPercent = (permCount / allPermissionKeys.length) * 100;
+
+                                return (
+                                    <Card
+                                        key={role._id}
+                                        variant="outlined"
+                                        onClick={() => setSelectedRole(role)}
+                                        sx={{
+                                            p: 2,
+                                            cursor: 'pointer',
+                                            borderRadius: 2,
+                                            borderWidth: isSelected ? 2 : 1,
+                                            borderColor: isSelected ? 'primary.main' : 'divider',
+                                            bgcolor: isSelected
+                                                ? (theme) => theme.palette.mode === 'dark' ? 'rgba(244,67,54,0.08)' : 'rgba(244,67,54,0.04)'
+                                                : 'background.paper',
+                                            transition: 'all 0.2s',
+                                            '&:hover': {
+                                                boxShadow: 2,
+                                                borderColor: 'primary.main'
+                                            }
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                <Box
+                                                    sx={{
+                                                        width: 32,
+                                                        height: 32,
+                                                        borderRadius: 1.5,
+                                                        bgcolor: 'primary.light',
+                                                        color: 'primary.main',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}
+                                                >
+                                                    <Shield size={16} />
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="subtitle1" fontWeight={700}>
+                                                        {role.role}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                {role.isSystem && (
+                                                    <Chip label="System" size="small" variant="outlined" sx={{ fontSize: '0.7rem', height: 20 }} />
+                                                )}
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', fontSize: '0.8rem' }}>
+                                                    <Users size={14} />
+                                                    <span>{role.userCount || 0}</span>
+                                                </Box>
+                                            </Stack>
+                                        </Box>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: '0.85rem' }} noWrap>
+                                            {role.description || 'No description'}
+                                        </Typography>
+                                        <Box>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {permCount}/{allPermissionKeys.length} permissions
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {Math.round(permPercent)}%
+                                                </Typography>
+                                            </Box>
+                                            <LinearProgress
+                                                variant="determinate"
+                                                value={permPercent}
+                                                color="primary"
+                                                sx={{ height: 6, borderRadius: 3 }}
+                                            />
+                                        </Box>
+                                    </Card>
+                                );
+                            })
+                        )}
+                    </Stack>
+                </Grid>
+
+                {/* Permissions Detail */}
+                <Grid size={{ xs: 12, md: 7, lg: 8 }}>
+                    {selectedRole ? (
+                        <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                            <CardContent sx={{ p: 3 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 3 }}>
+                                    <Box>
+                                        <Typography variant="h6" fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Shield size={18} color="var(--color-primary, #F44336)" />
+                                            {selectedRole.role} Permissions
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {selectedRole.description || 'No description provided'}
+                                        </Typography>
+                                    </Box>
+                                    {!selectedRole.isSystem && (
+                                        <Stack direction="row" spacing={1}>
+                                            <MuiButton size="small" variant="outlined" color="inherit" startIcon={<Copy size={14} />} onClick={handleDuplicate}>
+                                                Duplicate
+                                            </MuiButton>
+                                            <MuiButton size="small" variant="outlined" color="inherit" startIcon={<Edit size={14} />} onClick={openEditModal}>
+                                                Edit
+                                            </MuiButton>
+                                            <MuiButton size="small" variant="outlined" color="error" startIcon={<Trash2 size={14} />} onClick={() => setIsDeleteModalOpen(true)}>
+                                                Delete
+                                            </MuiButton>
+                                        </Stack>
+                                    )}
+                                </Box>
+
+                                <Divider sx={{ mb: 3 }} />
+
+                                <Stack spacing={3}>
+                                    {permissionGroups.map((group) => {
+                                        const grantedCount = group.permissions.filter(p => (selectedRole.permissions || []).includes(p.key)).length;
+
+                                        return (
+                                            <Box key={group.name}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+                                                        {group.name}
+                                                    </Typography>
+                                                    <Chip
+                                                        label={`${grantedCount}/${group.permissions.length}`}
+                                                        size="small"
+                                                        color={grantedCount > 0 ? 'primary' : 'default'}
+                                                        variant="outlined"
+                                                        sx={{ height: 20, fontSize: '0.75rem' }}
+                                                    />
+                                                </Box>
+                                                <Grid container spacing={1}>
+                                                    {group.permissions.map((perm) => {
+                                                        const isGranted = (selectedRole.permissions || []).includes(perm.key);
+                                                        return (
+                                                            <Grid key={perm.key} size={{ xs: 12, sm: 6 }}>
+                                                                <Paper
+                                                                    variant="outlined"
+                                                                    onClick={() => handlePermissionToggleInline(perm.key)}
+                                                                    sx={{
+                                                                        p: 1.5,
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 1.5,
+                                                                        borderRadius: 1.5,
+                                                                        cursor: selectedRole.isSystem ? 'default' : 'pointer',
+                                                                        bgcolor: isGranted
+                                                                            ? (theme) => theme.palette.mode === 'dark' ? 'rgba(244,67,54,0.06)' : 'rgba(244,67,54,0.03)'
+                                                                            : 'background.paper',
+                                                                        borderColor: isGranted ? 'primary.light' : 'divider',
+                                                                        transition: 'all 0.15s',
+                                                                        '&:hover': {
+                                                                            borderColor: selectedRole.isSystem ? undefined : 'primary.main'
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    {isGranted ? (
+                                                                        <CheckSquare size={16} color="var(--color-primary, #F44336)" />
+                                                                    ) : (
+                                                                        <Square size={16} color="var(--color-text-secondary, #94a3b8)" />
+                                                                    )}
+                                                                    <Typography variant="body2" sx={{ flex: 1, fontWeight: isGranted ? 600 : 400 }}>
+                                                                        {perm.label}
+                                                                    </Typography>
+                                                                    {selectedRole.isSystem && (
+                                                                        <Tooltip title="System permissions are locked">
+                                                                            <Lock size={12} color="var(--color-text-secondary, #94a3b8)" />
+                                                                        </Tooltip>
+                                                                    )}
+                                                                </Paper>
+                                                            </Grid>
+                                                        );
+                                                    })}
+                                                </Grid>
+                                            </Box>
+                                        );
+                                    })}
+                                </Stack>
                             </CardContent>
                         </Card>
                     ) : (
-                        roles.map((role) => (
-                            <Card
-                                key={role._id}
-                                className={`admin-role-card ${selectedRole?._id === role._id ? 'active' : ''}`}
-                                hover
-                                onClick={() => setSelectedRole(role)}
-                            >
-                                <div className="admin-role-card-header">
-                                    <div className="admin-role-card-info">
-                                        <div className="admin-role-icon" data-color={getRoleColor(role.role)}>
-                                            <Shield size={18} />
-                                        </div>
-                                        <div>
-                                            <span className="admin-role-name">{role.role}</span>
-                                            {role.isSystem && (
-                                                <span className="admin-role-system-badge">System</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="admin-role-user-count">
-                                        <Users size={14} />
-                                        <span>{role.userCount || 0}</span>
-                                    </div>
-                                </div>
-                                <p className="admin-role-description">{role.description || 'No description'}</p>
-                                <div className="admin-role-perm-summary">
-                                    <span>{(role.permissions || []).length}/{allPermissionKeys.length} permissions</span>
-                                    <div className="admin-role-perm-bar">
-                                        <div
-                                            className="admin-role-perm-fill"
-                                            data-color={getRoleColor(role.role)}
-                                            style={{ width: `${((role.permissions || []).length / allPermissionKeys.length) * 100}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            </Card>
-                        ))
+                        <Paper variant="outlined" sx={{ p: 6, textAlign: 'center', borderRadius: 2 }}>
+                            <Typography color="text.secondary">Select a role to view its permissions.</Typography>
+                        </Paper>
                     )}
-                </div>
-
-                {/* Permission Detail */}
-                {selectedRole && (
-                    <Card className="admin-permissions-detail">
-                        <CardHeader>
-                            <div className="admin-permissions-header">
-                                <div>
-                                    <CardTitle>
-                                        <span className="admin-role-icon-inline" data-color={getRoleColor(selectedRole.role)}>
-                                            <Shield size={16} />
-                                        </span>
-                                        {selectedRole.role} Permissions
-                                    </CardTitle>
-                                    <p className="admin-permissions-subtitle">{selectedRole.description || 'No description'}</p>
-                                </div>
-                                {!selectedRole.isSystem && (
-                                    <div className="admin-permissions-actions">
-                                        <Button variant="secondary" size="sm" icon={Copy} onClick={handleDuplicate}>Duplicate</Button>
-                                        <Button variant="secondary" size="sm" icon={Edit} onClick={openEditModal}>Edit</Button>
-                                        <Button variant="danger" size="sm" icon={Trash2} onClick={() => setIsDeleteModalOpen(true)}>Delete</Button>
-                                    </div>
-                                )}
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="admin-permission-groups">
-                                {permissionGroups.map((group) => (
-                                    <div key={group.name} className="admin-permission-group">
-                                        <div className="admin-permission-group-header">
-                                            <span className="admin-permission-group-name">{group.name}</span>
-                                            <span className="admin-permission-group-count">
-                                                {group.permissions.filter(p => (selectedRole.permissions || []).includes(p.key)).length}/{group.permissions.length}
-                                            </span>
-                                        </div>
-                                        <div className="admin-permission-items">
-                                            {group.permissions.map((perm) => {
-                                                const isGranted = (selectedRole.permissions || []).includes(perm.key);
-                                                return (
-                                                    <div
-                                                        key={perm.key}
-                                                        className={`admin-permission-item ${isGranted ? 'granted' : 'denied'}`}
-                                                        onClick={() => handlePermissionToggleInline(perm.key)}
-                                                        style={{ cursor: selectedRole.isSystem ? 'default' : 'pointer' }}
-                                                    >
-                                                        {isGranted ? (
-                                                            <CheckSquare size={16} className="admin-perm-check" />
-                                                        ) : (
-                                                            <Square size={16} className="admin-perm-uncheck" />
-                                                        )}
-                                                        <span className="admin-perm-label">{perm.label}</span>
-                                                        {selectedRole.isSystem && (
-                                                            <Lock size={12} className="admin-perm-lock" />
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-            </div>
+                </Grid>
+            </Grid>
 
             {/* Create / Edit Role Modal */}
             <Modal
                 isOpen={isCreateModalOpen}
                 onClose={() => { setIsCreateModalOpen(false); resetForm(); }}
                 title={isEditMode ? 'Edit Role' : 'Create New Role'}
+                size="large"
             >
-                <form className="admin-users-form" onSubmit={handleSubmit}>
-                    <Input
+                <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                    <TextField
                         label="Role Name"
                         placeholder="e.g. Support Lead"
                         value={formData.role}
                         onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
                         required
+                        fullWidth
+                        size="small"
                     />
-                    <Input
+                    <TextField
                         label="Description"
                         placeholder="Brief description of this role"
                         value={formData.description}
                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                        fullWidth
+                        multiline
+                        rows={2}
+                        size="small"
                     />
-                    <div className="admin-create-role-perms">
-                        <span className="admin-create-role-perms-label">Permissions</span>
-                        {permissionGroups.map((group) => {
-                            const groupKeys = group.permissions.map(p => p.key);
-                            const allSelected = groupKeys.every(k => formData.permissions.includes(k));
 
-                            return (
-                                <div key={group.name} className="admin-create-perm-group">
-                                    <label
-                                        className="admin-create-perm-group-name"
-                                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                                        onClick={() => handleToggleGroupAll(group)}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={allSelected}
-                                            onChange={() => handleToggleGroupAll(group)}
-                                        />
-                                        {group.name}
-                                    </label>
-                                    <div className="admin-create-perm-items">
-                                        {group.permissions.map((perm) => (
-                                            <label key={perm.key} className="admin-create-perm-item">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.permissions.includes(perm.key)}
-                                                    onChange={() => handlePermissionToggle(perm.key)}
+                    <Box>
+                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+                            Permissions
+                        </Typography>
+                        <Stack spacing={2} sx={{ maxHeight: 360, overflowY: 'auto', pr: 1 }}>
+                            {permissionGroups.map((group) => {
+                                const groupKeys = group.permissions.map(p => p.key);
+                                const allSelected = groupKeys.every(k => formData.permissions.includes(k));
+
+                                return (
+                                    <Paper key={group.name} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    size="small"
+                                                    checked={allSelected}
+                                                    onChange={() => handleToggleGroupAll(group)}
                                                 />
-                                                <span>{perm.label}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <div className="admin-users-form-actions">
-                        <Button variant="secondary" type="button" onClick={() => { setIsCreateModalOpen(false); resetForm(); }} disabled={formSubmitting}>
+                                            }
+                                            label={<Typography variant="subtitle2" fontWeight={700}>{group.name}</Typography>}
+                                        />
+                                        <Grid container spacing={1} sx={{ mt: 0.5, pl: 3 }}>
+                                            {group.permissions.map((perm) => (
+                                                <Grid key={perm.key} size={{ xs: 12, sm: 6 }}>
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                size="small"
+                                                                checked={formData.permissions.includes(perm.key)}
+                                                                onChange={() => handlePermissionToggle(perm.key)}
+                                                            />
+                                                        }
+                                                        label={<Typography variant="body2">{perm.label}</Typography>}
+                                                    />
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                    </Paper>
+                                );
+                            })}
+                        </Stack>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, mt: 1 }}>
+                        <MuiButton variant="outlined" color="inherit" onClick={() => { setIsCreateModalOpen(false); resetForm(); }} disabled={formSubmitting}>
                             Cancel
-                        </Button>
-                        <Button type="submit" icon={isEditMode ? Edit : Plus} disabled={formSubmitting}>
+                        </MuiButton>
+                        <MuiButton type="submit" variant="contained" color="primary" disabled={formSubmitting} startIcon={isEditMode ? <Edit size={16} /> : <Plus size={16} />}>
                             {formSubmitting ? 'Saving...' : (isEditMode ? 'Update Role' : 'Create Role')}
-                        </Button>
-                    </div>
-                </form>
+                        </MuiButton>
+                    </Box>
+                </Box>
             </Modal>
 
             {/* Delete Confirmation Modal */}
@@ -450,20 +552,20 @@ export function AdminRoles() {
                 size="small"
                 footer={
                     <>
-                        <Button variant="ghost" onClick={() => setIsDeleteModalOpen(false)} disabled={formSubmitting}>Cancel</Button>
-                        <Button className="danger" onClick={handleDelete} disabled={formSubmitting}>
+                        <MuiButton variant="text" color="inherit" onClick={() => setIsDeleteModalOpen(false)} disabled={formSubmitting}>Cancel</MuiButton>
+                        <MuiButton variant="contained" color="error" onClick={handleDelete} disabled={formSubmitting}>
                             {formSubmitting ? 'Deleting...' : 'Delete'}
-                        </Button>
+                        </MuiButton>
                     </>
                 }
             >
-                <p>
+                <Typography variant="body1">
                     Are you sure you want to delete the <strong>{selectedRole?.role}</strong> role?
                     {selectedRole?.userCount > 0 && (
                         <span> This role is currently assigned to <strong>{selectedRole.userCount}</strong> user(s).</span>
                     )}
-                </p>
+                </Typography>
             </Modal>
-        </div>
+        </Stack>
     );
 }
