@@ -1,24 +1,32 @@
 import { useState, useEffect } from 'react';
 import {
     Settings as SettingsIcon,
-    User,
     Bell,
     Shield,
     Zap,
     Link,
     Clock,
     Mail,
-    Save,
-    Loader2
+    Save
 } from 'lucide-react';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import CircularProgress from '@mui/material/CircularProgress';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Paper from '@mui/material/Paper';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { Input, Select, Textarea } from '../components/ui/Input';
+import { Input, Select } from '../components/ui/Input';
 import { SlaPolicyList } from '../features/settings/components/SlaPolicyList';
 import { settingsService } from '../services/settings.service';
 import toast from 'react-hot-toast';
-import './Settings.css';
 
 const menuItems = [
     { id: 'general', label: 'General', icon: SettingsIcon },
@@ -102,23 +110,26 @@ export function Settings() {
         <Card>
             <CardHeader><CardTitle>General Settings</CardTitle></CardHeader>
             <CardContent>
-                <form className="settings-form" onSubmit={e => { e.preventDefault(); handleSave('general'); }}>
+                <Box component="form" onSubmit={e => { e.preventDefault(); handleSave('general'); }} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                     <Input label="Company Name" value={sectionData('general').companyName || ''} onChange={handleChange('general', 'companyName')} />
                     <Input label="Support Email" type="email" value={sectionData('general').supportEmail || ''} onChange={handleChange('general', 'supportEmail')} />
                     <Select label="Timezone" options={timezoneOptions} value={sectionData('general').timezone || 'UTC'} onChange={handleChange('general', 'timezone')} />
                     <Select label="Language" options={languageOptions} value={sectionData('general').language || 'en'} onChange={handleChange('general', 'language')} />
-                    <Button icon={Save} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
-                </form>
+                    <Box sx={{ pt: 1 }}>
+                        <Button icon={Save} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
+                    </Box>
+                </Box>
             </CardContent>
         </Card>
     );
 
+    // Notification preferences form - kept functionally identical per Hard Constraint 2
     const renderNotifications = () => (
         <Card>
             <CardHeader><CardTitle>Notification Preferences</CardTitle></CardHeader>
             <CardContent>
                 <form onSubmit={e => { e.preventDefault(); handleSave('notifications'); }}>
-                    <div className="settings-toggles">
+                    <Stack spacing={2}>
                         {[
                             { key: 'ticketCreated', label: 'Ticket Created', desc: 'When a new ticket is submitted' },
                             { key: 'ticketAssigned', label: 'Ticket Assigned', desc: 'When a ticket is assigned to you' },
@@ -129,14 +140,24 @@ export function Settings() {
                         ].map(item => {
                             const pref = sectionData('notifications')[item.key] || {};
                             return (
-                                <label key={item.key} className="toggle-item">
-                                    <div className="toggle-info">
-                                        <span className="toggle-label">{item.label}</span>
-                                        <span className="toggle-description">{item.desc}</span>
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        className="toggle-input"
+                                <Box
+                                    key={item.key}
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        p: 2,
+                                        borderRadius: 1.5,
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        bgcolor: 'background.paper',
+                                    }}
+                                >
+                                    <Box>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{item.label}</Typography>
+                                        <Typography variant="caption" color="text.secondary">{item.desc}</Typography>
+                                    </Box>
+                                    <Switch
                                         checked={pref.email !== false}
                                         onChange={e => {
                                             const current = sectionData('notifications');
@@ -148,14 +169,15 @@ export function Settings() {
                                                 }
                                             }));
                                         }}
+                                        color="primary"
                                     />
-                                </label>
+                                </Box>
                             );
                         })}
-                    </div>
-                    <div style={{ marginTop: 'var(--spacing-lg)' }}>
+                    </Stack>
+                    <Box sx={{ mt: 3 }}>
                         <Button icon={Save} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
-                    </div>
+                    </Box>
                 </form>
             </CardContent>
         </Card>
@@ -165,19 +187,35 @@ export function Settings() {
         <Card>
             <CardHeader><CardTitle>Automation Rules</CardTitle></CardHeader>
             <CardContent>
-                <div className="settings-toggles">
-                    <label className="toggle-item">
-                        <div className="toggle-info">
-                            <span className="toggle-label">Auto-assign Tickets</span>
-                            <span className="toggle-description">Automatically assign new tickets to available agents</span>
-                        </div>
-                        <input type="checkbox" className="toggle-input" checked={settings.autoAssign !== false} onChange={e => setSettings(prev => ({ ...prev, autoAssign: e.target.checked }))} />
-                    </label>
-                </div>
-                <div className="automation-hint">
-                    <p>Configure more advanced automation rules in the Automation Center.</p>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        p: 2,
+                        borderRadius: 1.5,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        bgcolor: 'background.paper',
+                        mb: 3,
+                    }}
+                >
+                    <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Auto-assign Tickets</Typography>
+                        <Typography variant="caption" color="text.secondary">Automatically assign new tickets to available agents</Typography>
+                    </Box>
+                    <Switch
+                        checked={settings.autoAssign !== false}
+                        onChange={e => setSettings(prev => ({ ...prev, autoAssign: e.target.checked }))}
+                        color="primary"
+                    />
+                </Box>
+                <Paper elevation={0} sx={{ p: 2.5, bgcolor: 'action.hover', border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Configure more advanced automation rules in the Automation Center.
+                    </Typography>
                     <Button variant="secondary">Open Automation Center</Button>
-                </div>
+                </Paper>
             </CardContent>
         </Card>
     );
@@ -186,25 +224,43 @@ export function Settings() {
         <Card>
             <CardHeader><CardTitle>Security Settings</CardTitle></CardHeader>
             <CardContent>
-                <form onSubmit={e => { e.preventDefault(); handleSave('security'); }}>
-                    <div className="settings-toggles">
-                        <label className="toggle-item">
-                            <div className="toggle-info">
-                                <span className="toggle-label">Two-Factor Authentication</span>
-                                <span className="toggle-description">Require 2FA for all team members</span>
-                            </div>
-                            <input type="checkbox" className="toggle-input" checked={sectionData('security').twoFactorRequired || false} onChange={handleChange('security', 'twoFactorRequired')} />
-                        </label>
-                    </div>
-                    <Input label="Minimum Password Length" type="number" value={sectionData('security').minPasswordLength || 8} onChange={handleChange('security', 'minPasswordLength')} style={{ marginTop: 'var(--spacing-lg)' }} />
-                    <div style={{ marginTop: 'var(--spacing-lg)' }}>
+                <Box component="form" onSubmit={e => { e.preventDefault(); handleSave('security'); }} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            p: 2,
+                            borderRadius: 1.5,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: 'background.paper',
+                        }}
+                    >
+                        <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>Two-Factor Authentication</Typography>
+                            <Typography variant="caption" color="text.secondary">Require 2FA for all team members</Typography>
+                        </Box>
+                        <Switch
+                            checked={sectionData('security').twoFactorRequired || false}
+                            onChange={handleChange('security', 'twoFactorRequired')}
+                            color="primary"
+                        />
+                    </Box>
+                    <Input
+                        label="Minimum Password Length"
+                        type="number"
+                        value={sectionData('security').minPasswordLength || 8}
+                        onChange={handleChange('security', 'minPasswordLength')}
+                    />
+                    <Box sx={{ pt: 1 }}>
                         <Button icon={Save} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
-                    </div>
-                </form>
-                <div className="security-actions">
+                    </Box>
+                </Box>
+                <Stack direction="row" spacing={1.5} sx={{ mt: 3, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
                     <Button variant="secondary">View Login History</Button>
                     <Button variant="secondary">Manage API Keys</Button>
-                </div>
+                </Stack>
             </CardContent>
         </Card>
     );
@@ -215,37 +271,81 @@ export function Settings() {
         <Card>
             <CardHeader><CardTitle>{menuItems.find(m => m.id === sectionId)?.label}</CardTitle></CardHeader>
             <CardContent>
-                <div className="settings-placeholder">
-                    <p>Configure your {menuItems.find(m => m.id === sectionId)?.label.toLowerCase()} settings here.</p>
+                <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'action.hover', border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Configure your {menuItems.find(m => m.id === sectionId)?.label.toLowerCase()} settings here.
+                    </Typography>
                     <Button variant="secondary">Configure</Button>
-                </div>
+                </Paper>
             </CardContent>
         </Card>
     );
 
     return (
         <PageContainer title="Settings">
-            <div className="settings-page">
-                <aside className="settings-menu">
-                    <nav>
-                        {menuItems.map((item) => (
-                            <button
-                                key={item.id}
-                                className={`settings-menu-item ${activeSection === item.id ? 'active' : ''}`}
-                                onClick={() => setActiveSection(item.id)}
-                            >
-                                <item.icon size={18} />
-                                <span>{item.label}</span>
-                            </button>
-                        ))}
-                    </nav>
-                </aside>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', md: '240px 1fr' },
+                    gap: 3,
+                    alignItems: 'start',
+                }}
+            >
+                <Paper
+                    elevation={0}
+                    sx={{
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                        p: 1,
+                        bgcolor: 'background.paper',
+                    }}
+                >
+                    <List sx={{ p: 0 }}>
+                        {menuItems.map((item) => {
+                            const isSelected = activeSection === item.id;
+                            const IconComponent = item.icon;
+                            return (
+                                <ListItemButton
+                                    key={item.id}
+                                    selected={isSelected}
+                                    onClick={() => setActiveSection(item.id)}
+                                    sx={{
+                                        borderRadius: 1.5,
+                                        mb: 0.5,
+                                        '&.Mui-selected': {
+                                            bgcolor: 'primary.soft',
+                                            color: 'primary.main',
+                                            '&:hover': {
+                                                bgcolor: 'primary.soft',
+                                            },
+                                            '& .MuiListItemIcon-root': {
+                                                color: 'primary.main',
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <ListItemIcon sx={{ minWidth: 36, color: isSelected ? 'primary.main' : 'text.secondary' }}>
+                                        <IconComponent size={18} />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={item.label}
+                                        primaryTypographyProps={{
+                                            fontSize: '0.875rem',
+                                            fontWeight: isSelected ? 600 : 500
+                                        }}
+                                    />
+                                </ListItemButton>
+                            );
+                        })}
+                    </List>
+                </Paper>
 
-                <div className="settings-content">
+                <Box sx={{ minWidth: 0 }}>
                     {loading ? (
-                        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--spacing-2xl)' }}>
-                            <Loader2 size={24} className="spin" />
-                        </div>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 6 }}>
+                            <CircularProgress size={28} />
+                        </Box>
                     ) : (
                         <>
                             {activeSection === 'general' && renderGeneral()}
@@ -256,8 +356,8 @@ export function Settings() {
                             {(activeSection === 'integrations' || activeSection === 'email') && renderPlaceholder(activeSection)}
                         </>
                     )}
-                </div>
-            </div>
+                </Box>
+            </Box>
         </PageContainer>
     );
 }

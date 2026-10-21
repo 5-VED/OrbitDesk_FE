@@ -1,26 +1,34 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-    ScrollText,
+    Box,
+    Card,
+    Typography,
+    Button as MuiButton,
+    IconButton,
+    TextField,
+    MenuItem,
+    InputAdornment,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Stack,
+    Pagination,
+    CircularProgress
+} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import {
     Search,
     Download,
     Calendar,
-    Users,
-    Shield,
-    Activity,
-    Clock,
-    Settings,
-    X,
-    ChevronLeft,
-    ChevronRight,
-    Loader2
+    X
 } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
-import { Button } from '@/components/ui/Button';
 import { auditLogService } from '@/services/auditLog.service';
 import { toast } from 'react-hot-toast';
-import './AdminAuditLog.css';
 
 const categoryColors = {
     policy: 'primary',
@@ -30,16 +38,6 @@ const categoryColors = {
     data: 'warning',
     notification: 'default',
     settings: 'primary',
-};
-
-const categoryIcons = {
-    policy: Clock,
-    automation: Activity,
-    user: Users,
-    security: Shield,
-    data: ScrollText,
-    notification: Activity,
-    settings: Settings,
 };
 
 const categoryOptions = [
@@ -118,38 +116,6 @@ export function AdminAuditLog() {
         }
     };
 
-    const goToPage = (page) => {
-        if (page >= 1 && page <= pagination.totalPages) {
-            setCurrentPage(page);
-        }
-    };
-
-    const renderPageButtons = () => {
-        const pages = [];
-        const total = pagination.totalPages;
-        const current = currentPage;
-
-        let start = Math.max(1, current - 2);
-        let end = Math.min(total, current + 2);
-        if (end - start < 4) {
-            if (start === 1) end = Math.min(total, start + 4);
-            else start = Math.max(1, end - 4);
-        }
-
-        for (let i = start; i <= end; i++) {
-            pages.push(
-                <button
-                    key={i}
-                    className={`admin-audit-page-btn ${i === current ? 'active' : ''}`}
-                    onClick={() => goToPage(i)}
-                >
-                    {i}
-                </button>
-            );
-        }
-        return pages;
-    };
-
     const formatTimestamp = (ts) => {
         if (!ts) return '—';
         const d = new Date(ts);
@@ -160,128 +126,173 @@ export function AdminAuditLog() {
     };
 
     return (
-        <div className="admin-audit-log">
-            <div className="admin-page-header">
-                <div>
-                    <h1 className="admin-page-title">Audit Log</h1>
-                    <p className="admin-page-subtitle">Track all system events and administrative actions</p>
-                </div>
-                <div className="admin-page-actions">
-                    <Button variant="secondary" icon={Download} onClick={handleExport}>Export Log</Button>
-                </div>
-            </div>
+        <Stack spacing={3}>
+            {/* Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                <Box>
+                    <Typography variant="h5" fontWeight={800}>Audit Log</Typography>
+                    <Typography variant="body2" color="text.secondary">Track all system events and administrative actions</Typography>
+                </Box>
+                <MuiButton
+                    variant="outlined"
+                    color="inherit"
+                    startIcon={<Download size={16} />}
+                    onClick={handleExport}
+                    sx={{ textTransform: 'none' }}
+                >
+                    Export Log
+                </MuiButton>
+            </Box>
 
-            {/* Filters */}
-            <Card className="admin-audit-toolbar">
-                <div className="admin-users-toolbar">
-                    <div className="admin-users-search">
-                        <Search size={18} className="admin-users-search-icon" />
-                        <input
-                            type="text"
+            {/* Filters Toolbar */}
+            <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 8 }}>
+                        <TextField
+                            size="small"
+                            fullWidth
                             placeholder="Search by user, action, or target..."
                             value={searchQuery}
                             onChange={(e) => handleSearchChange(e.target.value)}
-                            className="admin-users-search-input"
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Search size={18} color="var(--color-text-secondary, #94a3b8)" />
+                                        </InputAdornment>
+                                    ),
+                                    endAdornment: searchQuery ? (
+                                        <InputAdornment position="end">
+                                            <IconButton size="small" onClick={() => handleSearchChange('')}>
+                                                <X size={14} />
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ) : null
+                                }
+                            }}
                         />
-                        {searchQuery && (
-                            <button className="admin-users-search-clear" onClick={() => handleSearchChange('')}>
-                                <X size={14} />
-                            </button>
-                        )}
-                    </div>
-                    <div className="admin-users-filters">
-                        <select
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                        <TextField
+                            select
+                            size="small"
+                            fullWidth
                             value={categoryFilter}
                             onChange={(e) => handleCategoryChange(e.target.value)}
-                            className="admin-users-filter-select"
                         >
                             {categoryOptions.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                             ))}
-                        </select>
-                    </div>
-                </div>
+                        </TextField>
+                    </Grid>
+                </Grid>
             </Card>
 
             {/* Audit Table */}
-            <Card className="admin-audit-table-card">
+            <Card variant="outlined" sx={{ borderRadius: 2 }}>
                 {loading ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
-                        <Loader2 size={28} className="spin" />
-                    </div>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                        <CircularProgress size={32} color="primary" />
+                    </Box>
                 ) : logs.length === 0 ? (
-                    <div style={{ textAlign: 'center', color: 'var(--color-text-tertiary)', padding: '3rem' }}>
+                    <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
                         No audit log entries found
-                    </div>
+                    </Box>
                 ) : (
-                    <div className="admin-audit-table">
-                        <div className="admin-audit-table-header">
-                            <span className="admin-audit-col-time">Timestamp</span>
-                            <span className="admin-audit-col-user">User</span>
-                            <span className="admin-audit-col-action">Action</span>
-                            <span className="admin-audit-col-resource">Resource</span>
-                            <span className="admin-audit-col-target">Target</span>
-                            <span className="admin-audit-col-category">Category</span>
-                            <span className="admin-audit-col-ip">IP Address</span>
-                        </div>
-                        <div className="admin-audit-table-body">
-                            {logs.map((log) => {
-                                const CategoryIcon = categoryIcons[log.category] || Activity;
-                                return (
-                                    <div key={log._id} className="admin-audit-table-row">
-                                        <span className="admin-audit-col-time">
-                                            <Calendar size={13} />
-                                            {formatTimestamp(log.createdAt)}
-                                        </span>
-                                        <div className="admin-audit-col-user">
-                                            <Avatar name={log.user_name} size="xs" />
-                                            <div>
-                                                <span className="admin-audit-user-name">{log.user_name}</span>
-                                                <span className="admin-audit-user-role">{log.user_role}</span>
-                                            </div>
-                                        </div>
-                                        <span className="admin-audit-col-action">{log.action}</span>
-                                        <span className="admin-audit-col-resource">{log.resource}</span>
-                                        <span className="admin-audit-col-target">{log.target}</span>
-                                        <div className="admin-audit-col-category">
+                    <TableContainer>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell sx={{ fontWeight: 700 }}>Timestamp</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Resource</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Target</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>IP Address</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {logs.map((log) => (
+                                    <TableRow key={log._id} hover>
+                                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.85rem', color: 'text.secondary' }}>
+                                                <Calendar size={13} />
+                                                <span>{formatTimestamp(log.createdAt)}</span>
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Avatar name={log.user_name} size="xs" />
+                                                <Box>
+                                                    <Typography variant="body2" fontWeight={600}>
+                                                        {log.user_name}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {log.user_role}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" fontWeight={500}>
+                                                {log.action}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {log.resource}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="primary.main" fontWeight={500}>
+                                                {log.target}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
                                             <Badge variant={categoryColors[log.category] || 'default'}>
                                                 {log.category}
                                             </Badge>
-                                        </div>
-                                        <span className="admin-audit-col-ip">{log.ip_address}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                                                {log.ip_address}
+                                            </Typography>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
                 )}
 
                 {/* Pagination */}
                 {pagination.totalPages > 0 && (
-                    <div className="admin-audit-pagination">
-                        <span className="admin-audit-pagination-info">
+                    <Box
+                        sx={{
+                            p: 2,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: 2,
+                            borderTop: '1px solid',
+                            borderColor: 'divider'
+                        }}
+                    >
+                        <Typography variant="caption" color="text.secondary">
                             Showing {Math.min((currentPage - 1) * pagination.limit + 1, pagination.total)}–{Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} events
-                        </span>
-                        <div className="admin-audit-pagination-controls">
-                            <button
-                                className="admin-audit-page-btn"
-                                disabled={currentPage <= 1}
-                                onClick={() => goToPage(currentPage - 1)}
-                            >
-                                <ChevronLeft size={16} />
-                            </button>
-                            {renderPageButtons()}
-                            <button
-                                className="admin-audit-page-btn"
-                                disabled={currentPage >= pagination.totalPages}
-                                onClick={() => goToPage(currentPage + 1)}
-                            >
-                                <ChevronRight size={16} />
-                            </button>
-                        </div>
-                    </div>
+                        </Typography>
+                        <Pagination
+                            count={pagination.totalPages}
+                            page={currentPage}
+                            onChange={(e, p) => setCurrentPage(p)}
+                            color="primary"
+                            size="small"
+                        />
+                    </Box>
                 )}
             </Card>
-        </div>
+        </Stack>
     );
 }

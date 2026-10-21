@@ -1,5 +1,26 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
+    Box,
+    Card,
+    CardContent,
+    Typography,
+    Button as MuiButton,
+    IconButton,
+    CircularProgress,
+    Stack,
+    Paper,
+    Chip,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    TextField,
+    Tooltip
+} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import {
     Clock,
     Plus,
     Edit,
@@ -8,17 +29,12 @@ import {
     CheckCircle2,
     Timer,
     Target,
-    Copy,
-    Loader2
+    Copy
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import { Input } from '@/components/ui/Input';
 import { slaService } from '@/features/settings/api/sla';
 import { toast } from 'react-hot-toast';
-import './AdminSla.css';
 
 const priorityColors = {
     urgent: 'danger',
@@ -205,202 +221,251 @@ export function AdminSla() {
 
     if (loading) {
         return (
-            <div className="admin-sla" style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
-                <Loader2 size={32} className="spin" />
-            </div>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 2 }}>
+                <CircularProgress size={36} color="primary" />
+                <Typography color="text.secondary">Loading SLA data...</Typography>
+            </Box>
         );
     }
 
     return (
-        <div className="admin-sla">
-            <div className="admin-page-header">
-                <div>
-                    <h1 className="admin-page-title">SLA Policies</h1>
-                    <p className="admin-page-subtitle">Define response and resolution targets for ticket priorities</p>
-                </div>
-                <div className="admin-page-actions">
-                    <Button icon={Plus} onClick={openCreateModal}>Create Policy</Button>
-                </div>
-            </div>
+        <Stack spacing={3}>
+            {/* Page Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                <Box>
+                    <Typography variant="h5" fontWeight={800}>SLA Policies</Typography>
+                    <Typography variant="body2" color="text.secondary">Define response and resolution targets for ticket priorities</Typography>
+                </Box>
+                <MuiButton
+                    variant="contained"
+                    color="primary"
+                    startIcon={<Plus size={16} />}
+                    onClick={openCreateModal}
+                    sx={{ textTransform: 'none' }}
+                >
+                    Create Policy
+                </MuiButton>
+            </Box>
 
             {/* Summary Cards */}
-            <div className="admin-sla-summary">
-                <Card className="admin-sla-summary-card">
-                    <div className="admin-sla-summary-icon" data-color="success">
-                        <CheckCircle2 size={20} />
-                    </div>
-                    <div>
-                        <span className="admin-sla-summary-value">{metrics?.overallCompliance ?? 0}%</span>
-                        <span className="admin-sla-summary-label">Avg. Compliance</span>
-                    </div>
-                </Card>
-                <Card className="admin-sla-summary-card">
-                    <div className="admin-sla-summary-icon" data-color="warning">
-                        <AlertTriangle size={20} />
-                    </div>
-                    <div>
-                        <span className="admin-sla-summary-value">{metrics?.breachesToday ?? 0}</span>
-                        <span className="admin-sla-summary-label">Breaches Today</span>
-                    </div>
-                </Card>
-                <Card className="admin-sla-summary-card">
-                    <div className="admin-sla-summary-icon" data-color="primary">
-                        <Timer size={20} />
-                    </div>
-                    <div>
-                        <span className="admin-sla-summary-value">{metrics?.avgResponseTime ?? '0h'}</span>
-                        <span className="admin-sla-summary-label">Avg. Response</span>
-                    </div>
-                </Card>
-                <Card className="admin-sla-summary-card">
-                    <div className="admin-sla-summary-icon" data-color="info">
-                        <Target size={20} />
-                    </div>
-                    <div>
-                        <span className="admin-sla-summary-value">{metrics?.activePolicies ?? 0}</span>
-                        <span className="admin-sla-summary-label">Active Policies</span>
-                    </div>
-                </Card>
-            </div>
+            <Grid container spacing={2}>
+                {[
+                    { label: 'Avg. Compliance', value: `${metrics?.overallCompliance ?? 0}%`, icon: CheckCircle2, color: 'success.main', bg: 'rgba(34, 197, 94, 0.1)' },
+                    { label: 'Breaches Today', value: metrics?.breachesToday ?? 0, icon: AlertTriangle, color: 'warning.main', bg: 'rgba(245, 158, 11, 0.1)' },
+                    { label: 'Avg. Response', value: metrics?.avgResponseTime ?? '0h', icon: Timer, color: 'primary.main', bg: 'rgba(244, 67, 54, 0.1)' },
+                    { label: 'Active Policies', value: metrics?.activePolicies ?? 0, icon: Target, color: 'info.main', bg: 'rgba(59, 130, 246, 0.1)' }
+                ].map((stat) => (
+                    <Grid key={stat.label} size={{ xs: 6, sm: 3 }}>
+                        <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: stat.bg, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <stat.icon size={20} />
+                                </Box>
+                                <Box>
+                                    <Typography variant="h5" fontWeight={800}>
+                                        {stat.value}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {stat.label}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
 
             {/* Policies List */}
-            <div className="admin-sla-policies">
-                {policies.length === 0 && (
-                    <Card>
-                        <CardContent>
-                            <p style={{ textAlign: 'center', color: 'var(--color-text-tertiary)', padding: '2rem 0' }}>
-                                No SLA policies yet. Create your first policy to get started.
-                            </p>
-                        </CardContent>
-                    </Card>
+            <Stack spacing={3}>
+                {policies.length === 0 ? (
+                    <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
+                        <Typography color="text.secondary">No SLA policies yet. Create your first policy to get started.</Typography>
+                    </Paper>
+                ) : (
+                    policies.map((policy) => {
+                        const compliance = getComplianceForPolicy(policy._id);
+                        const ticketCount = getTicketCountForPolicy(policy._id);
+                        const targetsMap = buildTargetsView(policy);
+                        const isActive = policy.is_active !== false;
+
+                        return (
+                            <Card key={policy._id} variant="outlined" sx={{ borderRadius: 2, opacity: isActive ? 1 : 0.75 }}>
+                                <CardContent sx={{ p: 3 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 2 }}>
+                                        <Box>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, flexWrap: 'wrap' }}>
+                                                <Typography variant="h6" fontWeight={700}>
+                                                    {policy.title}
+                                                </Typography>
+                                                {policy.is_default && <Badge variant="primary">Default</Badge>}
+                                                <Badge variant={isActive ? 'success' : 'default'}>
+                                                    {isActive ? 'Active' : 'Inactive'}
+                                                </Badge>
+                                            </Box>
+                                            {policy.description && (
+                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                                    {policy.description}
+                                                </Typography>
+                                            )}
+                                            <Typography variant="caption" color="text.secondary">
+                                                {ticketCount} ticket{ticketCount !== 1 ? 's' : ''} using this policy
+                                            </Typography>
+                                        </Box>
+
+                                        <Stack direction="row" spacing={1} alignItems="center">
+                                            {compliance !== null && (
+                                                <Chip
+                                                    label={`${compliance}% compliance`}
+                                                    size="small"
+                                                    color={compliance >= 90 ? 'success' : 'warning'}
+                                                    variant="outlined"
+                                                    sx={{ fontWeight: 600 }}
+                                                />
+                                            )}
+                                            <Tooltip title="Toggle Active">
+                                                <IconButton size="small" onClick={() => handleToggleActive(policy)}>
+                                                    {isActive ? <CheckCircle2 size={16} color="#10b981" /> : <Clock size={16} />}
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Duplicate">
+                                                <IconButton size="small" onClick={() => handleDuplicate(policy)}>
+                                                    <Copy size={16} />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Edit">
+                                                <IconButton size="small" onClick={() => openEditModal(policy)}>
+                                                    <Edit size={16} />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Delete">
+                                                <IconButton size="small" color="error" onClick={() => handleDelete(policy._id)}>
+                                                    <Trash2 size={16} />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
+                                    </Box>
+
+                                    {/* Target Matrix Table */}
+                                    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1.5 }}>
+                                        <Table size="small">
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Priority</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>First Response Target</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Resolution Target</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {PRIORITIES.map((priority) => (
+                                                    <TableRow key={priority}>
+                                                        <TableCell>
+                                                            <Badge variant={priorityColors[priority]}>{priority}</Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', fontSize: '0.85rem' }}>
+                                                                <Clock size={14} />
+                                                                <span>{minutesToLabel(targetsMap[priority]?.first_reply_time)}</span>
+                                                            </Box>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', fontSize: '0.85rem' }}>
+                                                                <Timer size={14} />
+                                                                <span>{minutesToLabel(targetsMap[priority]?.resolution_time)}</span>
+                                                            </Box>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </CardContent>
+                            </Card>
+                        );
+                    })
                 )}
-                {policies.map((policy) => {
-                    const compliance = getComplianceForPolicy(policy._id);
-                    const ticketCount = getTicketCountForPolicy(policy._id);
-                    const targetsMap = buildTargetsView(policy);
-                    const isActive = policy.is_active !== false;
-
-                    return (
-                        <Card key={policy._id} className={`admin-sla-policy ${!isActive ? 'inactive' : ''}`}>
-                            <div className="admin-sla-policy-header">
-                                <div className="admin-sla-policy-info">
-                                    <div className="admin-sla-policy-title-row">
-                                        <h3 className="admin-sla-policy-name">{policy.title}</h3>
-                                        {policy.is_default && <Badge variant="primary">Default</Badge>}
-                                        <Badge variant={isActive ? 'success' : 'default'}>
-                                            {isActive ? 'Active' : 'Inactive'}
-                                        </Badge>
-                                    </div>
-                                    {policy.description && <p className="admin-sla-policy-desc">{policy.description}</p>}
-                                    <span className="admin-sla-policy-applied">
-                                        {ticketCount} ticket{ticketCount !== 1 ? 's' : ''} using this policy
-                                    </span>
-                                </div>
-                                <div className="admin-sla-policy-actions">
-                                    {compliance !== null && (
-                                        <div className={`admin-sla-compliance-badge ${compliance >= 90 ? 'good' : 'warning'}`}>
-                                            <span>{compliance}%</span>
-                                            <span className="admin-sla-compliance-label">compliance</span>
-                                        </div>
-                                    )}
-                                    <div className="admin-sla-policy-btns">
-                                        <button className="admin-users-action-btn" title="Toggle Active" onClick={() => handleToggleActive(policy)}>
-                                            {isActive
-                                                ? <CheckCircle2 size={15} />
-                                                : <Clock size={15} />
-                                            }
-                                        </button>
-                                        <button className="admin-users-action-btn" title="Duplicate" onClick={() => handleDuplicate(policy)}>
-                                            <Copy size={15} />
-                                        </button>
-                                        <button className="admin-users-action-btn" title="Edit" onClick={() => openEditModal(policy)}>
-                                            <Edit size={15} />
-                                        </button>
-                                        <button className="admin-users-action-btn danger" title="Delete" onClick={() => handleDelete(policy._id)}>
-                                            <Trash2 size={15} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Target Matrix */}
-                            <div className="admin-sla-targets">
-                                <div className="admin-sla-targets-header">
-                                    <span>Priority</span>
-                                    <span>First Response</span>
-                                    <span>Resolution</span>
-                                </div>
-                                {PRIORITIES.map((priority) => (
-                                    <div key={priority} className="admin-sla-target-row">
-                                        <Badge variant={priorityColors[priority]}>{priority}</Badge>
-                                        <span className="admin-sla-target-time">
-                                            <Clock size={13} />
-                                            {minutesToLabel(targetsMap[priority]?.first_reply_time)}
-                                        </span>
-                                        <span className="admin-sla-target-time">
-                                            <Timer size={13} />
-                                            {minutesToLabel(targetsMap[priority]?.resolution_time)}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </Card>
-                    );
-                })}
-            </div>
+            </Stack>
 
             {/* Create/Edit Policy Modal */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 title={editingPolicy ? 'Edit SLA Policy' : 'Create SLA Policy'}
+                size="large"
             >
-                <form className="admin-users-form" onSubmit={handleSubmit}>
-                    <Input
+                <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                    <TextField
                         label="Policy Name"
                         placeholder="e.g. Premium Support"
                         value={formTitle}
                         onChange={(e) => setFormTitle(e.target.value)}
                         required
+                        fullWidth
+                        size="small"
                     />
-                    <Input
+                    <TextField
                         label="Description"
                         placeholder="Brief description"
                         value={formDescription}
                         onChange={(e) => setFormDescription(e.target.value)}
+                        fullWidth
+                        multiline
+                        rows={2}
+                        size="small"
                     />
-                    <div className="admin-sla-form-section">
-                        <h4 className="admin-sla-form-section-title">Response & Resolution Targets (in minutes)</h4>
-                        {PRIORITIES.map((priority) => (
-                            <div key={priority} className="admin-sla-form-priority-row">
-                                <span className="admin-sla-form-priority-label" style={{ textTransform: 'capitalize' }}>{priority}</span>
-                                <Input
-                                    label="First Response (min)"
-                                    type="number"
-                                    min="0"
-                                    placeholder="e.g. 60"
-                                    value={formTargets[priority]?.first_reply_time || ''}
-                                    onChange={(e) => updateTarget(priority, 'first_reply_time', e.target.value)}
-                                />
-                                <Input
-                                    label="Resolution (min)"
-                                    type="number"
-                                    min="0"
-                                    placeholder="e.g. 240"
-                                    value={formTargets[priority]?.resolution_time || ''}
-                                    onChange={(e) => updateTarget(priority, 'resolution_time', e.target.value)}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                    <div className="admin-users-form-actions">
-                        <Button variant="secondary" type="button" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                        <Button type="submit" icon={editingPolicy ? Edit : Plus} disabled={saving}>
+
+                    <Box>
+                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+                            Response & Resolution Targets (in minutes)
+                        </Typography>
+                        <Stack spacing={1.5}>
+                            {PRIORITIES.map((priority) => (
+                                <Paper key={priority} variant="outlined" sx={{ p: 2, borderRadius: 1.5 }}>
+                                    <Grid container spacing={2} alignItems="center">
+                                        <Grid size={{ xs: 12, sm: 3 }}>
+                                            <Typography variant="subtitle2" fontWeight={700} sx={{ textTransform: 'capitalize' }}>
+                                                {priority}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 4.5 }}>
+                                            <TextField
+                                                label="First Response (min)"
+                                                type="number"
+                                                slotProps={{ htmlInput: { min: 0 } }}
+                                                placeholder="e.g. 60"
+                                                value={formTargets[priority]?.first_reply_time || ''}
+                                                onChange={(e) => updateTarget(priority, 'first_reply_time', e.target.value)}
+                                                fullWidth
+                                                size="small"
+                                            />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 4.5 }}>
+                                            <TextField
+                                                label="Resolution (min)"
+                                                type="number"
+                                                slotProps={{ htmlInput: { min: 0 } }}
+                                                placeholder="e.g. 240"
+                                                value={formTargets[priority]?.resolution_time || ''}
+                                                onChange={(e) => updateTarget(priority, 'resolution_time', e.target.value)}
+                                                fullWidth
+                                                size="small"
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+                            ))}
+                        </Stack>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, mt: 1 }}>
+                        <MuiButton variant="outlined" color="inherit" onClick={() => setIsModalOpen(false)}>
+                            Cancel
+                        </MuiButton>
+                        <MuiButton type="submit" variant="contained" color="primary" disabled={saving} startIcon={editingPolicy ? <Edit size={16} /> : <Plus size={16} />}>
                             {saving ? 'Saving...' : (editingPolicy ? 'Update Policy' : 'Create Policy')}
-                        </Button>
-                    </div>
-                </form>
+                        </MuiButton>
+                    </Box>
+                </Box>
             </Modal>
-        </div>
+        </Stack>
     );
 }

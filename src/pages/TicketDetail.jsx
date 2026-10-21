@@ -20,12 +20,22 @@ import {
     Frown,
     Star
 } from 'lucide-react';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
+import IconButton from '@mui/material/IconButton';
+import ButtonBase from '@mui/material/ButtonBase';
+import Chip from '@mui/material/Chip';
+import Alert from '@mui/material/Alert';
+import Divider from '@mui/material/Divider';
+import CircularProgress from '@mui/material/CircularProgress';
+import OutlinedInput from '@mui/material/OutlinedInput';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { StatusBadge, PriorityBadge } from '../components/ui/Badge';
 import { Avatar } from '../components/ui/Avatar';
-import { Select } from '../components/ui/Input';
 import { Dropdown } from '../components/ui/Dropdown';
 import { RichTextEditor } from '../components/editor/RichTextEditor';
 import { Modal } from '../components/ui/Modal';
@@ -51,7 +61,6 @@ import { getStatusOptions, getPriorityOptions } from '../utils/ticketConstants';
 import { aiService } from '../services/ai.service';
 import { ratingService } from '../services/rating.service';
 import { toast } from 'react-hot-toast';
-import './TicketDetail.css';
 
 export function TicketDetail() {
     const { ticketId } = useParams();
@@ -147,7 +156,7 @@ export function TicketDetail() {
                 })
                 .catch(err => console.error("Sentiment analysis failed:", err));
         }
-    }, [ticket?.description]);
+    }, [ticket?.description, sentiment]);
 
     const handleRefresh = () => dispatch(fetchTicketDetail(ticketId));
 
@@ -198,7 +207,7 @@ export function TicketDetail() {
         try {
             await dispatch(updateTicketStatus({ ticketId, status: newStatus })).unwrap();
             toast.success('Status updated');
-        } catch (error) {
+        } catch {
             toast.error('Failed to update status');
         }
     };
@@ -207,7 +216,7 @@ export function TicketDetail() {
         try {
             await dispatch(updateTicketPriority({ ticketId, priority: newPriority })).unwrap();
             toast.success('Priority updated');
-        } catch (error) {
+        } catch {
             toast.error('Failed to update priority');
         }
     };
@@ -217,7 +226,7 @@ export function TicketDetail() {
             await dispatch(assignTicket({ ticketId, assigneeId: newAssignee })).unwrap();
             toast.success('Ticket assigned');
             dispatch(fetchTicketDetail(ticketId));
-        } catch (error) {
+        } catch {
             toast.error('Failed to assign ticket');
         }
     };
@@ -226,7 +235,7 @@ export function TicketDetail() {
         try {
             await dispatch(updateTicketStatus({ ticketId, status: 'solved' })).unwrap();
             toast.success('Ticket resolved');
-        } catch (error) {
+        } catch {
             toast.error('Failed to resolve ticket');
         }
     };
@@ -245,7 +254,7 @@ export function TicketDetail() {
     const handleSmartReplyInsert = (text) => {
         setReplyText(text);
         replyEditorRef.current?.setContent(text);
-        setIsInternal(false); // Default to public reply for AI suggestions
+        setIsInternal(false);
     };
 
     const handleSaveEdit = async (commentId) => {
@@ -295,7 +304,10 @@ export function TicketDetail() {
     if (loading) {
         return (
             <PageContainer title="Loading...">
-                <div className="loading-state">Loading ticket details...</div>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300, gap: 2 }}>
+                    <CircularProgress size={28} />
+                    <Typography variant="body2" color="text.secondary">Loading ticket details...</Typography>
+                </Box>
             </PageContainer>
         );
     }
@@ -303,10 +315,10 @@ export function TicketDetail() {
     if (!ticket) {
         return (
             <PageContainer title="Ticket Not Found">
-                <div className="error-state">
-                    <p>The requested ticket could not be found.</p>
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>The requested ticket could not be found.</Typography>
                     <Button onClick={() => navigate('/tickets')}>Back to Tickets</Button>
-                </div>
+                </Box>
             </PageContainer>
         );
     }
@@ -338,9 +350,9 @@ export function TicketDetail() {
 
     const getSentimentIcon = () => {
         if (!sentiment) return null;
-        if (sentiment.label === 'Positive') return <Smile size={16} className="text-green-500" />;
-        if (sentiment.label === 'Negative') return <Frown size={16} className="text-red-500" />;
-        return <Meh size={16} className="text-yellow-500" />; // Neutral
+        if (sentiment.label === 'Positive') return <Smile size={16} color="#22C55E" />;
+        if (sentiment.label === 'Negative') return <Frown size={16} color="#EF4444" />;
+        return <Meh size={16} color="#F59E0B" />;
     };
 
     const handleSubmitRating = async () => {
@@ -358,7 +370,7 @@ export function TicketDetail() {
                 setExistingRating(res.data);
                 toast.success(existingRating ? 'Rating updated' : 'Rating submitted');
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to submit rating');
         } finally {
             setSubmittingRating(false);
@@ -368,46 +380,70 @@ export function TicketDetail() {
     const renderStars = (interactive = false) => {
         const displayRating = interactive ? (hoverRating || selectedRating) : (existingRating?.rating || 0);
         return (
-            <div className="rating-stars" onMouseLeave={() => interactive && setHoverRating(0)}>
+            <Stack direction="row" spacing={0.5} onMouseLeave={() => interactive && setHoverRating(0)}>
                 {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
+                    <Box
                         key={star}
-                        size={interactive ? 28 : 20}
-                        className={`rating-star ${star <= displayRating ? 'filled' : ''}`}
-                        fill={star <= displayRating ? '#f59e0b' : 'none'}
-                        stroke={star <= displayRating ? '#f59e0b' : 'currentColor'}
-                        style={{ cursor: interactive ? 'pointer' : 'default' }}
+                        component="span"
+                        sx={{
+                            cursor: interactive ? 'pointer' : 'default',
+                            display: 'inline-flex',
+                            transition: 'transform 0.15s ease',
+                            '&:hover': interactive ? { transform: 'scale(1.2)' } : {}
+                        }}
                         onMouseEnter={() => interactive && setHoverRating(star)}
                         onClick={() => interactive && setSelectedRating(star)}
-                    />
+                    >
+                        <Star
+                            size={interactive ? 26 : 20}
+                            fill={star <= displayRating ? '#f59e0b' : 'none'}
+                            stroke={star <= displayRating ? '#f59e0b' : 'currentColor'}
+                        />
+                    </Box>
                 ))}
-            </div>
+            </Stack>
         );
     };
 
     return (
         <PageContainer
             title={
-                <div className="ticket-header">
-                    <Link to="/tickets" className="back-link">
-                        <ArrowLeft size={20} />
-                    </Link>
-                    <div className="ticket-header-info">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span className="ticket-id">#{ticketId?.slice(-6).toUpperCase()}</span>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <IconButton
+                        component={Link}
+                        to="/tickets"
+                        size="small"
+                        sx={{
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1.5,
+                        }}
+                    >
+                        <ArrowLeft size={18} />
+                    </IconButton>
+                    <Box>
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', letterSpacing: 0.5 }}>
+                                #{ticketId?.slice(-6).toUpperCase()}
+                            </Typography>
                             {sentiment && (
-                                <span className={`sentiment-badge ${sentiment.label.toLowerCase()}`} title={`Sentiment: ${sentiment.label}`}>
-                                    {getSentimentIcon()}
-                                    {sentiment.emoji}
-                                </span>
+                                <Chip
+                                    icon={getSentimentIcon()}
+                                    label={`${sentiment.label} ${sentiment.emoji || ''}`}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{ height: 22, fontSize: '0.75rem' }}
+                                />
                             )}
-                        </div>
-                        <h1 className="ticket-subject">{ticket.subject}</h1>
-                    </div>
-                </div>
+                        </Stack>
+                        <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
+                            {ticket.subject}
+                        </Typography>
+                    </Box>
+                </Box>
             }
             actions={
-                <>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     <Button variant="outline" icon={FileText} onClick={handleSummarize} disabled={loadingSummary}>
                         {loadingSummary ? 'Summarizing...' : 'Summarize'}
                     </Button>
@@ -416,7 +452,7 @@ export function TicketDetail() {
                     <Button onClick={handleResolveTicket} disabled={ticket.status === 'solved'}>
                         {ticket.status === 'solved' ? 'Resolved' : 'Resolve Ticket'}
                     </Button>
-                </>
+                </Stack>
             }
         >
             {/* Delete Confirmation Modal */}
@@ -448,7 +484,7 @@ export function TicketDetail() {
                     </>
                 }
             >
-                <p>Are you sure you want to delete this note? This action cannot be undone.</p>
+                <Typography variant="body2">Are you sure you want to delete this note? This action cannot be undone.</Typography>
             </Modal>
 
             {/* AI Smart Reply Modal */}
@@ -461,151 +497,194 @@ export function TicketDetail() {
 
             {/* AI Summary Section */}
             {summary && (
-                <div className="ticket-summary-alert" style={{ marginBottom: '20px' }}>
-                    <Card className="bg-blue-50 border-blue-200">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-base flex items-center gap-2 text-blue-800">
-                                <Sparkles size={16} /> AI Summary
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-blue-700 whitespace-pre-wrap">{summary}</p>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-blue-600 hover:bg-blue-100 mt-2 h-auto p-1"
-                                onClick={() => setSummary(null)}
-                            >
-                                Dismiss
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
+                <Alert
+                    severity="info"
+                    icon={<Sparkles size={20} />}
+                    sx={{ mb: 3 }}
+                    action={
+                        <Button variant="ghost" size="sm" onClick={() => setSummary(null)}>
+                            Dismiss
+                        </Button>
+                    }
+                >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>AI Summary</Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{summary}</Typography>
+                </Alert>
             )}
 
-            <div className="ticket-detail">
-                {/* Main Content */}
-                <div className="ticket-main">
-                    {/* Original Description */}
-                    <Card padding="none" className="conversation-card">
-                        <div className="conversation-list">
-                            {/* Original ticket description as first message */}
-                            <div className="conversation-message customer">
-                                <div className="message-header">
-                                    <Avatar name={getRequesterName()} size="sm" />
-                                    <div className="message-meta">
-                                        <span className="message-author">{getRequesterName()}</span>
-                                        <span className="message-time">{formatDate(ticket.createdAt)}</span>
-                                        <span className="message-via">via {ticket.channel || 'Web'}</span>
-                                    </div>
-                                </div>
-                                <div className="message-content">
-                                    <strong>{ticket.subject}</strong>
-                                    <p style={{ marginTop: '8px', whiteSpace: 'pre-wrap' }}>{ticket.description}</p>
-                                </div>
-                            </div>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', lg: '1fr 320px' },
+                    gap: 3,
+                    alignItems: 'start',
+                }}
+            >
+                {/* Main Conversation Column */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+                        {/* Original ticket description as first message */}
+                        <Box sx={{ p: 3, bgcolor: 'background.paper' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                                <Avatar name={getRequesterName()} size="sm" />
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{getRequesterName()}</Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {formatDate(ticket.createdAt)} · via {ticket.channel || 'Web'}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>{ticket.subject}</Typography>
+                            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', color: 'text.primary' }}>
+                                {ticket.description}
+                            </Typography>
+                        </Box>
 
-                            {/* Comments/Replies */}
-                            {comments.map((comment) => (
-                                <div
+                        {/* Comments/Replies */}
+                        {comments.map((comment) => {
+                            const isInternalNote = comment.public === false;
+                            return (
+                                <Box
                                     key={comment._id}
-                                    className={`conversation-message ${comment.public === false ? 'internal' : (comment.author_id?._id === ticket.requester_id?._id ? 'customer' : 'agent')}`}
+                                    sx={{
+                                        p: 3,
+                                        borderTop: '1px solid',
+                                        borderColor: 'divider',
+                                        bgcolor: isInternalNote
+                                            ? (theme) => theme.palette.mode === 'dark' ? 'rgba(245, 158, 11, 0.08)' : 'rgba(254, 243, 199, 0.4)'
+                                            : 'background.paper',
+                                    }}
                                 >
-                                    <div className="message-header">
-                                        <Avatar name={comment.author_id?.first_name ? `${comment.author_id.first_name} ${comment.author_id.last_name}` : 'Unknown'} size="sm" />
-                                        <div className="message-meta">
-                                            <span className="message-author">
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                                        <Avatar
+                                            name={comment.author_id?.first_name ? `${comment.author_id.first_name} ${comment.author_id.last_name}` : 'Unknown'}
+                                            size="sm"
+                                        />
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
                                                 {comment.author_id?.first_name ? `${comment.author_id.first_name} ${comment.author_id.last_name}` : 'Unknown'}
-                                            </span>
-                                            <span className="message-time">{formatDate(comment.createdAt)}</span>
-                                        </div>
-                                        {comment.public === false && (
-                                            <span className="internal-badge">
-                                                <Lock size={12} />
-                                                Internal Note
-                                            </span>
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {formatDate(comment.createdAt)}
+                                            </Typography>
+                                        </Box>
+                                        {isInternalNote && (
+                                            <Chip
+                                                icon={<Lock size={12} />}
+                                                label="Internal Note"
+                                                size="small"
+                                                color="warning"
+                                                variant="outlined"
+                                                sx={{ height: 22, fontSize: '0.75rem' }}
+                                            />
                                         )}
-                                        {/* Edit/Delete buttons - only show for comments, not when editing */}
                                         {editingCommentId !== comment._id && (
-                                            <div className="message-actions">
-                                                <button
-                                                    type="button"
-                                                    className="message-action-btn"
+                                            <Stack direction="row" spacing={0.5}>
+                                                <IconButton
+                                                    size="small"
                                                     onClick={() => handleEditComment(comment)}
                                                     title="Edit"
                                                 >
                                                     <Edit size={14} />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="message-action-btn danger"
+                                                </IconButton>
+                                                <IconButton
+                                                    size="small"
+                                                    color="error"
                                                     onClick={() => handleDeleteComment(comment._id)}
                                                     disabled={deletingCommentId === comment._id}
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={14} />
-                                                </button>
-                                            </div>
+                                                </IconButton>
+                                            </Stack>
                                         )}
-                                    </div>
-                                    <div className="message-content">
-                                        {editingCommentId === comment._id ? (
-                                            <div className="edit-comment-form">
-                                                <RichTextEditor
-                                                    value={editingCommentText}
-                                                    onChange={setEditingCommentText}
-                                                    placeholder="Edit your comment..."
-                                                    compact
-                                                    minHeight="80px"
-                                                    maxHeight="250px"
-                                                />
-                                                <div className="edit-comment-actions">
-                                                    <button
-                                                        type="button"
-                                                        className="edit-action-btn cancel"
-                                                        onClick={handleCancelEdit}
-                                                        disabled={savingEdit}
-                                                    >
-                                                        <X size={14} /> Cancel
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="edit-action-btn save"
-                                                        onClick={() => handleSaveEdit(comment._id)}
-                                                        disabled={savingEdit || !editingCommentText || editingCommentText === '<p></p>'}
-                                                    >
-                                                        <Check size={14} /> {savingEdit ? 'Saving...' : 'Save'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div dangerouslySetInnerHTML={{ __html: comment.body }} />
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                    </Box>
+
+                                    {editingCommentId === comment._id ? (
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                            <RichTextEditor
+                                                value={editingCommentText}
+                                                onChange={setEditingCommentText}
+                                                placeholder="Edit your comment..."
+                                                compact
+                                                minHeight="80px"
+                                                maxHeight="250px"
+                                            />
+                                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleCancelEdit}
+                                                    disabled={savingEdit}
+                                                >
+                                                    <X size={14} style={{ marginRight: 4 }} /> Cancel
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleSaveEdit(comment._id)}
+                                                    disabled={savingEdit || !editingCommentText || editingCommentText === '<p></p>'}
+                                                >
+                                                    <Check size={14} style={{ marginRight: 4 }} /> {savingEdit ? 'Saving...' : 'Save'}
+                                                </Button>
+                                            </Stack>
+                                        </Box>
+                                    ) : (
+                                        <Typography
+                                            variant="body2"
+                                            component="div"
+                                            dangerouslySetInnerHTML={{ __html: comment.body }}
+                                        />
+                                    )}
+                                </Box>
+                            );
+                        })}
 
                         {/* Reply Form */}
-                        <form className="reply-form" onSubmit={handleSubmitReply}>
-                            <div className="reply-tabs">
-                                <button
-                                    type="button"
-                                    className={`reply-tab ${!isInternal ? 'active' : ''}`}
+                        <Box
+                            component="form"
+                            onSubmit={handleSubmitReply}
+                            sx={{
+                                p: 2.5,
+                                borderTop: '1px solid',
+                                borderColor: 'divider',
+                                bgcolor: 'background.paper',
+                            }}
+                        >
+                            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                                <ButtonBase
                                     onClick={() => setIsInternal(false)}
+                                    sx={{
+                                        px: 2,
+                                        py: 0.75,
+                                        borderRadius: 1.5,
+                                        fontSize: '0.875rem',
+                                        fontWeight: 600,
+                                        bgcolor: !isInternal ? 'primary.soft' : 'transparent',
+                                        color: !isInternal ? 'primary.main' : 'text.secondary',
+                                        gap: 1,
+                                    }}
                                 >
                                     <MessageSquare size={16} />
                                     Reply
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`reply-tab ${isInternal ? 'active' : ''}`}
+                                </ButtonBase>
+                                <ButtonBase
                                     onClick={() => setIsInternal(true)}
+                                    sx={{
+                                        px: 2,
+                                        py: 0.75,
+                                        borderRadius: 1.5,
+                                        fontSize: '0.875rem',
+                                        fontWeight: 600,
+                                        bgcolor: isInternal ? 'warning.light' : 'transparent',
+                                        color: isInternal ? 'warning.dark' : 'text.secondary',
+                                        gap: 1,
+                                    }}
                                 >
                                     <Lock size={16} />
                                     Internal Note
-                                </button>
-                            </div>
+                                </ButtonBase>
+                            </Stack>
+
                             <RichTextEditor
                                 ref={replyEditorRef}
                                 value={replyText}
@@ -615,12 +694,12 @@ export function TicketDetail() {
                                 maxHeight="400px"
                                 onSubmit={handleSubmitReply}
                             />
-                            <div className="reply-actions">
+
+                            <Stack direction="row" spacing={1.5} justifyContent="space-between" alignItems="center" sx={{ mt: 2 }}>
                                 <Button
                                     variant="ghost"
                                     icon={Sparkles}
                                     type="button"
-                                    className="ai-reply-btn"
                                     onClick={() => setIsSmartReplyModalOpen(true)}
                                 >
                                     AI Reply
@@ -628,115 +707,114 @@ export function TicketDetail() {
                                 <Button type="submit" icon={Send} disabled={!replyText || replyText === '<p></p>' || submitting}>
                                     {submitting ? 'Sending...' : (isInternal ? 'Add Note' : 'Send Reply')}
                                 </Button>
-                            </div>
-                        </form>
+                            </Stack>
+                        </Box>
                     </Card>
-                </div>
+                </Box>
 
-                {/* Sidebar */}
-                <aside className="ticket-sidebar">
+                {/* Sidebar Column */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                     {/* SLA Status */}
                     {(ticket.response_due_at || ticket.resolve_due_at) && (
-                        <Card className="mb-4">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Clock size={16} /> SLA Status
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-3">
+                        <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                            <CardHeader
+                                title={
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <Clock size={16} />
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>SLA Status</Typography>
+                                    </Stack>
+                                }
+                                sx={{ pb: 1 }}
+                            />
+                            <CardContent sx={{ pt: 0 }}>
+                                <Stack spacing={2}>
                                     {ticket.response_due_at && (
-                                        <div className="flex flex-col text-sm">
-                                            <span className="text-gray-500 font-medium">Response Due</span>
-                                            <div className="flex items-center justify-between">
-                                                <span>{new Date(ticket.response_due_at).toLocaleString()}</span>
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                                Response Due
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <Typography variant="body2">{new Date(ticket.response_due_at).toLocaleString()}</Typography>
                                                 {ticket.first_response_at ? (
                                                     new Date(ticket.first_response_at) <= new Date(ticket.response_due_at)
-                                                        ? <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full border border-green-200">Responded</span>
-                                                        : <span className="text-red-500 font-bold text-xs bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Breached</span>
+                                                        ? <Chip label="Responded" size="small" color="success" variant="outlined" sx={{ height: 20 }} />
+                                                        : <Chip label="Breached" size="small" color="error" variant="outlined" sx={{ height: 20 }} />
                                                 ) : new Date() > new Date(ticket.response_due_at) ? (
-                                                    <span className="text-red-500 font-bold text-xs bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Overdue</span>
+                                                    <Chip label="Overdue" size="small" color="error" sx={{ height: 20 }} />
                                                 ) : (
-                                                    <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full border border-green-200">On Track</span>
+                                                    <Chip label="On Track" size="small" color="success" variant="outlined" sx={{ height: 20 }} />
                                                 )}
-                                            </div>
-                                        </div>
+                                            </Box>
+                                        </Box>
                                     )}
                                     {ticket.resolve_due_at && (
-                                        <div className="flex flex-col text-sm border-t pt-2 mt-2">
-                                            <span className="text-gray-500 font-medium">Resolution Due</span>
-                                            <div className="flex items-center justify-between">
-                                                <span>{new Date(ticket.resolve_due_at).toLocaleString()}</span>
+                                        <Box sx={{ pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                                Resolution Due
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <Typography variant="body2">{new Date(ticket.resolve_due_at).toLocaleString()}</Typography>
                                                 {ticket.solved_at ? (
                                                     new Date(ticket.solved_at) <= new Date(ticket.resolve_due_at)
-                                                        ? <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full border border-green-200">Resolved</span>
-                                                        : <span className="text-red-500 font-bold text-xs bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Breached</span>
+                                                        ? <Chip label="Resolved" size="small" color="success" variant="outlined" sx={{ height: 20 }} />
+                                                        : <Chip label="Breached" size="small" color="error" variant="outlined" sx={{ height: 20 }} />
                                                 ) : new Date() > new Date(ticket.resolve_due_at) ? (
-                                                    <span className="text-red-500 font-bold text-xs bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Overdue</span>
+                                                    <Chip label="Overdue" size="small" color="error" sx={{ height: 20 }} />
                                                 ) : (
-                                                    <span className="text-green-600 font-medium text-xs bg-green-50 px-2 py-0.5 rounded-full border border-green-200">On Track</span>
+                                                    <Chip label="On Track" size="small" color="success" variant="outlined" sx={{ height: 20 }} />
                                                 )}
-                                            </div>
-                                        </div>
+                                            </Box>
+                                        </Box>
                                     )}
-                                </div>
+                                </Stack>
                             </CardContent>
                         </Card>
                     )}
 
-                    {/* Properties */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Properties</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="property-list">
-                                <div className="property-item">
-                                    <label>Status</label>
+                    {/* Properties Card */}
+                    <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                        <CardHeader
+                            title={<Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Properties</Typography>}
+                            sx={{ pb: 1 }}
+                        />
+                        <CardContent sx={{ pt: 0 }}>
+                            <Stack spacing={2}>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>Status</Typography>
                                     <Dropdown
                                         value={ticket.status}
                                         onChange={handleStatusChange}
                                         items={statusWithDots}
                                         trigger={(selected) => (
-                                            <>
+                                            <Stack direction="row" spacing={1} alignItems="center">
                                                 {selected?.dotColor && (
-                                                    <span
-                                                        className="dropdown-trigger-dot"
-                                                        style={{ backgroundColor: selected.dotColor }}
-                                                    />
+                                                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: selected.dotColor }} />
                                                 )}
-                                                <span className="dropdown-trigger-value">
-                                                    {selected?.label || 'Select status'}
-                                                </span>
-                                                <ChevronDown size={14} className="dropdown-trigger-arrow" />
-                                            </>
+                                                <Typography variant="body2">{selected?.label || 'Select status'}</Typography>
+                                                <ChevronDown size={14} style={{ opacity: 0.5 }} />
+                                            </Stack>
                                         )}
                                     />
-                                </div>
-                                <div className="property-item">
-                                    <label>Priority</label>
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>Priority</Typography>
                                     <Dropdown
                                         value={ticket.priority}
                                         onChange={handlePriorityChange}
                                         items={priorityWithDots}
                                         trigger={(selected) => (
-                                            <>
+                                            <Stack direction="row" spacing={1} alignItems="center">
                                                 {selected?.dotColor && (
-                                                    <span
-                                                        className="dropdown-trigger-dot"
-                                                        style={{ backgroundColor: selected.dotColor }}
-                                                    />
+                                                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: selected.dotColor }} />
                                                 )}
-                                                <span className="dropdown-trigger-value">
-                                                    {selected?.label || 'Select priority'}
-                                                </span>
-                                                <ChevronDown size={14} className="dropdown-trigger-arrow" />
-                                            </>
+                                                <Typography variant="body2">{selected?.label || 'Select priority'}</Typography>
+                                                <ChevronDown size={14} style={{ opacity: 0.5 }} />
+                                            </Stack>
                                         )}
                                     />
-                                </div>
-                                <div className="property-item">
-                                    <label>Assigned To</label>
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>Assigned To</Typography>
                                     <Dropdown
                                         value={ticket.assignee_id?._id || ''}
                                         onChange={handleAssigneeChange}
@@ -745,69 +823,73 @@ export function TicketDetail() {
                                             ...agents,
                                         ]}
                                         trigger={(selected) => (
-                                            <span className="dropdown-trigger-value">
-                                                {selected?.label || 'Unassigned'}
-                                            </span>
+                                            <Typography variant="body2">{selected?.label || 'Unassigned'}</Typography>
                                         )}
                                     />
-                                </div>
-                                <div className="property-item">
-                                    <label>Type</label>
-                                    <span className="property-value" style={{ textTransform: 'capitalize' }}>{ticket.type || 'Question'}</span>
-                                </div>
-                                <div className="property-item">
-                                    <label>Channel</label>
-                                    <span className="property-value" style={{ textTransform: 'capitalize' }}>{ticket.channel || 'Web'}</span>
-                                </div>
-                                <div className="property-item">
-                                    <label>Created</label>
-                                    <span className="property-value">{formatDate(ticket.createdAt)}</span>
-                                </div>
-                                <div className="property-item">
-                                    <label>Updated</label>
-                                    <span className="property-value">{formatDate(ticket.updatedAt)}</span>
-                                </div>
-                            </div>
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="caption" color="text.secondary">Type</Typography>
+                                    <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>{ticket.type || 'Question'}</Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="caption" color="text.secondary">Channel</Typography>
+                                    <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>{ticket.channel || 'Web'}</Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="caption" color="text.secondary">Created</Typography>
+                                    <Typography variant="body2">{formatDate(ticket.createdAt)}</Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="caption" color="text.secondary">Updated</Typography>
+                                    <Typography variant="body2">{formatDate(ticket.updatedAt)}</Typography>
+                                </Box>
+                            </Stack>
                         </CardContent>
                     </Card>
 
-                    {/* Tags */}
+                    {/* Tags Card */}
                     {ticket.tags && ticket.tags.length > 0 && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Tags</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="tags-list">
+                        <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                            <CardHeader
+                                title={<Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Tags</Typography>}
+                                sx={{ pb: 1 }}
+                            />
+                            <CardContent sx={{ pt: 0 }}>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                     {ticket.tags.map((tag, index) => (
-                                        <span key={index} className="tag-badge">{tag}</span>
+                                        <Chip key={index} label={tag} size="small" variant="outlined" />
                                     ))}
-                                </div>
+                                </Box>
                             </CardContent>
                         </Card>
                     )}
 
-                    {/* Agent Rating */}
+                    {/* Agent Rating Card */}
                     {(ticket.status === 'solved' || ticket.status === 'closed') && ticket.assignee_id && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>
-                                    <Star size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                                    Rate Agent
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="rating-section">
-                                    <p className="rating-agent-name">
+                        <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                            <CardHeader
+                                title={
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <Star size={16} color="#F59E0B" />
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Rate Agent</Typography>
+                                    </Stack>
+                                }
+                                sx={{ pb: 1 }}
+                            />
+                            <CardContent sx={{ pt: 0 }}>
+                                <Stack spacing={1.5} alignItems="center">
+                                    <Typography variant="body2" textAlign="center">
                                         How was <strong>{getAssigneeName() || 'the agent'}</strong>?
-                                    </p>
+                                    </Typography>
                                     {renderStars(true)}
-                                    <textarea
-                                        className="rating-feedback-input"
+                                    <OutlinedInput
+                                        size="small"
+                                        fullWidth
+                                        multiline
+                                        rows={2}
                                         placeholder="Optional feedback..."
                                         value={ratingFeedback}
                                         onChange={(e) => setRatingFeedback(e.target.value)}
-                                        rows={2}
                                     />
                                     <Button
                                         size="sm"
@@ -818,44 +900,43 @@ export function TicketDetail() {
                                         {submittingRating ? 'Submitting...' : (existingRating ? 'Update Rating' : 'Submit Rating')}
                                     </Button>
                                     {existingRating && (
-                                        <p className="rating-submitted-hint">
+                                        <Typography variant="caption" color="text.secondary">
                                             You rated {existingRating.rating}/5
-                                        </p>
+                                        </Typography>
                                     )}
-                                </div>
+                                </Stack>
                             </CardContent>
                         </Card>
                     )}
 
-                    {/* Requester Info */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Requester</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="customer-info">
-                                <div className="customer-header">
-                                    <Avatar name={getRequesterName()} size="lg" />
-                                    <div>
-                                        <h4>{getRequesterName()}</h4>
-                                        {ticket.requester_id?.email && (
-                                            <span>{ticket.requester_id.email}</span>
-                                        )}
-                                    </div>
-                                </div>
-                                {ticket.requester_id?.phone && (
-                                    <div className="customer-details">
-                                        <div className="detail-item">
-                                            <label>Phone</label>
-                                            <span>{ticket.requester_id.phone}</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                    {/* Requester Info Card */}
+                    <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                        <CardHeader
+                            title={<Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Requester</Typography>}
+                            sx={{ pb: 1 }}
+                        />
+                        <CardContent sx={{ pt: 0 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                                <Avatar name={getRequesterName()} size="lg" />
+                                <Box>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{getRequesterName()}</Typography>
+                                    {ticket.requester_id?.email && (
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                            {ticket.requester_id.email}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </Box>
+                            {ticket.requester_id?.phone && (
+                                <Box sx={{ pt: 1, borderTop: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="caption" color="text.secondary">Phone</Typography>
+                                    <Typography variant="body2">{ticket.requester_id.phone}</Typography>
+                                </Box>
+                            )}
                         </CardContent>
                     </Card>
-                </aside>
-            </div>
+                </Box>
+            </Box>
         </PageContainer>
     );
 }

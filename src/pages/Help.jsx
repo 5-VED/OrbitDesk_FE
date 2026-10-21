@@ -1,8 +1,21 @@
 import { useState } from 'react';
-import { Search, ChevronDown, ChevronUp, BookOpen, MessageCircle, Ticket, User, Shield } from 'lucide-react';
+import {
+    Box,
+    Card,
+    CardContent,
+    Typography,
+    TextField,
+    InputAdornment,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    Stack,
+    Chip,
+    Paper
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Search, BookOpen, MessageCircle, Ticket, User, Shield } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import './Help.css';
 
 const faqCategories = [
     {
@@ -54,11 +67,10 @@ const faqCategories = [
 
 export function Help() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [openItems, setOpenItems] = useState({});
+    const [expanded, setExpanded] = useState({});
 
-    const toggleItem = (catIdx, itemIdx) => {
-        const key = `${catIdx}-${itemIdx}`;
-        setOpenItems(prev => ({ ...prev, [key]: !prev[key] }));
+    const handleAccordionChange = (key) => (event, isExpanded) => {
+        setExpanded(prev => ({ ...prev, [key]: isExpanded }));
     };
 
     const allFaqs = faqCategories.flatMap((cat, ci) =>
@@ -74,72 +86,152 @@ export function Help() {
 
     return (
         <PageContainer title="Help Center">
-            <div className="help-page">
-                <div className="help-header">
-                    <h1 className="help-title">How can we help you?</h1>
-                    <p className="help-subtitle">Search the help center or browse topics below</p>
-                    <div className="help-search-wrapper">
-                        <Search size={20} className="help-search-icon" />
-                        <input
-                            type="text"
-                            className="help-search-input"
+            <Stack spacing={4}>
+                {/* Hero search card */}
+                <Paper
+                    sx={{
+                        p: { xs: 3, sm: 5 },
+                        textAlign: 'center',
+                        borderRadius: 3,
+                        background: (theme) =>
+                            theme.palette.mode === 'dark'
+                                ? 'linear-gradient(135deg, rgba(244,67,54,0.15) 0%, rgba(20,24,33,0.95) 100%)'
+                                : 'linear-gradient(135deg, #fff1f2 0%, #fef2f2 100%)',
+                        border: '1px solid',
+                        borderColor: 'divider'
+                    }}
+                >
+                    <Typography variant="h3" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.75rem', sm: '2.5rem' } }}>
+                        How can we help you?
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                        Search the help center or browse topics below
+                    </Typography>
+                    <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+                        <TextField
+                            fullWidth
                             placeholder="Search for answers..."
                             value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Search size={20} color="var(--color-text-secondary, #94a3b8)" />
+                                        </InputAdornment>
+                                    )
+                                }
+                            }}
+                            sx={{
+                                bgcolor: 'background.paper',
+                                borderRadius: 2,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 2
+                                }
+                            }}
                         />
-                    </div>
-                </div>
+                    </Box>
+                </Paper>
 
+                {/* Search Results */}
                 {filtered ? (
-                    <div className="help-search-results">
-                        <h2 className="help-results-title">Search Results ({filtered.length})</h2>
-                        {filtered.map((item) => (
-                            <Card key={`${item.catIdx}-${item.itemIdx}`} className="help-result-card">
-                                <CardContent>
-                                    <span className="help-result-category">{item.category}</span>
-                                    <h3 className="help-result-q">{item.q}</h3>
-                                    <p className="help-result-a">{item.a}</p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                        {filtered.length === 0 && (
-                            <p className="help-no-results">No results found. Try different keywords.</p>
+                    <Box>
+                        <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                            Search Results ({filtered.length})
+                        </Typography>
+                        {filtered.length > 0 ? (
+                            <Stack spacing={2}>
+                                {filtered.map((item) => (
+                                    <Card key={`${item.catIdx}-${item.itemIdx}`} variant="outlined">
+                                        <CardContent>
+                                            <Chip
+                                                label={item.category}
+                                                size="small"
+                                                color="primary"
+                                                variant="outlined"
+                                                sx={{ mb: 1, fontWeight: 600 }}
+                                            />
+                                            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+                                                {item.q}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {item.a}
+                                            </Typography>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </Stack>
+                        ) : (
+                            <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
+                                <Typography color="text.secondary">
+                                    No results found. Try different keywords.
+                                </Typography>
+                            </Paper>
                         )}
-                    </div>
+                    </Box>
                 ) : (
-                    <div className="help-categories">
+                    /* Category Accordions */
+                    <Stack spacing={3}>
                         {faqCategories.map((cat, ci) => (
-                            <div key={cat.title} className="help-category-section">
-                                <div className="help-category-header">
-                                    <cat.icon size={22} />
-                                    <h2>{cat.title}</h2>
-                                </div>
-                                <div className="help-faq-list">
+                            <Box key={cat.title}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                                    <Box
+                                        sx={{
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: 1.5,
+                                            bgcolor: 'primary.light',
+                                            color: 'primary.main',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <cat.icon size={20} />
+                                    </Box>
+                                    <Typography variant="h6" fontWeight={700}>
+                                        {cat.title}
+                                    </Typography>
+                                </Box>
+
+                                <Stack spacing={1}>
                                     {cat.items.map((item, ii) => {
                                         const key = `${ci}-${ii}`;
-                                        const isOpen = openItems[key];
+                                        const isExpanded = !!expanded[key];
                                         return (
-                                            <div
+                                            <Accordion
                                                 key={key}
-                                                className={`help-faq-item ${isOpen ? 'open' : ''}`}
-                                                onClick={() => toggleItem(ci, ii)}
+                                                expanded={isExpanded}
+                                                onChange={handleAccordionChange(key)}
+                                                variant="outlined"
+                                                sx={{
+                                                    borderRadius: '8px !important',
+                                                    '&:before': { display: 'none' },
+                                                    transition: 'all 0.2s',
+                                                    '&:hover': {
+                                                        borderColor: 'primary.main'
+                                                    }
+                                                }}
                                             >
-                                                <div className="help-faq-question">
-                                                    <span>{item.q}</span>
-                                                    {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                                                </div>
-                                                <div className="help-faq-answer">
-                                                    <p>{item.a}</p>
-                                                </div>
-                                            </div>
+                                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                                    <Typography fontWeight={600} variant="body1">
+                                                        {item.q}
+                                                    </Typography>
+                                                </AccordionSummary>
+                                                <AccordionDetails sx={{ pt: 0 }}>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                                                        {item.a}
+                                                    </Typography>
+                                                </AccordionDetails>
+                                            </Accordion>
                                         );
                                     })}
-                                </div>
-                            </div>
+                                </Stack>
+                            </Box>
                         ))}
-                    </div>
+                    </Stack>
                 )}
-            </div>
+            </Stack>
         </PageContainer>
     );
 }

@@ -1,13 +1,21 @@
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import Grid from '@mui/material/Grid';
+import FormControl from '@mui/material/FormControl';
+import FormLabel from '@mui/material/FormLabel';
+import MuiSelect from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import { Mail, Lock, User, Building, ArrowRight, Phone, Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input, Select } from '../../components/ui/Input';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { signupUser, loginUser, selectAuthLoading, clearAuthError } from '../../store/slices/authSlice';
 import { countryCodes } from '../../utils/countryCodes';
 import { toast } from 'react-hot-toast';
-import './Auth.css';
 
 export function Signup() {
     const navigate = useNavigate();
@@ -27,24 +35,17 @@ export function Signup() {
         gender: '',
     });
 
-    // Sort country codes by name or keep as is (list is alphabetical)
-    // We can use countryCodes directly.
-
     const handleChange = (field) => (e) => {
         let value = e.target.value;
 
-        // Special handling for phone to allow only numbers and max 10
         if (field === 'phone') {
-            // Remove any non-numeric characters
             value = value.replace(/\D/g, '');
-            // Limit to 10 digits
             if (value.length > 10) {
-                return; // Ignore input if more than 10
+                return;
             }
         }
 
         setFormData(prev => ({ ...prev, [field]: value }));
-        // Clear error when user types
         if (errors[field]) {
             setErrors(prev => ({ ...prev, [field]: null }));
         }
@@ -52,9 +53,8 @@ export function Signup() {
 
     const handleBlur = (field) => () => {
         const newErrors = { ...errors };
-        // Validate specific field
         switch (field) {
-            case 'email':
+            case 'email': {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!formData.email) {
                     newErrors.email = 'Email is required';
@@ -64,14 +64,16 @@ export function Signup() {
                     delete newErrors.email;
                 }
                 break;
-            case 'name':
+            }
+            case 'name': {
                 if (!formData.name.trim()) {
                     newErrors.name = 'Full name is required';
                 } else {
                     delete newErrors.name;
                 }
                 break;
-            case 'phone':
+            }
+            case 'phone': {
                 if (!formData.phone) {
                     newErrors.phone = 'Phone number is required';
                 } else if (!/^\d{10}$/.test(formData.phone)) {
@@ -80,7 +82,8 @@ export function Signup() {
                     delete newErrors.phone;
                 }
                 break;
-            case 'password':
+            }
+            case 'password': {
                 if (!formData.password) {
                     newErrors.password = 'Password is required';
                 } else if (formData.password.length < 8) {
@@ -89,13 +92,15 @@ export function Signup() {
                     delete newErrors.password;
                 }
                 break;
-            case 'confirmPassword':
+            }
+            case 'confirmPassword': {
                 if (formData.password !== formData.confirmPassword) {
                     newErrors.confirmPassword = 'Passwords do not match';
                 } else {
                     delete newErrors.confirmPassword;
                 }
                 break;
+            }
             default:
                 break;
         }
@@ -139,10 +144,7 @@ export function Signup() {
 
         dispatch(clearAuthError());
         try {
-            // Include user selected country code and phone
             await dispatch(signupUser({ ...formData })).unwrap();
-
-            // Auto login after successful signup
             await dispatch(loginUser({ email: formData.email, password: formData.password })).unwrap();
             navigate('/dashboard');
         } catch (errorMessage) {
@@ -151,19 +153,77 @@ export function Signup() {
     };
 
     return (
-        <div className="auth-page">
-            <div className="auth-container">
-                <div className="auth-card">
-                    <div className="auth-header">
-                        <div className="auth-logo">
-                            <div className="auth-logo-icon">O</div>
-                            <span className="auth-logo-text">OrbitDesk</span>
-                        </div>
-                        <h1 className="auth-title">Create your account</h1>
-                        <p className="auth-subtitle">Start your 14-day free trial</p>
-                    </div>
+        <Box
+            sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'background.default',
+                p: { xs: 2, sm: 3 },
+                py: { xs: 4, sm: 6 },
+            }}
+        >
+            <Box sx={{ width: '100%', maxWidth: 480 }}>
+                <Paper
+                    variant="outlined"
+                    sx={{
+                        p: { xs: 3, sm: 4 },
+                        borderRadius: 3,
+                        boxShadow: 3,
+                        backgroundColor: 'background.paper',
+                    }}
+                >
+                    {/* Header */}
+                    <Box sx={{ textAlign: 'center', mb: 3.5 }}>
+                        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
+                            <Box
+                                sx={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 1.5,
+                                    backgroundColor: 'primary.main',
+                                    color: '#FFFFFF',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontWeight: 700,
+                                    fontSize: '1.25rem',
+                                }}
+                            >
+                                O
+                            </Box>
+                            <Typography
+                                variant="h5"
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: '1.25rem',
+                                    color: 'text.primary',
+                                    letterSpacing: '-0.02em',
+                                }}
+                            >
+                                OrbitDesk
+                            </Typography>
+                        </Box>
+                        <Typography
+                            component="h1"
+                            variant="h4"
+                            sx={{
+                                fontWeight: 700,
+                                fontSize: { xs: '1.5rem', sm: '1.75rem' },
+                                color: 'text.primary',
+                                mb: 0.75,
+                            }}
+                        >
+                            Create your account
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            Start your 14-day free trial
+                        </Typography>
+                    </Box>
 
-                    <form className="auth-form" onSubmit={handleSubmit}>
+                    {/* Form */}
+                    <Box component="form" onSubmit={handleSubmit} noValidate>
                         <Input
                             label="Full Name"
                             type="text"
@@ -188,23 +248,28 @@ export function Signup() {
                             required
                         />
 
-                        <div className="phone-input-group" style={{ display: 'flex', gap: '10px' }}>
-                            <div style={{ width: '120px' }}>
-                                <label className="input-label" style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500 }}>Code</label>
-                                <select
-                                    className="select-field"
-                                    value={formData.countryCode}
-                                    onChange={handleChange('countryCode')}
-                                    style={{ height: '42px' }}
-                                >
-                                    {countryCodes.map(country => (
-                                        <option key={country.code} value={country.callingCode}>
-                                            {country.code} ({country.callingCode})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div style={{ flex: 1 }}>
+                        {/* Country code + phone */}
+                        <Box sx={{ display: 'flex', gap: 1.5, mb: 0 }}>
+                            <Box sx={{ width: 130 }}>
+                                <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                                    <FormLabel sx={{ mb: 0.75, fontSize: '0.875rem', fontWeight: 500 }}>
+                                        Code
+                                    </FormLabel>
+                                    <MuiSelect
+                                        value={formData.countryCode}
+                                        onChange={handleChange('countryCode')}
+                                        size="small"
+                                        sx={{ borderRadius: 1 }}
+                                    >
+                                        {countryCodes.map(country => (
+                                            <MenuItem key={country.code} value={country.callingCode}>
+                                                {country.code} ({country.callingCode})
+                                            </MenuItem>
+                                        ))}
+                                    </MuiSelect>
+                                </FormControl>
+                            </Box>
+                            <Box sx={{ flex: 1 }}>
                                 <Input
                                     label="Phone Number"
                                     type="tel"
@@ -216,8 +281,8 @@ export function Signup() {
                                     error={errors.phone}
                                     required
                                 />
-                            </div>
-                        </div>
+                            </Box>
+                        </Box>
 
                         <Select
                             label="Gender"
@@ -242,7 +307,7 @@ export function Signup() {
 
                         <Input
                             label="Password"
-                            type={showPassword ? "text" : "password"}
+                            type={showPassword ? 'text' : 'password'}
                             placeholder="Create a password"
                             icon={Lock}
                             value={formData.password}
@@ -252,19 +317,20 @@ export function Signup() {
                             error={errors.password}
                             required
                             suffix={
-                                <button
-                                    type="button"
+                                <IconButton
+                                    size="small"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                    edge="end"
+                                    aria-label="toggle password visibility"
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </button>
+                                </IconButton>
                             }
                         />
 
                         <Input
                             label="Confirm Password"
-                            type={showConfirmPassword ? "text" : "password"}
+                            type={showConfirmPassword ? 'text' : 'password'}
                             placeholder="Confirm your password"
                             icon={Lock}
                             value={formData.confirmPassword}
@@ -273,31 +339,77 @@ export function Signup() {
                             error={errors.confirmPassword}
                             required
                             suffix={
-                                <button
-                                    type="button"
+                                <IconButton
+                                    size="small"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                    edge="end"
+                                    aria-label="toggle confirm password visibility"
                                 >
                                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </button>
+                                </IconButton>
                             }
                         />
 
-                        <Button type="submit" fullWidth loading={loading} icon={ArrowRight} iconPosition="right">
+                        <Button
+                            type="submit"
+                            fullWidth
+                            size="lg"
+                            loading={loading}
+                            icon={ArrowRight}
+                            iconPosition="right"
+                            sx={{ mt: 1 }}
+                        >
                             Create Account
                         </Button>
-                    </form>
+                    </Box>
 
-                    <p className="auth-terms">
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            display: 'block',
+                            color: 'text.tertiary',
+                            textAlign: 'center',
+                            mt: 2,
+                            '& a': { color: 'primary.main', textDecoration: 'none' },
+                            '& a:hover': { textDecoration: 'underline' },
+                        }}
+                    >
                         By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
-                    </p>
+                    </Typography>
 
-                    <div className="auth-footer">
-                        <span>Already have an account?</span>
-                        <Link to="/login">Sign in</Link>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    {/* Footer */}
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 0.75,
+                            mt: 3,
+                            pt: 2.5,
+                            borderTop: 1,
+                            borderColor: 'divider',
+                        }}
+                    >
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            Already have an account?
+                        </Typography>
+                        <Typography
+                            component={Link}
+                            to="/login"
+                            variant="body2"
+                            sx={{
+                                color: 'primary.main',
+                                fontWeight: 600,
+                                '&:hover': { textDecoration: 'underline' },
+                            }}
+                        >
+                            Sign in
+                        </Typography>
+                    </Box>
+                </Paper>
+            </Box>
+        </Box>
     );
 }
+
+export default Signup;

@@ -9,7 +9,7 @@ import { Loader } from '@/components/ui/Loader';
 const NotFound = lazy(() => import('@/pages/NotFound').then(module => ({ default: module.NotFound })));
 
 // Landing Page (public)
-const LandingPage = lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
+const LandingPage = lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage || module.default })));
 
 // Lazy Load Pages
 const Login = lazy(() => import('@/pages/auth/Login').then(module => ({ default: module.Login })));

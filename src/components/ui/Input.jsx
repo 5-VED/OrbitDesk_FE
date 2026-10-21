@@ -1,4 +1,12 @@
-import './Input.css';
+import React from 'react';
+import FormControl from '@mui/material/FormControl';
+import FormLabel from '@mui/material/FormLabel';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import FormHelperText from '@mui/material/FormHelperText';
+import InputAdornment from '@mui/material/InputAdornment';
+import MuiSelect from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Box from '@mui/material/Box';
 
 export function Input({
     label,
@@ -14,39 +22,62 @@ export function Input({
     className = '',
     id,
     suffix,
+    sx = {},
     ...props
 }) {
-    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+    const inputId = id || (label ? `input-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined);
+    const hasError = Boolean(error);
 
     return (
-        <div className={`input-wrapper ${className}`}>
+        <FormControl
+            fullWidth
+            error={hasError}
+            disabled={disabled}
+            required={required}
+            className={`input-wrapper ${className}`}
+            sx={{ mb: 2, ...sx }}
+        >
             {label && (
-                <label htmlFor={inputId} className="input-label">
+                <FormLabel
+                    htmlFor={inputId}
+                    sx={{ mb: 0.75, fontSize: '0.875rem', fontWeight: 500 }}
+                >
                     {label}
-                    {required && <span className="input-required">*</span>}
-                </label>
+                </FormLabel>
             )}
-            <div className={`input-container ${error ? 'input-error' : ''} ${disabled ? 'input-disabled' : ''}`}>
-                {Icon && <Icon size={18} className="input-icon" />}
-                <input
-                    id={inputId}
-                    type={type}
-                    className="input-field"
-                    placeholder={placeholder}
-                    value={value}
-                    onChange={onChange}
-                    disabled={disabled}
-                    required={required}
-                    {...props}
-                />
-                {suffix && <div className="input-suffix">{suffix}</div>}
-            </div>
+            <OutlinedInput
+                id={inputId}
+                type={type}
+                placeholder={placeholder}
+                value={value ?? ''}
+                onChange={onChange}
+                size="small"
+                startAdornment={
+                    Icon ? (
+                        <InputAdornment position="start">
+                            <Icon size={18} style={{ opacity: 0.7 }} />
+                        </InputAdornment>
+                    ) : null
+                }
+                endAdornment={
+                    suffix ? (
+                        <InputAdornment position="end">
+                            {suffix}
+                        </InputAdornment>
+                    ) : null
+                }
+                sx={{
+                    borderRadius: 1,
+                    '& input': { py: 1.25 },
+                }}
+                {...props}
+            />
             {(error || hint) && (
-                <span className={`input-message ${error ? 'input-message-error' : ''}`}>
+                <FormHelperText sx={{ mt: 0.5, mx: 0 }}>
                     {error || hint}
-                </span>
+                </FormHelperText>
             )}
-        </div>
+        </FormControl>
     );
 }
 
@@ -62,35 +93,48 @@ export function Textarea({
     rows = 4,
     className = '',
     id,
+    sx = {},
     ...props
 }) {
-    const inputId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`;
+    const inputId = id || (label ? `textarea-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined);
+    const hasError = Boolean(error);
 
     return (
-        <div className={`input-wrapper ${className}`}>
+        <FormControl
+            fullWidth
+            error={hasError}
+            disabled={disabled}
+            required={required}
+            className={`input-wrapper ${className}`}
+            sx={{ mb: 2, ...sx }}
+        >
             {label && (
-                <label htmlFor={inputId} className="input-label">
+                <FormLabel
+                    htmlFor={inputId}
+                    sx={{ mb: 0.75, fontSize: '0.875rem', fontWeight: 500 }}
+                >
                     {label}
-                    {required && <span className="input-required">*</span>}
-                </label>
+                </FormLabel>
             )}
-            <textarea
+            <OutlinedInput
                 id={inputId}
-                className={`textarea-field ${error ? 'input-error' : ''} ${disabled ? 'input-disabled' : ''}`}
-                placeholder={placeholder}
-                value={value}
-                onChange={onChange}
-                disabled={disabled}
-                required={required}
+                multiline
                 rows={rows}
+                placeholder={placeholder}
+                value={value ?? ''}
+                onChange={onChange}
+                size="small"
+                sx={{
+                    borderRadius: 1,
+                }}
                 {...props}
             />
             {(error || hint) && (
-                <span className={`input-message ${error ? 'input-message-error' : ''}`}>
+                <FormHelperText sx={{ mt: 0.5, mx: 0 }}>
                     {error || hint}
-                </span>
+                </FormHelperText>
             )}
-        </div>
+        </FormControl>
     );
 }
 
@@ -101,39 +145,69 @@ export function Select({
     onChange,
     placeholder = 'Select...',
     error,
+    hint,
     disabled = false,
     required = false,
     className = '',
     id,
+    sx = {},
     ...props
 }) {
-    const inputId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
+    const inputId = id || (label ? `select-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined);
+    const hasError = Boolean(error);
 
     return (
-        <div className={`input-wrapper ${className}`}>
+        <FormControl
+            fullWidth
+            error={hasError}
+            disabled={disabled}
+            required={required}
+            className={`input-wrapper ${className}`}
+            sx={{ mb: 2, ...sx }}
+        >
             {label && (
-                <label htmlFor={inputId} className="input-label">
+                <FormLabel
+                    htmlFor={inputId}
+                    sx={{ mb: 0.75, fontSize: '0.875rem', fontWeight: 500 }}
+                >
                     {label}
-                    {required && <span className="input-required">*</span>}
-                </label>
+                </FormLabel>
             )}
-            <select
+            <MuiSelect
                 id={inputId}
-                className={`select-field ${error ? 'input-error' : ''} ${disabled ? 'input-disabled' : ''}`}
-                value={value}
+                value={value ?? ''}
                 onChange={onChange}
-                disabled={disabled}
-                required={required}
+                displayEmpty
+                size="small"
+                sx={{
+                    borderRadius: 1,
+                    '& .MuiSelect-select': { py: 1.25 },
+                }}
+                renderValue={(selected) => {
+                    if (selected === '' || selected === undefined || selected === null) {
+                        return <Box component="span" sx={{ color: 'text.tertiary' }}>{placeholder}</Box>;
+                    }
+                    const match = options.find((opt) => String(opt.value) === String(selected));
+                    return match ? match.label : selected;
+                }}
                 {...props}
             >
-                <option value="">{placeholder}</option>
+                {placeholder && (
+                    <MenuItem value="">
+                        <Box component="span" sx={{ color: 'text.tertiary' }}>{placeholder}</Box>
+                    </MenuItem>
+                )}
                 {options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
+                    <MenuItem key={opt.value} value={opt.value}>
                         {opt.label}
-                    </option>
+                    </MenuItem>
                 ))}
-            </select>
-            {error && <span className="input-message input-message-error">{error}</span>}
-        </div>
+            </MuiSelect>
+            {(error || hint) && (
+                <FormHelperText sx={{ mt: 0.5, mx: 0 }}>
+                    {error || hint}
+                </FormHelperText>
+            )}
+        </FormControl>
     );
 }

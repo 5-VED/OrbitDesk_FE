@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Camera } from 'lucide-react';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
 import { Modal } from '../components/ui/Modal';
 import { Input, Select } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { userService } from '../features/contacts/api/users';
 import { Avatar } from '../components/ui/Avatar';
 import { toast } from 'react-hot-toast';
-import './ContactModal.css';
 
 export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
     const fileInputRef = useRef(null);
@@ -114,13 +117,10 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
 
         setIsSubmitting(true);
         try {
-            // ... (rest of logic same)
-            let response;
             const data = new FormData();
 
             Object.keys(formData).forEach(key => {
                 if (key === 'password' && !formData[key]) return;
-                // Ensure role is ID
                 data.append(key, formData[key]);
             });
 
@@ -133,9 +133,9 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
             }
 
             if (agent) {
-                response = await userService.update(agent._id, data);
+                await userService.update(agent._id, data);
             } else {
-                response = await userService.create(data);
+                await userService.create(data);
             }
 
             toast.success(`Agent ${agent ? 'updated' : 'created'} successfully`);
@@ -152,7 +152,7 @@ export function AgentModal({ isOpen, onClose, onSuccess, agent }) {
     };
 
     const getImageUrl = (url) => {
-if (!url) return null;
+        if (!url) return null;
         if (url.startsWith('http') || url.startsWith('blob:')) return url;
         return url;
     };
@@ -174,40 +174,40 @@ if (!url) return null;
                 </>
             }
         >
-            <form onSubmit={handleSubmit} className="contact-form">
+            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                 {errors.submit && (
-                    <div className="form-error-banner">
-                        {errors.submit}
-                    </div>
+                    <Alert severity="error">{errors.submit}</Alert>
                 )}
 
-                <div className="form-section profile-upload-section" style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                    {/* ... (avatar logic same) ... */}
-                    <div className="profile-upload-container" style={{ position: 'relative', cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    <Box
+                        sx={{ position: 'relative', cursor: 'pointer', display: 'inline-block' }}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
                         <Avatar
                             src={getImageUrl(previewUrl)}
                             name={`${formData.first_name} ${formData.last_name}`}
                             size="xl"
-                            style={{ width: '80px', height: '80px', fontSize: '2rem' }}
+                            sx={{ width: 80, height: 80, fontSize: '2rem' }}
                         />
-                        {/* ... */}
-                        <div className="profile-upload-overlay" style={{
+                        <Box sx={{
                             position: 'absolute',
                             bottom: 0,
                             right: 0,
-                            background: '#7c3aed',
+                            bgcolor: 'primary.main',
                             borderRadius: '50%',
-                            width: '28px',
-                            height: '28px',
-                            color: 'white',
+                            width: 28,
+                            height: 28,
+                            color: 'primary.contrastText',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                            border: '2px solid white'
+                            boxShadow: 2,
+                            border: '2px solid',
+                            borderColor: 'background.paper'
                         }}>
                             <Camera size={14} />
-                        </div>
+                        </Box>
                         <input
                             type="file"
                             ref={fileInputRef}
@@ -215,67 +215,106 @@ if (!url) return null;
                             accept="image/*"
                             style={{ display: 'none' }}
                         />
-                    </div>
-                </div>
+                    </Box>
+                </Box>
 
-                <div className="form-section">
-                    <h3 className="form-section-title">Personal Information</h3>
+                <Box>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            fontWeight: 600,
+                            color: 'text.secondary',
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                            display: 'block',
+                            mb: 1.5,
+                            pb: 0.5,
+                            borderBottom: '1px solid',
+                            borderColor: 'divider',
+                        }}
+                    >
+                        Personal Information
+                    </Typography>
 
-                    <div className="form-row">
-                        <Input
-                            label="First Name"
-                            value={formData.first_name}
-                            onChange={(e) => handleChange('first_name', e.target.value)}
-                            error={errors.first_name}
-                            required
-                        />
-                        <Input
-                            label="Last Name"
-                            value={formData.last_name}
-                            onChange={(e) => handleChange('last_name', e.target.value)}
-                            error={errors.last_name}
-                            required
-                        />
-                    </div>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Input
+                                label="First Name"
+                                value={formData.first_name}
+                                onChange={(e) => handleChange('first_name', e.target.value)}
+                                error={errors.first_name}
+                                required
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Input
+                                label="Last Name"
+                                value={formData.last_name}
+                                onChange={(e) => handleChange('last_name', e.target.value)}
+                                error={errors.last_name}
+                                required
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Input
+                                label="Email"
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => handleChange('email', e.target.value)}
+                                error={errors.email}
+                                required
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Input
+                                label="Phone"
+                                value={formData.phone}
+                                onChange={(e) => handleChange('phone', e.target.value)}
+                                error={errors.phone}
+                                required
+                            />
+                        </Grid>
+                    </Grid>
+                </Box>
 
-                    <div className="form-row">
-                        <Input
-                            label="Email"
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => handleChange('email', e.target.value)}
-                            error={errors.email}
-                            required
-                        />
-                        <Input
-                            label="Phone"
-                            value={formData.phone}
-                            onChange={(e) => handleChange('phone', e.target.value)}
-                            error={errors.phone}
-                            required
-                        />
-                    </div>
-                </div>
-
-                <div className="form-section">
-                    <h3 className="form-section-title">Role & Department</h3>
-                    <div className="form-row">
-                        <Select
-                            label="Role"
-                            value={formData.role}
-                            onChange={(e) => handleChange('role', e.target.value)}
-                            options={roles.map(r => ({ value: r._id, label: r.role }))}
-                            error={errors.role}
-                        />
-                        <Input
-                            label="Department"
-                            value={formData.department}
-                            onChange={(e) => handleChange('department', e.target.value)}
-                            placeholder="e.g. Technical Support"
-                        />
-                    </div>
-                </div>
-            </form>
+                <Box>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            fontWeight: 600,
+                            color: 'text.secondary',
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                            display: 'block',
+                            mb: 1.5,
+                            pb: 0.5,
+                            borderBottom: '1px solid',
+                            borderColor: 'divider',
+                        }}
+                    >
+                        Role & Department
+                    </Typography>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Select
+                                label="Role"
+                                value={formData.role}
+                                onChange={(e) => handleChange('role', e.target.value)}
+                                options={roles.map(r => ({ value: r._id, label: r.role }))}
+                                error={errors.role}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Input
+                                label="Department"
+                                value={formData.department}
+                                onChange={(e) => handleChange('department', e.target.value)}
+                                placeholder="e.g. Technical Support"
+                            />
+                        </Grid>
+                    </Grid>
+                </Box>
+            </Box>
         </Modal>
     );
 }

@@ -1,13 +1,45 @@
 import React from 'react';
-import './Loader.css';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export const Loader = ({ size = 'medium', fullScreen = false }) => {
-    const containerClass = fullScreen ? 'loader-container-fullscreen' : 'loader-container';
-    const spinnerClass = `loader-spinner ${size}`;
+    const pixelSize = size === 'small' ? 24 : size === 'large' ? 64 : 44;
+
+    if (fullScreen) {
+        return (
+            <Box
+                sx={{
+                    position: 'fixed',
+                    inset: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'background.default',
+                    zIndex: 9999,
+                }}
+            >
+                <CircularProgress size={pixelSize} thickness={4} color="primary" />
+            </Box>
+        );
+    }
 
     return (
-        <div className={containerClass}>
-            <div className={spinnerClass}></div>
-        </div>
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100%',
+                minHeight: 200,
+                p: 3,
+            }}
+        >
+            <CircularProgress size={pixelSize} thickness={4} color="primary" />
+        </Box>
     );
 };
+
+export default Loader;

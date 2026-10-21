@@ -1,26 +1,33 @@
 import { useState, useEffect } from 'react';
 import {
     Search,
-    Book,
     FileText,
     Folder,
-    ChevronRight,
     Plus,
     Clock,
     Eye,
     Edit,
     Trash2
 } from 'lucide-react';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import ButtonBase from '@mui/material/ButtonBase';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
+import { Input, Select, Textarea } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { knowledgeBaseService } from '@/features/knowledgeBase/api/knowledgeBase';
 import { useAppSelector } from '../store/hooks';
 import { selectCurrentUser } from '../store/slices/authSlice';
 import toast from 'react-hot-toast';
-import './KnowledgeBase.css';
 
 export function KnowledgeBase() {
     const user = useAppSelector(selectCurrentUser);
@@ -49,13 +56,12 @@ export function KnowledgeBase() {
         try {
             const [catsRes, artsRes] = await Promise.all([
                 knowledgeBaseService.getCategories(),
-                knowledgeBaseService.getArticles({ limit: 100 }) // Fetching sufficient articles for now
+                knowledgeBaseService.getArticles({ limit: 100 })
             ]);
             setCategories(catsRes.data);
             setArticles(artsRes.data.articles);
         } catch (error) {
             console.error('Failed to fetch KB data', error);
-            // Silently fail — empty state UI handles the no-data case
         } finally {
             setLoading(false);
         }
@@ -101,7 +107,7 @@ export function KnowledgeBase() {
             await knowledgeBaseService.deleteCategory(id);
             toast.success("Category deleted");
             fetchData();
-        } catch (error) {
+        } catch {
             toast.error("Failed to delete category");
         }
     };
@@ -153,7 +159,7 @@ export function KnowledgeBase() {
             await knowledgeBaseService.deleteArticle(id);
             toast.success("Article deleted");
             fetchData();
-        } catch (error) {
+        } catch {
             toast.error("Failed to delete article");
         }
     };
@@ -166,9 +172,7 @@ export function KnowledgeBase() {
     });
 
     const popularArticles = [...articles].sort((a, b) => b.views - a.views).slice(0, 5);
-    const recentArticles = [...articles].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0, 5);
 
-    // Debug check: Ensure user is loaded and check role case-insensitively
     const userRole = (user?.role_type || '').toLowerCase();
     const isAdminOrAgent = ['admin', 'agent', 'superadmin'].includes(userRole);
 
@@ -176,207 +180,248 @@ export function KnowledgeBase() {
         <PageContainer
             title="Knowledge Base"
             actions={isAdminOrAgent && (
-                <div className="flex gap-2">
+                <Stack direction="row" spacing={1}>
                     <Button variant="outline" onClick={() => handleOpenCategoryModal()}>New Category</Button>
                     <Button icon={Plus} onClick={() => handleOpenArticleModal()}>New Article</Button>
-                </div>
+                </Stack>
             )}
         >
-            <div className="kb-page">
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
                 {/* Search */}
-                <div className="kb-search-section">
-                    <div className="kb-search">
-                        <Search size={20} />
-                        <input
-                            type="text"
-                            placeholder="Search articles..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                </div>
+                <Box sx={{ maxWidth: 460 }}>
+                    <OutlinedInput
+                        fullWidth
+                        placeholder="Search articles..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        startAdornment={
+                            <InputAdornment position="start">
+                                <Search size={20} />
+                            </InputAdornment>
+                        }
+                    />
+                </Box>
 
                 {/* Categories Grid */}
-                <section className="kb-section">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="kb-section-title mb-0">Browse by Category</h2>
+                <Box component="section">
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>Browse by Category</Typography>
                         {selectedCategory && (
                             <Button variant="ghost" size="sm" onClick={() => setSelectedCategory(null)}>
                                 Clear Filter
                             </Button>
                         )}
-                    </div>
+                    </Box>
 
-                    <div className="kb-categories">
-                        {loading ? (
-                            <div className="kb-empty-state">
-                                <p className="kb-empty-sub">Loading categories...</p>
-                            </div>
-                        ) : categories.length === 0 ? (
-                            <div className="kb-empty-state">
-                                <div className="kb-empty-icon" aria-hidden="true">
-                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" strokeWidth="1.5"
-                                        strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                                    </svg>
-                                </div>
-                                <p className="kb-empty-title">No Categories Yet</p>
-                                <p className="kb-empty-sub">Create your first category to start organizing articles.</p>
-                            </div>
-                        ) : (
-                            categories.map((cat) => (
-                                <Card
-                                    key={cat._id}
-                                    className={`category-card ${selectedCategory === cat._id ? 'ring-2 ring-primary' : ''}`}
-                                    hover
-                                    onClick={() => setSelectedCategory(selectedCategory === cat._id ? null : cat._id)}
-                                >
-                                    <div className="category-header flex justify-between w-full">
-                                        <div className="category-icon" style={{ backgroundColor: (cat.color || '#3b82f6') + '20', color: cat.color || '#3b82f6' }}>
-                                            <Folder size={24} />
-                                        </div>
-                                        {isAdminOrAgent && (
-                                            <div className="category-actions" onClick={(e) => e.stopPropagation()}>
-                                                <Button variant="ghost" size="icon" onClick={() => handleOpenCategoryModal(cat)}>
-                                                    <Edit size={14} />
-                                                </Button>
-                                                <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDeleteCategory(cat._id)}>
-                                                    <Trash2 size={14} />
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="category-info mt-3">
-                                        <h3>{cat.name}</h3>
-                                        <span>{articles.filter(a => a.category?._id === cat._id).length} articles</span>
-                                    </div>
-                                </Card>
-                            ))
-                        )}
-                    </div>
-                </section>
+                    {loading ? (
+                        <Box sx={{ p: 4, textAlign: 'center' }}>
+                            <Typography variant="body2" color="text.secondary">Loading categories...</Typography>
+                        </Box>
+                    ) : categories.length === 0 ? (
+                        <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', p: 4, textAlign: 'center' }}>
+                            <Folder size={32} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>No Categories Yet</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Create your first category to start organizing articles.
+                            </Typography>
+                        </Card>
+                    ) : (
+                        <Grid container spacing={2}>
+                            {categories.map((cat) => {
+                                const isSelected = selectedCategory === cat._id;
+                                const count = articles.filter(a => a.category?._id === cat._id).length;
+                                return (
+                                    <Grid key={cat._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                                        <Card
+                                            elevation={0}
+                                            onClick={() => setSelectedCategory(isSelected ? null : cat._id)}
+                                            sx={{
+                                                p: 2.5,
+                                                cursor: 'pointer',
+                                                border: '1px solid',
+                                                borderColor: isSelected ? 'primary.main' : 'divider',
+                                                bgcolor: isSelected ? 'action.selected' : 'background.paper',
+                                                transition: 'all 0.15s ease',
+                                                '&:hover': {
+                                                    borderColor: 'primary.main',
+                                                    transform: 'translateY(-2px)',
+                                                    boxShadow: 2,
+                                                }
+                                            }}
+                                        >
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                                <Box
+                                                    sx={{
+                                                        width: 44,
+                                                        height: 44,
+                                                        borderRadius: 2,
+                                                        bgcolor: (cat.color || '#3b82f6') + '20',
+                                                        color: cat.color || '#3b82f6',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                    }}
+                                                >
+                                                    <Folder size={22} />
+                                                </Box>
+                                                {isAdminOrAgent && (
+                                                    <Stack direction="row" spacing={0.5} onClick={(e) => e.stopPropagation()}>
+                                                        <IconButton size="small" onClick={() => handleOpenCategoryModal(cat)}>
+                                                            <Edit size={14} />
+                                                        </IconButton>
+                                                        <IconButton size="small" color="error" onClick={() => handleDeleteCategory(cat._id)}>
+                                                            <Trash2 size={14} />
+                                                        </IconButton>
+                                                    </Stack>
+                                                )}
+                                            </Box>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>{cat.name}</Typography>
+                                            <Typography variant="caption" color="text.secondary">{count} article{count !== 1 ? 's' : ''}</Typography>
+                                        </Card>
+                                    </Grid>
+                                );
+                            })}
+                        </Grid>
+                    )}
+                </Box>
 
-                <div className="kb-grid">
+                <Grid container spacing={3} alignItems="start">
                     {/* Articles List (Filtered) */}
-                    <Card className="articles-card col-span-2">
-                        <CardHeader>
-                            <CardTitle>
-                                {selectedCategory
-                                    ? `Articles in ${categories.find(c => c._id === selectedCategory)?.name}`
-                                    : searchQuery ? 'Search Results' : 'Recent Articles'}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="articles-list">
+                    <Grid size={{ xs: 12, lg: 8 }}>
+                        <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                            <CardHeader
+                                title={
+                                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                        {selectedCategory
+                                            ? `Articles in ${categories.find(c => c._id === selectedCategory)?.name}`
+                                            : searchQuery ? 'Search Results' : 'Recent Articles'}
+                                    </Typography>
+                                }
+                                sx={{ pb: 1 }}
+                            />
+                            <CardContent sx={{ pt: 0 }}>
                                 {filteredArticles.length > 0 ? (
-                                    filteredArticles.map((article) => (
-                                        <div key={article._id} className="article-item group">
-                                            <div className="article-icon">
-                                                <FileText size={18} />
-                                            </div>
-                                            <div className="article-content flex-1">
-                                                <div className="flex justify-between">
-                                                    <a href="#" className="article-title">{article.title}</a>
-                                                    {isAdminOrAgent && (
-                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                                                            <button onClick={() => handleOpenArticleModal(article)} className="text-gray-500 hover:text-primary">
-                                                                <Edit size={14} />
-                                                            </button>
-                                                            <button onClick={() => handleDeleteArticle(article._id)} className="text-gray-500 hover:text-red-500">
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="article-meta">
-                                                    <span className="article-category">{article.category?.name}</span>
-                                                    <span className="article-updated">
-                                                        <Clock size={12} />
-                                                        {new Date(article.updatedAt).toLocaleDateString()}
-                                                    </span>
-                                                    <span className="article-views ml-2">
-                                                        <Eye size={12} />
-                                                        {article.views}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
+                                    <Stack spacing={1.5}>
+                                        {filteredArticles.map((article) => (
+                                            <Box
+                                                key={article._id}
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 2,
+                                                    p: 1.5,
+                                                    borderRadius: 1.5,
+                                                    border: '1px solid',
+                                                    borderColor: 'divider',
+                                                    transition: 'all 0.15s ease',
+                                                    '&:hover': {
+                                                        bgcolor: 'action.hover',
+                                                    }
+                                                }}
+                                            >
+                                                <Box sx={{ color: 'primary.main', display: 'flex' }}>
+                                                    <FileText size={20} />
+                                                </Box>
+                                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{ fontWeight: 600, color: 'text.primary', mb: 0.25 }}
+                                                    >
+                                                        {article.title}
+                                                    </Typography>
+                                                    <Stack direction="row" spacing={2} alignItems="center">
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {article.category?.name}
+                                                        </Typography>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', fontSize: '0.75rem' }}>
+                                                            <Clock size={12} />
+                                                            {new Date(article.updatedAt).toLocaleDateString()}
+                                                        </Box>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', fontSize: '0.75rem' }}>
+                                                            <Eye size={12} />
+                                                            {article.views} views
+                                                        </Box>
+                                                    </Stack>
+                                                </Box>
+                                                {isAdminOrAgent && (
+                                                    <Stack direction="row" spacing={0.5}>
+                                                        <IconButton size="small" onClick={() => handleOpenArticleModal(article)}>
+                                                            <Edit size={14} />
+                                                        </IconButton>
+                                                        <IconButton size="small" color="error" onClick={() => handleDeleteArticle(article._id)}>
+                                                            <Trash2 size={14} />
+                                                        </IconButton>
+                                                    </Stack>
+                                                )}
+                                            </Box>
+                                        ))}
+                                    </Stack>
                                 ) : (
-                                    <div className="kb-empty-state">
-                                        <div className="kb-empty-icon" aria-hidden="true">
-                                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" strokeWidth="1.5"
-                                                strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                <polyline points="14 2 14 8 20 8" />
-                                                <line x1="16" y1="13" x2="8" y2="13" />
-                                                <line x1="16" y1="17" x2="8" y2="17" />
-                                                <polyline points="10 9 9 9 8 9" />
-                                            </svg>
-                                        </div>
-                                        <p className="kb-empty-title">
+                                    <Box sx={{ p: 4, textAlign: 'center' }}>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
                                             {searchQuery
                                                 ? 'No Articles Match Your Search'
                                                 : selectedCategory
                                                     ? 'No Articles in This Category'
                                                     : 'No Articles Yet'}
-                                        </p>
-                                        <p className="kb-empty-sub">
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
                                             {searchQuery
                                                 ? 'Try a different keyword or browse by category.'
                                                 : 'Create your first article to share knowledge with your team.'}
-                                        </p>
-                                    </div>
+                                        </Typography>
+                                    </Box>
                                 )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </Grid>
 
                     {/* Popular Articles Sidebar */}
-                    <Card className="articles-card h-fit">
-                        <CardHeader>
-                            <CardTitle>Popular Articles</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="articles-list">
+                    <Grid size={{ xs: 12, lg: 4 }}>
+                        <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                            <CardHeader
+                                title={<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Popular Articles</Typography>}
+                                sx={{ pb: 1 }}
+                            />
+                            <CardContent sx={{ pt: 0 }}>
                                 {popularArticles.length > 0 ? (
-                                    popularArticles.map((article) => (
-                                        <div key={article._id} className="article-item">
-                                            <div className="article-icon">
-                                                <FileText size={18} />
-                                            </div>
-                                            <div className="article-content">
-                                                <span className="article-title block truncate">{article.title}</span>
-                                                <div className="article-meta">
-                                                    <span className="article-views">
-                                                        <Eye size={12} />
+                                    <Stack spacing={1.5}>
+                                        {popularArticles.map((article) => (
+                                            <Box
+                                                key={article._id}
+                                                sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 1.5,
+                                                    p: 1,
+                                                    borderRadius: 1,
+                                                    '&:hover': { bgcolor: 'action.hover' }
+                                                }}
+                                            >
+                                                <FileText size={18} style={{ opacity: 0.6 }} />
+                                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                    <Typography variant="body2" sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {article.title}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
                                                         {article.views} views
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        ))}
+                                    </Stack>
                                 ) : (
-                                    <div className="kb-empty-state kb-empty-state--compact">
-                                        <div className="kb-empty-icon" aria-hidden="true">
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" strokeWidth="1.5"
-                                                strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                                <circle cx="12" cy="12" r="3" />
-                                            </svg>
-                                        </div>
-                                        <p className="kb-empty-title">No Popular Articles</p>
-                                        <p className="kb-empty-sub">Articles will appear here once they get views.</p>
-                                    </div>
+                                    <Box sx={{ p: 3, textAlign: 'center' }}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Articles will appear here once they get views.
+                                        </Typography>
+                                    </Box>
                                 )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+            </Box>
 
             {/* Category Modal */}
             <Modal
@@ -390,7 +435,7 @@ export function KnowledgeBase() {
                     </>
                 }
             >
-                <form id="category-form" onSubmit={handleCategorySubmit} className="space-y-4">
+                <Box component="form" id="category-form" onSubmit={handleCategorySubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Input
                         label="Name"
                         value={categoryForm.name}
@@ -409,21 +454,28 @@ export function KnowledgeBase() {
                         value={categoryForm.description}
                         onChange={e => setCategoryForm({ ...categoryForm, description: e.target.value })}
                     />
-                    <div>
-                        <label className="text-sm font-medium mb-1 block">Color</label>
-                        <div className="flex gap-2">
+                    <Box>
+                        <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', mb: 1 }}>Color</Typography>
+                        <Stack direction="row" spacing={1}>
                             {['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'].map(c => (
-                                <button
+                                <ButtonBase
                                     key={c}
                                     type="button"
-                                    className={`w-8 h-8 rounded-full ${categoryForm.color === c ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
-                                    style={{ backgroundColor: c }}
+                                    sx={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: '50%',
+                                        bgcolor: c,
+                                        border: categoryForm.color === c ? '2px solid' : 'none',
+                                        borderColor: 'text.primary',
+                                        boxShadow: categoryForm.color === c ? 2 : 0,
+                                    }}
                                     onClick={() => setCategoryForm({ ...categoryForm, color: c })}
                                 />
                             ))}
-                        </div>
-                    </div>
-                </form>
+                        </Stack>
+                    </Box>
+                </Box>
             </Modal>
 
             {/* Article Modal */}
@@ -439,7 +491,7 @@ export function KnowledgeBase() {
                     </>
                 }
             >
-                <form id="article-form" onSubmit={handleArticleSubmit} className="space-y-4">
+                <Box component="form" id="article-form" onSubmit={handleArticleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Input
                         label="Title"
                         value={articleForm.title}
@@ -453,44 +505,32 @@ export function KnowledgeBase() {
                         required
                         placeholder="e.g. how-to-reset-password"
                     />
-                    <div>
-                        <label className="text-sm font-medium mb-1 block">Category</label>
-                        <select
-                            className="w-full p-2 border rounded-md bg-transparent"
-                            value={articleForm.category}
-                            onChange={e => setArticleForm({ ...articleForm, category: e.target.value })}
-                            required
-                        >
-                            <option value="">Select Category</option>
-                            {categories.map(c => (
-                                <option key={c._id} value={c._id}>{c.name}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="text-sm font-medium mb-1 block">Content</label>
-                        <textarea
-                            className="w-full p-2 border rounded-md h-40 bg-transparent"
-                            value={articleForm.content}
-                            onChange={e => setArticleForm({ ...articleForm, content: e.target.value })}
-                            required
-                            placeholder="Write your article content here..."
-                            style={{ resize: 'vertical', minHeight: '150px' }}
-                        />
-                    </div>
-                    <div>
-                        <label className="text-sm font-medium mb-1 block">Status</label>
-                        <select
-                            className="w-full p-2 border rounded-md bg-transparent"
-                            value={articleForm.status}
-                            onChange={e => setArticleForm({ ...articleForm, status: e.target.value })}
-                        >
-                            <option value="draft">Draft</option>
-                            <option value="published">Published</option>
-                            <option value="archived">Archived</option>
-                        </select>
-                    </div>
-                </form>
+                    <Select
+                        label="Category"
+                        value={articleForm.category}
+                        onChange={e => setArticleForm({ ...articleForm, category: e.target.value })}
+                        options={categories.map(c => ({ value: c._id, label: c.name }))}
+                        required
+                    />
+                    <Textarea
+                        label="Content"
+                        value={articleForm.content}
+                        onChange={e => setArticleForm({ ...articleForm, content: e.target.value })}
+                        required
+                        placeholder="Write your article content here..."
+                        rows={6}
+                    />
+                    <Select
+                        label="Status"
+                        value={articleForm.status}
+                        onChange={e => setArticleForm({ ...articleForm, status: e.target.value })}
+                        options={[
+                            { value: 'draft', label: 'Draft' },
+                            { value: 'published', label: 'Published' },
+                            { value: 'archived', label: 'Archived' },
+                        ]}
+                    />
+                </Box>
             </Modal>
         </PageContainer>
     );
