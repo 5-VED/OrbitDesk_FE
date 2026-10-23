@@ -2,8 +2,26 @@ import { createSlice } from "@reduxjs/toolkit";
 
 // ─── Initial State ──────────────────────────────────────────────
 
+const SIDEBAR_STORAGE_KEY = "orbitdesk-sidebar-collapsed";
+
+const readSidebarCollapsed = () => {
+  try {
+    return localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+};
+
+const persistSidebarCollapsed = (value) => {
+  try {
+    localStorage.setItem(SIDEBAR_STORAGE_KEY, String(value));
+  } catch {
+    // ignore storage errors (private mode, quota, etc.)
+  }
+};
+
 const initialState = {
-  sidebarCollapsed: false,
+  sidebarCollapsed: readSidebarCollapsed(),
   globalLoading: false,
 };
 
@@ -15,9 +33,11 @@ const uiSlice = createSlice({
   reducers: {
     toggleSidebar(state) {
       state.sidebarCollapsed = !state.sidebarCollapsed;
+      persistSidebarCollapsed(state.sidebarCollapsed);
     },
     setSidebarCollapsed(state, action) {
       state.sidebarCollapsed = action.payload;
+      persistSidebarCollapsed(state.sidebarCollapsed);
     },
     setGlobalLoading(state, action) {
       state.globalLoading = action.payload;

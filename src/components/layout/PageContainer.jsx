@@ -1,19 +1,25 @@
 import React, { useState, useCallback } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { useTheme } from "@mui/material/styles";
 import { Sidebar } from "./Sidebar";
 import { TopNavbar } from "./TopNavbar";
 import { layout } from "@/theme/tokens";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  selectSidebarCollapsed,
+  toggleSidebar as toggleSidebarAction,
+} from "@/store/slices/uiSlice";
 
 export function PageContainer({ children, title, actions, maxWidth = false }) {
-  const [collapsed, setCollapsed] = useState(false);
+  // Collapsed state lives in Redux: every page mounts its own PageContainer,
+  // so local state would reset to expanded on each navigation.
+  const dispatch = useAppDispatch();
+  const collapsed = useAppSelector(selectSidebarCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const theme = useTheme();
 
   const toggleSidebar = useCallback(() => {
-    setCollapsed((prev) => !prev);
-  }, []);
+    dispatch(toggleSidebarAction());
+  }, [dispatch]);
 
   const toggleMobile = useCallback(() => {
     setMobileOpen((prev) => !prev);
@@ -22,10 +28,6 @@ export function PageContainer({ children, title, actions, maxWidth = false }) {
   const closeMobile = useCallback(() => {
     setMobileOpen(false);
   }, []);
-
-  const sidebarWidth = collapsed
-    ? layout.sidebarCollapsedWidth
-    : layout.sidebarWidth;
 
   return (
     <Box
@@ -49,21 +51,12 @@ export function PageContainer({ children, title, actions, maxWidth = false }) {
         component="main"
         className={`page-main ${collapsed ? "expanded" : ""}`}
         sx={{
+          // The permanent Drawer already reserves its width in this flex row,
+          // so no margin-left offset is needed here.
           flexGrow: 1,
+          minWidth: 0,
           minHeight: `calc(100vh - ${layout.navbarHeight}px)`,
           mt: `${layout.navbarHeight}px`,
-          ml: {
-            xs: 0,
-            md: `${sidebarWidth}px`,
-          },
-          transition: theme.transitions.create(["margin-left", "width"], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
-          width: {
-            xs: "100%",
-            md: `calc(100% - ${sidebarWidth}px)`,
-          },
           display: "flex",
           flexDirection: "column",
         }}

@@ -38,7 +38,7 @@ export function TopNavbar({ collapsed, onToggleMobile }) {
         const res = await notificationService.list();
         setNotifications(res?.data || []);
         setUnreadCount(res?.unreadCount || 0);
-      } catch {}
+      } catch { }
     };
     fetchNotifs();
     const interval = setInterval(fetchNotifs, 60000);
@@ -78,39 +78,6 @@ export function TopNavbar({ collapsed, onToggleMobile }) {
 
   return (
     <header className={`top-navbar ${collapsed ? "collapsed" : ""}`}>
-      <div className="top-navbar-left">
-        <button
-          className="mobile-menu-btn"
-          onClick={onToggleMobile}
-          aria-label="Toggle menu"
-        >
-          <Menu size={20} />
-        </button>
-
-        <div
-          className={`top-navbar-search ${searchOpen ? "search-expanded" : ""}`}
-        >
-          <Search size={18} className="search-icon" />
-          <input
-            ref={searchRef}
-            type="text"
-            placeholder="Search tickets, contacts, articles..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="search-input"
-          />
-          <kbd className="search-shortcut">⌘K</kbd>
-        </div>
-
-        <button
-          className="mobile-search-toggle"
-          onClick={() => setSearchOpen(!searchOpen)}
-          aria-label="Toggle search"
-        >
-          {searchOpen ? <X size={20} /> : <Search size={20} />}
-        </button>
-      </div>
-
       <div className="top-navbar-actions">
         <ThemeToggle />
 

@@ -358,6 +358,10 @@ export function AdminSidebar({
       sx={{
         width: drawerWidth,
         flexShrink: 0,
+        transition: theme.transitions.create("width", {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
         display: { xs: "none", md: "block" },
         "& .MuiDrawer-paper": {
           width: drawerWidth,
