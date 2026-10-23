@@ -1,33 +1,33 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext(undefined);
 
 export function ThemeProvider({ children }) {
-    const [theme, setTheme] = useState(() => {
-        const saved = localStorage.getItem('supportdesk-theme');
-        return saved || 'light';
-    });
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem("supportdesk-theme");
+    return saved || "light";
+  });
 
-    useEffect(() => {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('supportdesk-theme', theme);
-    }, [theme]);
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("supportdesk-theme", theme);
+  }, [theme]);
 
-    const toggleTheme = () => {
-        setTheme(prev => prev === 'light' ? 'dark' : 'light');
-    };
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  };
 
-    return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
-            {children}
-        </ThemeContext.Provider>
-    );
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {
-    const context = useContext(ThemeContext);
-    if (context === undefined) {
-        throw new Error('useTheme must be used within a ThemeProvider');
-    }
-    return context;
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return context;
 }
