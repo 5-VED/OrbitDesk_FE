@@ -1,19 +1,23 @@
 import React, { useState, useCallback } from "react";
 import { Outlet } from "react-router-dom";
 import Box from "@mui/material/Box";
-import { useTheme } from "@mui/material/styles";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminTopbar } from "./AdminTopbar";
 import { layout } from "@/theme/tokens";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  selectSidebarCollapsed,
+  toggleSidebar as toggleSidebarAction,
+} from "@/store/slices/uiSlice";
 
 export function AdminLayout() {
-  const [collapsed, setCollapsed] = useState(false);
+  const dispatch = useAppDispatch();
+  const collapsed = useAppSelector(selectSidebarCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const theme = useTheme();
 
   const toggleSidebar = useCallback(() => {
-    setCollapsed((prev) => !prev);
-  }, []);
+    dispatch(toggleSidebarAction());
+  }, [dispatch]);
 
   const toggleMobile = useCallback(() => {
     setMobileOpen((prev) => !prev);
@@ -22,10 +26,6 @@ export function AdminLayout() {
   const closeMobile = useCallback(() => {
     setMobileOpen(false);
   }, []);
-
-  const sidebarWidth = collapsed
-    ? layout.sidebarCollapsedWidth
-    : layout.sidebarWidth;
 
   return (
     <Box
@@ -48,21 +48,12 @@ export function AdminLayout() {
         component="main"
         className={`admin-main ${collapsed ? "expanded" : ""}`}
         sx={{
+          // The permanent Drawer already reserves its width in this flex row,
+          // so no margin-left offset is needed here.
           flexGrow: 1,
+          minWidth: 0,
           minHeight: `calc(100vh - ${layout.navbarHeight}px)`,
           mt: `${layout.navbarHeight}px`,
-          ml: {
-            xs: 0,
-            md: `${sidebarWidth}px`,
-          },
-          transition: theme.transitions.create(["margin-left", "width"], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
-          width: {
-            xs: "100%",
-            md: `calc(100% - ${sidebarWidth}px)`,
-          },
           p: { xs: 2, sm: 3, md: 4 },
         }}
       >

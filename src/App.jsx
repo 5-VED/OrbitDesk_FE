@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { useEffect } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useDispatch } from "react-redux";
