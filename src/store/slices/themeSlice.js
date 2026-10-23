@@ -1,34 +1,34 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 // ─── Initial State ──────────────────────────────────────────────
 
 const getInitialTheme = () => {
-    const saved = localStorage.getItem('supportdesk-theme');
-    return saved || 'light';
+  const saved = localStorage.getItem("supportdesk-theme");
+  return saved || "light";
 };
 
 const initialState = {
-    mode: getInitialTheme(),
+  mode: getInitialTheme(),
 };
 
 // ─── Slice ──────────────────────────────────────────────────────
 
 const themeSlice = createSlice({
-    name: 'theme',
-    initialState,
-    reducers: {
-        toggleTheme(state) {
-            state.mode = state.mode === 'light' ? 'dark' : 'light';
-            // Side effects: persist + apply
-            localStorage.setItem('supportdesk-theme', state.mode);
-            document.documentElement.setAttribute('data-theme', state.mode);
-        },
-        setTheme(state, action) {
-            state.mode = action.payload;
-            localStorage.setItem('supportdesk-theme', state.mode);
-            document.documentElement.setAttribute('data-theme', state.mode);
-        },
+  name: "theme",
+  initialState,
+  reducers: {
+    toggleTheme(state) {
+      state.mode = state.mode === "light" ? "dark" : "light";
+      // Side effects: persist + apply
+      localStorage.setItem("supportdesk-theme", state.mode);
+      document.documentElement.setAttribute("data-theme", state.mode);
     },
+    setTheme(state, action) {
+      state.mode = action.payload;
+      localStorage.setItem("supportdesk-theme", state.mode);
+      document.documentElement.setAttribute("data-theme", state.mode);
+    },
+  },
 });
 
 // ─── Actions ────────────────────────────────────────────────────

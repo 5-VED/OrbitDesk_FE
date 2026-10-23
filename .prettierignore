@@ -1,0 +1,6 @@
+dist
+node_modules
+public
+package-lock.json
+build_out.txt
+build_err.txt

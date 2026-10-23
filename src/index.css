@@ -1,39 +1,39 @@
 /* OrbitDesk Design System — Enterprise Work OS */
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@500;600;700&family=Inter:wght@400;500;600&display=swap");
 
 :root {
   /* ---- Colors (Dark-first: deep graphite background) ---- */
-  --color-bg-primary:     #23262F;
-  --color-bg-secondary:   #2B2F39;
-  --color-bg-tertiary:    #353945;
-  --color-bg-hover:       #3A3F4B;
+  --color-bg-primary: #23262f;
+  --color-bg-secondary: #2b2f39;
+  --color-bg-tertiary: #353945;
+  --color-bg-hover: #3a3f4b;
 
-  --color-text-primary:   #F7F8FA;
-  --color-text-secondary: #A2A8B5;
-  --color-text-tertiary:  #6B7280;
-  --color-text-inverse:   #23262F;
+  --color-text-primary: #f7f8fa;
+  --color-text-secondary: #a2a8b5;
+  --color-text-tertiary: #6b7280;
+  --color-text-inverse: #23262f;
 
-  --color-border:         rgba(247, 248, 250, 0.08);
-  --color-border-light:   rgba(247, 248, 250, 0.04);
-  --color-border-dark:    rgba(247, 248, 250, 0.14);
+  --color-border: rgba(247, 248, 250, 0.08);
+  --color-border-light: rgba(247, 248, 250, 0.04);
+  --color-border-dark: rgba(247, 248, 250, 0.14);
 
   /* Brand / Action */
-  --color-primary:        #F44336;
-  --color-primary-hover:  #E53935;
-  --color-primary-light:  rgba(244, 67, 54, 0.12);
+  --color-primary: #f44336;
+  --color-primary-hover: #e53935;
+  --color-primary-light: rgba(244, 67, 54, 0.12);
 
   /* Semantic — status only, never decorative */
-  --color-success:        #22C55E;
-  --color-success-light:  rgba(34, 197, 94, 0.12);
-  --color-warning:        #F59E0B;
-  --color-warning-light:  rgba(245, 158, 11, 0.12);
-  --color-error:          #EF4444;
-  --color-error-light:    rgba(239, 68, 68, 0.12);
-  --color-danger:         #EF4444;
-  --color-danger-light:   rgba(239, 68, 68, 0.12);
-  --color-info:           #3B82F6;
-  --color-info-light:     rgba(59, 130, 246, 0.12);
+  --color-success: #22c55e;
+  --color-success-light: rgba(34, 197, 94, 0.12);
+  --color-warning: #f59e0b;
+  --color-warning-light: rgba(245, 158, 11, 0.12);
+  --color-error: #ef4444;
+  --color-error-light: rgba(239, 68, 68, 0.12);
+  --color-danger: #ef4444;
+  --color-danger-light: rgba(239, 68, 68, 0.12);
+  --color-info: #3b82f6;
+  --color-info-light: rgba(59, 130, 246, 0.12);
 
   /* ---- Shadows (soft, minimal) ---- */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -41,11 +41,11 @@
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
 
   /* ---- Spacing ---- */
-  --spacing-xs:  4px;
-  --spacing-sm:  8px;
-  --spacing-md:  16px;
-  --spacing-lg:  24px;
-  --spacing-xl:  32px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
   --spacing-2xl: 48px;
 
   /* ---- Border Radius (8–14px range) ---- */
@@ -56,30 +56,33 @@
   --radius-full: 9999px;
 
   /* ---- Typography ---- */
-  --font-heading: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-family:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading:
+    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  --font-family:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  --font-size-xs:   0.75rem;
-  --font-size-sm:   0.875rem;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
-  --font-size-lg:   1.125rem;
-  --font-size-xl:   1.25rem;
-  --font-size-2xl:  1.5rem;
-  --font-size-3xl:  1.875rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
 
-  --font-weight-normal:   400;
-  --font-weight-medium:   500;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
   --font-weight-semibold: 600;
-  --font-weight-bold:     700;
+  --font-weight-bold: 700;
 
-  --line-height-tight:   1.25;
-  --line-height-normal:  1.5;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
 
   /* ---- Transitions (subtle) ---- */
-  --transition-fast:   150ms ease;
+  --transition-fast: 150ms ease;
   --transition-normal: 200ms ease;
-  --transition-slow:   300ms ease;
+  --transition-slow: 300ms ease;
 
   /* ---- Layout ---- */
   --sidebar-width: 240px;
@@ -89,28 +92,28 @@
 
 /* ===== Light Theme ===== */
 [data-theme="light"] {
-  --color-bg-primary:     #F8F9FA;
-  --color-bg-secondary:   #FFFFFF;
-  --color-bg-tertiary:    #EEF0F2;
-  --color-bg-hover:       #E8EAED;
+  --color-bg-primary: #f8f9fa;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #eef0f2;
+  --color-bg-hover: #e8eaed;
 
-  --color-text-primary:   #1A1D23;
-  --color-text-secondary: #5F6570;
-  --color-text-tertiary:  #9CA0AA;
-  --color-text-inverse:   #FFFFFF;
+  --color-text-primary: #1a1d23;
+  --color-text-secondary: #5f6570;
+  --color-text-tertiary: #9ca0aa;
+  --color-text-inverse: #ffffff;
 
-  --color-border:         rgba(26, 29, 35, 0.08);
-  --color-border-light:   rgba(26, 29, 35, 0.04);
-  --color-border-dark:    rgba(26, 29, 35, 0.14);
+  --color-border: rgba(26, 29, 35, 0.08);
+  --color-border-light: rgba(26, 29, 35, 0.04);
+  --color-border-dark: rgba(26, 29, 35, 0.14);
 
-  --color-primary:        #F44336;
-  --color-primary-hover:  #D32F2F;
-  --color-primary-light:  rgba(244, 67, 54, 0.08);
+  --color-primary: #f44336;
+  --color-primary-hover: #d32f2f;
+  --color-primary-light: rgba(244, 67, 54, 0.08);
 
-  --color-success-light:  rgba(34, 197, 94, 0.08);
-  --color-warning-light:  rgba(245, 158, 11, 0.08);
-  --color-error-light:    rgba(239, 68, 68, 0.08);
-  --color-info-light:     rgba(59, 130, 246, 0.08);
+  --color-success-light: rgba(34, 197, 94, 0.08);
+  --color-warning-light: rgba(245, 158, 11, 0.08);
+  --color-error-light: rgba(239, 68, 68, 0.08);
+  --color-info-light: rgba(59, 130, 246, 0.08);
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -144,7 +147,12 @@ body {
   min-height: 100vh;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
@@ -182,22 +190,50 @@ select {
    UTILITY CLASSES
    ============================================ */
 
-.text-xs   { font-size: var(--font-size-xs); }
-.text-sm   { font-size: var(--font-size-sm); }
-.text-base { font-size: var(--font-size-base); }
-.text-lg   { font-size: var(--font-size-lg); }
-.text-xl   { font-size: var(--font-size-xl); }
-.text-2xl  { font-size: var(--font-size-2xl); }
-.text-3xl  { font-size: var(--font-size-3xl); }
+.text-xs {
+  font-size: var(--font-size-xs);
+}
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+.text-base {
+  font-size: var(--font-size-base);
+}
+.text-lg {
+  font-size: var(--font-size-lg);
+}
+.text-xl {
+  font-size: var(--font-size-xl);
+}
+.text-2xl {
+  font-size: var(--font-size-2xl);
+}
+.text-3xl {
+  font-size: var(--font-size-3xl);
+}
 
-.font-normal   { font-weight: var(--font-weight-normal); }
-.font-medium   { font-weight: var(--font-weight-medium); }
-.font-semibold { font-weight: var(--font-weight-semibold); }
-.font-bold     { font-weight: var(--font-weight-bold); }
+.font-normal {
+  font-weight: var(--font-weight-normal);
+}
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+.font-semibold {
+  font-weight: var(--font-weight-semibold);
+}
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
 
-.text-primary   { color: var(--color-text-primary); }
-.text-secondary { color: var(--color-text-secondary); }
-.text-tertiary  { color: var(--color-text-tertiary); }
+.text-primary {
+  color: var(--color-text-primary);
+}
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+.text-tertiary {
+  color: var(--color-text-tertiary);
+}
 
 /* ============================================
    SCROLLBAR STYLES
@@ -226,25 +262,52 @@ select {
    ============================================ */
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideInDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
-.animate-fade-in     { animation: fadeIn var(--transition-normal); }
-.animate-slide-in-up { animation: slideInUp var(--transition-normal); }
-.animate-pulse       { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.animate-fade-in {
+  animation: fadeIn var(--transition-normal);
+}
+.animate-slide-in-up {
+  animation: slideInUp var(--transition-normal);
+}
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

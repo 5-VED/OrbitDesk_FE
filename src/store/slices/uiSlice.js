@@ -1,37 +1,34 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 // ─── Initial State ──────────────────────────────────────────────
 
 const initialState = {
-    sidebarCollapsed: false,
-    globalLoading: false,
+  sidebarCollapsed: false,
+  globalLoading: false,
 };
 
 // ─── Slice ──────────────────────────────────────────────────────
 
 const uiSlice = createSlice({
-    name: 'ui',
-    initialState,
-    reducers: {
-        toggleSidebar(state) {
-            state.sidebarCollapsed = !state.sidebarCollapsed;
-        },
-        setSidebarCollapsed(state, action) {
-            state.sidebarCollapsed = action.payload;
-        },
-        setGlobalLoading(state, action) {
-            state.globalLoading = action.payload;
-        },
+  name: "ui",
+  initialState,
+  reducers: {
+    toggleSidebar(state) {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
     },
+    setSidebarCollapsed(state, action) {
+      state.sidebarCollapsed = action.payload;
+    },
+    setGlobalLoading(state, action) {
+      state.globalLoading = action.payload;
+    },
+  },
 });
 
 // ─── Actions ────────────────────────────────────────────────────
 
-export const {
-    toggleSidebar,
-    setSidebarCollapsed,
-    setGlobalLoading,
-} = uiSlice.actions;
+export const { toggleSidebar, setSidebarCollapsed, setGlobalLoading } =
+  uiSlice.actions;
 
 // ─── Selectors ──────────────────────────────────────────────────
 
